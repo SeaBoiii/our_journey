@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "updated": "2026-08-05",
   "sourceBriefs": {
     "site": "Build a polished, production-ready wedding invitation website that feels like a cinematic journey through the clouds",
@@ -28,8 +28,8 @@
     "usedSeparateMasterPrompt": true,
     "authoritativePrompt": "COUPLE ARTWORK — IMPORTANT LAYERED COMPOSITION",
     "note": "The dedicated separate master prompt, not the shorter general-site couple prompt, is authoritative for the generated couple master and every derived couple layer.",
-    "masterReference": "/assets/couple/couple-master-chroma.png",
-    "processedMaster": "/assets/couple/couple-main.png",
+    "masterReference": "artwork-source/legacy/couple/couple-master-chroma.png",
+    "processedMaster": "artwork-source/legacy/couple/couple-main.png",
     "runtimeMaster": "/assets/couple/couple-main.webp",
     "deriveLayersFromSameComposition": true
   },
@@ -58,7 +58,7 @@
         "purpose": "Global vertical background plate with text-safe negative space.",
         "generated": true,
         "status": "available",
-        "losslessSource": "/assets/sky/sky-gradient.png",
+        "losslessSource": "artwork-source/legacy/sky/sky-gradient.png",
         "actualDimensions": "864x1821",
         "responsiveVariants": [
           "/assets/sky/sky-gradient-480.webp",
@@ -172,16 +172,16 @@
     },
     "stairs": {
       "main": {
-        "file": "/assets/stairs/staircase-main.webp",
+        "file": "/assets/stairs/staircase-painterly.webp",
         "purpose": "Main centred ascension scene.",
         "generated": true,
         "status": "available",
-        "generationSource": "/assets/stairs/staircase-master-chroma.png",
-        "losslessSource": "/assets/stairs/staircase-main.png",
-        "actualDimensions": "908x1732",
+        "generationSource": "artwork-source/generated/staircase-painterly-chroma.png",
+        "losslessSource": "artwork-source/generated/staircase-painterly-alpha.png",
+        "actualDimensions": "903x1742",
         "responsiveVariants": [
-          "/assets/stairs/staircase-main-480.webp",
-          "/assets/stairs/staircase-main-640.webp"
+          "/assets/stairs/staircase-painterly-480.webp",
+          "/assets/stairs/staircase-painterly-640.webp"
         ],
         "preferredMaster": "2048x3072",
         "transparency": true,
@@ -208,17 +208,17 @@
         "prompt": "distant-pavilion"
       },
       "main": {
-        "file": "/assets/pavilion/pavilion-main.webp",
+        "file": "/assets/pavilion/pavilion-painterly.webp",
         "purpose": "Final intimate pavilion with central space reserved for the couple.",
         "generated": true,
         "status": "available",
-        "generationSource": "/assets/pavilion/pavilion-master-chroma.png",
-        "losslessSource": "/assets/pavilion/pavilion-main.png",
+        "generationSource": "artwork-source/generated/pavilion-painterly-chroma.png",
+        "losslessSource": "artwork-source/generated/pavilion-painterly-alpha.png",
         "actualDimensions": "1536x1024",
         "responsiveVariants": [
-          "/assets/pavilion/pavilion-main-640.webp",
-          "/assets/pavilion/pavilion-main-768.webp",
-          "/assets/pavilion/pavilion-main-1024.webp"
+          "/assets/pavilion/pavilion-painterly-640.webp",
+          "/assets/pavilion/pavilion-painterly-768.webp",
+          "/assets/pavilion/pavilion-painterly-1024.webp"
         ],
         "preferredMaster": "3072x2304",
         "transparency": true,
@@ -254,7 +254,7 @@
     },
     "couple": {
       "masterChroma": {
-        "file": "/assets/couple/couple-master-chroma.png",
+        "file": "artwork-source/legacy/couple/couple-master-chroma.png",
         "purpose": "Preserved editable/source master from the separate authoritative couple prompt; never serve at runtime.",
         "generated": true,
         "status": "source-intermediate",
@@ -269,7 +269,7 @@
         "purpose": "Current optimized transparent portrait couple runtime asset.",
         "generated": true,
         "status": "available",
-        "losslessSource": "/assets/couple/couple-main.png",
+        "losslessSource": "artwork-source/legacy/couple/couple-main.png",
         "actualDimensions": "853x1844",
         "sourcePixelFormat": "32-bit ARGB",
         "responsiveVariants": [
@@ -318,7 +318,7 @@
         "prompt": "couple-master"
       },
       "brideRingHand": {
-        "file": "/assets/couple/bride-ring-hand.webp",
+        "file": "/assets/couple/bride-ring-hand-optimized.webp",
         "purpose": "Exact derived hand and sleeve detail; never a separately invented hand.",
         "generated": true,
         "status": "available-derived-from-master",

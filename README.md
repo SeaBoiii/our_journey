@@ -27,13 +27,14 @@ In the GitHub repository, open **Settings → Pages** and select **GitHub Action
 
 ## Invitation content
 
-Edit [`src/data/invitation.ts`](src/data/invitation.ts) to replace:
+Edit [`src/data/wedding.ts`](src/data/wedding.ts) to replace:
 
 - the partner-name placeholders;
 - `VENUE NAME`;
-- the supplied date/day copy;
-- timeline and RSVP wording;
-- invite-code records and guest limits.
+- the supplied date/day copy, schedule, doa, and RSVP wording;
+- Google Maps/Waze URLs and optional public family contacts.
+
+Invite-code records and guest limits remain isolated in [`src/data/invitation.ts`](src/data/invitation.ts). Keep real private guest lists out of a public repository unless a protected data source is added later.
 
 The supplied brief says **Saturday, 14 June 2027**, although 14 June 2027 is a Monday. The project deliberately preserves the supplied copy in one configuration file rather than guessing the intended correction.
 
@@ -47,7 +48,7 @@ Runtime artwork is under `public/assets`. The couple was generated from the sepa
 - [`ARTWORK_MANIFEST.json`](ARTWORK_MANIFEST.json) maps semantic layers to current files and normalized ring coordinates.
 - [`ASSET_GUIDE.md`](ASSET_GUIDE.md) explains replacement, responsive safe areas, compositing, and quality control.
 
-Generated alpha assets keep their original chroma and lossless sources alongside optimized runtime variants. Procedural clouds, haze, light, curtains, ornaments, and contact shadows keep the site runnable when raster layers are replaced.
+Generated alpha assets keep their original chroma and lossless sources under `artwork-source`, outside the published Pages artifact. Procedural clouds, haze, light, curtains, ornaments, and contact shadows keep the site runnable when raster layers are replaced.
 
 ## Accessibility and performance
 

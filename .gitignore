@@ -12,6 +12,9 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# local visual and motion audit output
+artifacts/
+
 
 # environment variables
 .env

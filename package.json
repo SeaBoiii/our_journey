@@ -10,6 +10,8 @@
     "build": "astro build",
     "check": "astro check",
     "capture": "node scripts/capture.mjs",
+    "audit:journey": "node scripts/journey-audit.mjs",
+    "audit:motion": "node scripts/motion-audit.mjs",
     "smoke": "node scripts/smoke.mjs",
     "preview": "astro preview",
     "astro": "astro"
@@ -18,6 +20,7 @@
     "@astrojs/react": "^6.0.2",
     "@fontsource/cormorant-garamond": "^5.3.0",
     "@fontsource/manrope": "^5.3.0",
+    "@fontsource/noto-naskh-arabic": "^5.3.0",
     "@tailwindcss/vite": "^4.3.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",

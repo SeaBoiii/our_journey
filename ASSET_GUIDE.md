@@ -15,16 +15,16 @@ The couple’s intended focal hierarchy is always faces/eye contact → embrace 
 
 ## Directory contract
 
-public/assets contains:
+`public/assets` contains optimized browser assets only:
 
 - sky — global background, distant cloudscape, and optional sunlight overlays.
 - clouds — isolated back, middle, front, small, and mist layers.
 - stairs — staircase detail and its separable glow.
 - pavilion — distant pavilion, final structure, curtains, and foreground cloud occlusion.
-- couple — preserved source and processed PNG masters, optimized transparent runtime derivatives, optional derived body/fabric/hand/light layers, and ring highlight.
+- couple — optimized transparent runtime derivatives, optional derived body/fabric/hand/light layers, and ring highlight.
 - ornaments — original editable monogram, divider, and restrained floral SVGs.
 
-Keep editable/lossless sources. Runtime code should use optimized WebP/AVIF derivatives where practical, except original SVG artwork. Never overwrite public/assets/couple/couple-master-chroma.png; it is the preserved generation source, not a browser asset.
+Editable/lossless sources live under `artwork-source` so GitHub Pages does not publish multi-megabyte intermediates. Runtime code should use optimized WebP/AVIF derivatives where practical, except original SVG artwork. Never overwrite `artwork-source/legacy/couple/couple-master-chroma.png`; it is the preserved generation source, not a browser asset.
 
 ## Couple prompt authority
 
@@ -32,11 +32,11 @@ The couple asset used the separate **COUPLE ARTWORK — IMPORTANT LAYERED COMPOS
 
 The current files are:
 
-- public/assets/couple/couple-master-chroma.png — preserved 853 × 1844 RGB source/intermediate.
-- public/assets/couple/couple-main.png — processed 853 × 1844 transparent 32-bit ARGB master.
+- artwork-source/legacy/couple/couple-master-chroma.png — preserved 853 × 1844 RGB source/intermediate.
+- artwork-source/legacy/couple/couple-main.png — processed 853 × 1844 transparent 32-bit ARGB master.
 - public/assets/couple/couple-main.webp — optimized full-size runtime asset.
 - public/assets/couple/couple-main-480.webp and couple-main-640.webp — responsive runtime variants.
-- public/assets/couple/bride-ring-hand.webp — exact 853 × 1844 pixel-aligned alpha extraction from the approved master, used for the delayed hand reveal, with 480 px and 640 px responsive variants.
+- public/assets/couple/bride-ring-hand-optimized.webp — exact 853 × 1844 pixel-aligned alpha extraction from the approved master, re-encoded for runtime and used for the delayed hand reveal, with 480 px and 640 px responsive variants.
 
 If bride/groom separation causes any mismatch, use the intact couple-main composition via its optimized WebP. A coherent flattened couple is preferable to visible seams. When layers are produced, derive them from the processed PNG master so faces, proportions, lighting, pose, hand placement, clothing, and eye lines do not change.
 

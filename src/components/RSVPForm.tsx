@@ -272,8 +272,8 @@ export default function RSVPForm({
           {invitation.rsvp.heading}
         </h2>
         <p className={styles.introCopy}>
-          Your presence would mean the world to us. Please let us know if you
-          can share the day.
+          <span>{invitation.rsvp.introduction[0]}</span>
+          <span>{invitation.rsvp.introduction[1]}</span>
         </p>
       </div>
 

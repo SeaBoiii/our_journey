@@ -6,7 +6,7 @@ This library reconciles the site brief with the separate **COUPLE ARTWORK — IM
 
 The generated couple asset used the separate couple master prompt. That dedicated prompt is authoritative for the couple, bride, groom, hijab, veil, embrace, hand, ring, and couple lighting. The shorter general-site couple prompt is retained only as background direction and must not override the dedicated prompt.
 
-Generate a high-resolution couple master first. Derive every foreground couple layer from the same approved composition; do not independently reinvent a face, hand, garment, light direction, or pose. Preserve the source master at public/assets/couple/couple-master-chroma.png, the processed transparent master at public/assets/couple/couple-main.png, and serve its optimized WebP derivatives at runtime.
+Generate a high-resolution couple master first. Derive every foreground couple layer from the same approved composition; do not independently reinvent a face, hand, garment, light direction, or pose. Preserve the source master at artwork-source/legacy/couple/couple-master-chroma.png, the processed transparent master at artwork-source/legacy/couple/couple-main.png, and serve its optimized WebP derivatives at runtime.
 
 Shared visual language:
 
@@ -16,6 +16,26 @@ Shared visual language:
 - Early golden dawn, diffused sunlight, very soft volumetric rays, and no harsh shadows.
 - No chibi styling, photorealistic people, Disney-like exaggeration, hyper-saturation, video-game concept art, tacky wedding clip art, wings, halos, religious depictions, fantasy castles, or excessive gold.
 - Major isolated scene layers require clean alpha. Retain a lossless PNG source and export optimized WebP/AVIF runtime derivatives.
+
+## 2026 painterly staircase revision
+
+- Built-in image generation edit target: the preserved original staircase.
+- Runtime files: `public/assets/stairs/staircase-painterly.webp`, plus 480 px and 640 px variants.
+- Preserved generated sources: `artwork-source/generated/staircase-painterly-chroma.png` and `staircase-painterly-alpha.png`.
+
+Final prompt:
+
+“Re-render only the supplied staircase as a sophisticated romantic painterly storybook illustration while preserving its exact long vertical perspective from below, centred symmetry, step density, taper, silhouette, and padding. Use warm ivory pearl marble, subtle hand-painted tonal variation, restrained champagne edge detailing, slight natural imperfections, softer contrast and atmospheric softness toward the distant top. Match a premium painterly wedding editorial with a gentle Korean romance fantasy-drama atmosphere, diffused pearl morning light, powder-blue shadows, pale-lavender depth and warm understated highlights. Keep one staircase only; no people, pavilion, railings, castle, excessive ornament, text or watermark. Render on a perfectly flat solid `#00ff00` chroma-key background with no shadow, gradient, texture, reflection, floor plane or haze.”
+
+## 2026 painterly pavilion revision
+
+- Built-in image generation edit target: the preserved original pavilion.
+- Runtime files: `public/assets/pavilion/pavilion-painterly.webp`, plus 640 px, 768 px and 1024 px variants.
+- Preserved generated sources: `artwork-source/generated/pavilion-painterly-chroma.png` and `pavilion-painterly-alpha.png`.
+
+Final prompt:
+
+“Re-render only the supplied pavilion as a sophisticated romantic painterly storybook illustration while preserving its intimate front-facing proportions, centred open arch, side arches, layered roof silhouette, central steps, perspective and empty central space for the approved Muslim wedding couple. Use ivory and soft cream stone, subtle Malay and Islamic influence, restrained geometric detail, delicate champagne-gold accents, gentle hand-painted tonal variation and refined imperfections. Match a premium painterly wedding editorial with a subtle Korean romance fantasy-drama atmosphere, warm diffused pearl morning light, powder-blue and lavender-grey shadows, and subtle champagne rim light. No people, couple, flowers, throne, mosque dome, minaret, palace, castle, added curtains, text or watermark. Render on a perfectly flat solid `#ff00ff` chroma-key background with no shadow, gradient, texture, reflection, floor plane, cloud or haze.”
 
 ## sky-background
 
@@ -175,8 +195,8 @@ Regeneration notes: align attachment points and light direction to the final pav
 
 ## couple-master
 
-- Preserved source: public/assets/couple/couple-master-chroma.png
-- Processed transparent master: public/assets/couple/couple-main.png
+- Preserved source: artwork-source/legacy/couple/couple-master-chroma.png
+- Processed transparent master: artwork-source/legacy/couple/couple-main.png
 - Current runtime asset: public/assets/couple/couple-main.webp, with 480 px and 640 px responsive variants.
 - Purpose: emotional focal point and visual source for every derived couple layer.
 - Composition: portrait full-body/three-quarter; current output is 853 × 1844.

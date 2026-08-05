@@ -4,6 +4,7 @@ import "@fontsource/cormorant-garamond/500.css";
 import "@fontsource/manrope/400.css";
 import "@fontsource/manrope/500.css";
 import "@fontsource/manrope/600.css";
+import "@fontsource/noto-naskh-arabic/400.css";
 import "../styles/global.css";
 
 interface Props {
@@ -38,6 +39,8 @@ const withBase = (path: string) => `${baseUrl}${path.replace(/^\/+/, "")}`;
       rel="preload"
       as="image"
       href={withBase("assets/sky/sky-gradient-480.webp")}
+      imagesrcset={`${withBase("assets/sky/sky-gradient-480.webp")} 480w, ${withBase("assets/sky/sky-gradient-640.webp")} 640w`}
+      imagesizes="100vw"
       media="(max-width: 640px)"
       fetchpriority="high"
     />
