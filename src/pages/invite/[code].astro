@@ -1,0 +1,28 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import WeddingJourney from "../../components/WeddingJourney.astro";
+import {
+  inviteCodes,
+  type InviteCodeData,
+} from "../../data/invitation";
+
+export function getStaticPaths() {
+  return Object.values(inviteCodes).map((invite) => ({
+    params: { code: invite.code },
+    props: { invite },
+  }));
+}
+
+interface Props {
+  invite: InviteCodeData;
+}
+
+const { invite } = Astro.props;
+---
+
+<BaseLayout
+  title={`${invite.guestName} — Aleem & A's Wedding Invitation`}
+  description={`${invite.greeting} Join us for a wedding celebration told as a cinematic journey through the clouds.`}
+>
+  <WeddingJourney invite={invite} />
+</BaseLayout>

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 64" role="img" aria-labelledby="divider-title divider-desc">
+  <title id="divider-title">Wedding stationery divider</title>
+  <desc id="divider-desc">A fine symmetrical divider with a small pointed arch and restrained botanical details.</desc>
+  <g fill="none" stroke="#B59662" stroke-linecap="round" stroke-linejoin="round">
+    <g id="rules" stroke-width="1">
+      <path d="M24 32H286"/>
+      <path d="M434 32H696"/>
+    </g>
+    <g id="botanical-left" stroke-width="1.1">
+      <path d="M286 32C305 32 316 25 326 16"/>
+      <path d="M302 30C306 21 313 18 320 18C318 25 312 29 302 30Z"/>
+      <path d="M315 24C322 25 327 29 330 35C322 36 317 32 315 24Z"/>
+    </g>
+    <g id="botanical-right" stroke-width="1.1" transform="translate(720 0) scale(-1 1)">
+      <path d="M286 32C305 32 316 25 326 16"/>
+      <path d="M302 30C306 21 313 18 320 18C318 25 312 29 302 30Z"/>
+      <path d="M315 24C322 25 327 29 330 35C322 36 317 32 315 24Z"/>
+    </g>
+    <g id="central-arch" stroke-width="1.35">
+      <path d="M332 40C342 36 349 27 360 12C371 27 378 36 388 40"/>
+      <path d="M340 40H380"/>
+      <path d="M360 21V45"/>
+      <path d="M354 39L360 45L366 39"/>
+    </g>
+  </g>
+  <g id="small-accents" fill="#B59662">
+    <circle cx="326" cy="16" r="1.7"/>
+    <circle cx="394" cy="16" r="1.7"/>
+    <path d="M360 7L363 12L360 16L357 12Z"/>
+  </g>
+</svg>

@@ -1,0 +1,425 @@
+{
+  "version": 1,
+  "updated": "2026-08-05",
+  "sourceBriefs": {
+    "site": "Build a polished, production-ready wedding invitation website that feels like a cinematic journey through the clouds",
+    "couple": "COUPLE ARTWORK — IMPORTANT LAYERED COMPOSITION"
+  },
+  "artDirection": {
+    "style": "Luxury romantic storybook illustration with refined Korean romance and premium wedding-editorial influence; sophisticated semi-realistic adult proportions and soft painterly rendering.",
+    "palette": [
+      "soft white",
+      "pearl",
+      "ivory",
+      "warm cream",
+      "pale powder blue",
+      "faint lavender-blue shadow",
+      "warm champagne",
+      "restrained muted gold"
+    ],
+    "lighting": "Early golden dawn with diffused sunlight, subtle golden rim light, very soft volumetric rays, and no harsh shadows.",
+    "primaryViewport": [
+      "390x844",
+      "393x852",
+      "430x932"
+    ]
+  },
+  "couplePromptPolicy": {
+    "usedSeparateMasterPrompt": true,
+    "authoritativePrompt": "COUPLE ARTWORK — IMPORTANT LAYERED COMPOSITION",
+    "note": "The dedicated separate master prompt, not the shorter general-site couple prompt, is authoritative for the generated couple master and every derived couple layer.",
+    "masterReference": "/assets/couple/couple-master-chroma.png",
+    "processedMaster": "/assets/couple/couple-main.png",
+    "runtimeMaster": "/assets/couple/couple-main.webp",
+    "deriveLayersFromSameComposition": true
+  },
+  "ringAnchor": {
+    "asset": "/assets/couple/couple-main.webp",
+    "coordinateSpace": "intrinsic image bounds, origin at top-left",
+    "normalized": {
+      "x": 0.655,
+      "y": 0.279
+    },
+    "calibratedPixel": {
+      "x": 559,
+      "y": 514,
+      "sourceWidth": 853,
+      "sourceHeight": 1844
+    },
+    "overlay": "/assets/couple/ring-highlight.svg",
+    "overlayOrigin": "center",
+    "placementTransform": "translate(-50%, -50%)",
+    "note": "This is the measured anchor for the current generated master. Recalibrate it whenever the runtime couple artwork or crop changes."
+  },
+  "assets": {
+    "sky": {
+      "skyGradient": {
+        "file": "/assets/sky/sky-gradient.webp",
+        "purpose": "Global vertical background plate with text-safe negative space.",
+        "generated": true,
+        "status": "available",
+        "losslessSource": "/assets/sky/sky-gradient.png",
+        "actualDimensions": "864x1821",
+        "responsiveVariants": [
+          "/assets/sky/sky-gradient-480.webp",
+          "/assets/sky/sky-gradient-640.webp"
+        ],
+        "preferredMaster": "2048x3072",
+        "transparency": false,
+        "prompt": "sky-background"
+      },
+      "distantCloudscape": {
+        "file": "/assets/sky/distant-cloudscape.webp",
+        "purpose": "Slowest far-background cloud horizon.",
+        "generated": false,
+        "status": "prompt-ready",
+        "preferredMaster": "3072x1728",
+        "transparency": false,
+        "prompt": "distant-cloudscape"
+      },
+      "sunlightRays": {
+        "file": "/assets/sky/sunlight-rays.webp",
+        "purpose": "Very soft optional dawn-light overlay.",
+        "generated": false,
+        "status": "prompt-ready-or-procedural",
+        "preferredMaster": "2048x3072",
+        "transparency": true,
+        "prompt": "sunlight-rays"
+      }
+    },
+    "clouds": {
+      "backLeft": {
+        "file": "/assets/clouds/cloud-back-left.webp",
+        "purpose": "Slow background parallax cloud.",
+        "generated": false,
+        "status": "prompt-ready",
+        "preferredMaster": "2048x1536",
+        "transparency": true,
+        "prompt": "background-cloud"
+      },
+      "backRight": {
+        "file": "/assets/clouds/cloud-back-right.webp",
+        "purpose": "Slow background parallax cloud with a silhouette distinct from back-left.",
+        "generated": false,
+        "status": "prompt-ready",
+        "preferredMaster": "2048x1536",
+        "transparency": true,
+        "prompt": "background-cloud"
+      },
+      "midLeft": {
+        "file": "/assets/clouds/cloud-mid-left.webp",
+        "purpose": "Mid-depth cloud layer.",
+        "generated": false,
+        "status": "prompt-ready",
+        "preferredMaster": "2048x1536",
+        "transparency": true,
+        "prompt": "background-cloud"
+      },
+      "midRight": {
+        "file": "/assets/clouds/cloud-mid-right.webp",
+        "purpose": "Mid-depth cloud layer with asymmetric motion and silhouette.",
+        "generated": false,
+        "status": "prompt-ready",
+        "preferredMaster": "2048x1536",
+        "transparency": true,
+        "prompt": "background-cloud"
+      },
+      "frontLeft": {
+        "file": "/assets/clouds/cloud-front-left.webp",
+        "purpose": "Large opening-reveal foreground bank.",
+        "generated": false,
+        "status": "prompt-ready",
+        "preferredMaster": "2560x1920",
+        "transparency": true,
+        "prompt": "foreground-cloud"
+      },
+      "frontRight": {
+        "file": "/assets/clouds/cloud-front-right.webp",
+        "purpose": "Large opening-reveal foreground bank with a distinct silhouette.",
+        "generated": false,
+        "status": "prompt-ready",
+        "preferredMaster": "2560x1920",
+        "transparency": true,
+        "prompt": "foreground-cloud"
+      },
+      "small01": {
+        "file": "/assets/clouds/cloud-small-01.webp",
+        "purpose": "Independent atmospheric depth accent.",
+        "generated": false,
+        "status": "prompt-ready",
+        "preferredMaster": "1280x960",
+        "transparency": true,
+        "prompt": "background-cloud"
+      },
+      "small02": {
+        "file": "/assets/clouds/cloud-small-02.webp",
+        "purpose": "Independent atmospheric depth accent with a non-cloned silhouette.",
+        "generated": false,
+        "status": "prompt-ready",
+        "preferredMaster": "1280x960",
+        "transparency": true,
+        "prompt": "background-cloud"
+      },
+      "mistOverlay": {
+        "file": "/assets/clouds/mist-overlay.webp",
+        "purpose": "Atmospheric mask and reveal haze.",
+        "generated": false,
+        "status": "prompt-ready-or-css",
+        "preferredMaster": "2048x2048",
+        "transparency": true,
+        "prompt": "mist-overlay"
+      }
+    },
+    "stairs": {
+      "main": {
+        "file": "/assets/stairs/staircase-main.webp",
+        "purpose": "Main centred ascension scene.",
+        "generated": true,
+        "status": "available",
+        "generationSource": "/assets/stairs/staircase-master-chroma.png",
+        "losslessSource": "/assets/stairs/staircase-main.png",
+        "actualDimensions": "908x1732",
+        "responsiveVariants": [
+          "/assets/stairs/staircase-main-480.webp",
+          "/assets/stairs/staircase-main-640.webp"
+        ],
+        "preferredMaster": "2048x3072",
+        "transparency": true,
+        "prompt": "staircase"
+      },
+      "glow": {
+        "file": "/assets/stairs/staircase-glow.webp",
+        "purpose": "Soft dawn glow and haze isolated from staircase detail.",
+        "generated": false,
+        "status": "prompt-ready-or-procedural",
+        "preferredMaster": "2048x3072",
+        "transparency": true,
+        "prompt": "staircase-glow"
+      }
+    },
+    "pavilion": {
+      "distant": {
+        "file": "/assets/pavilion/pavilion-distant.webp",
+        "purpose": "Soft silhouette used during the pavilion approach.",
+        "generated": false,
+        "status": "prompt-ready",
+        "preferredMaster": "1536x1536",
+        "transparency": true,
+        "prompt": "distant-pavilion"
+      },
+      "main": {
+        "file": "/assets/pavilion/pavilion-main.webp",
+        "purpose": "Final intimate pavilion with central space reserved for the couple.",
+        "generated": true,
+        "status": "available",
+        "generationSource": "/assets/pavilion/pavilion-master-chroma.png",
+        "losslessSource": "/assets/pavilion/pavilion-main.png",
+        "actualDimensions": "1536x1024",
+        "responsiveVariants": [
+          "/assets/pavilion/pavilion-main-640.webp",
+          "/assets/pavilion/pavilion-main-768.webp",
+          "/assets/pavilion/pavilion-main-1024.webp"
+        ],
+        "preferredMaster": "3072x2304",
+        "transparency": true,
+        "prompt": "final-pavilion"
+      },
+      "curtainLeft": {
+        "file": "/assets/pavilion/pavilion-curtains-left.webp",
+        "purpose": "Independent subtle idle-motion curtain.",
+        "generated": false,
+        "status": "prompt-ready",
+        "preferredMaster": "1536x2304",
+        "transparency": true,
+        "prompt": "curtain"
+      },
+      "curtainRight": {
+        "file": "/assets/pavilion/pavilion-curtains-right.webp",
+        "purpose": "Independent subtle idle-motion curtain.",
+        "generated": false,
+        "status": "prompt-ready",
+        "preferredMaster": "1536x2304",
+        "transparency": true,
+        "prompt": "curtain"
+      },
+      "foregroundClouds": {
+        "file": "/assets/pavilion/pavilion-foreground-clouds.webp",
+        "purpose": "Foreground occlusion and atmospheric couple reveal.",
+        "generated": false,
+        "status": "prompt-ready",
+        "preferredMaster": "3072x1536",
+        "transparency": true,
+        "prompt": "foreground-cloud"
+      }
+    },
+    "couple": {
+      "masterChroma": {
+        "file": "/assets/couple/couple-master-chroma.png",
+        "purpose": "Preserved editable/source master from the separate authoritative couple prompt; never serve at runtime.",
+        "generated": true,
+        "status": "source-intermediate",
+        "actualDimensions": "853x1844",
+        "transparency": false,
+        "runtime": false,
+        "usedSeparateMasterPrompt": true,
+        "prompt": "couple-master"
+      },
+      "main": {
+        "file": "/assets/couple/couple-main.webp",
+        "purpose": "Current optimized transparent portrait couple runtime asset.",
+        "generated": true,
+        "status": "available",
+        "losslessSource": "/assets/couple/couple-main.png",
+        "actualDimensions": "853x1844",
+        "sourcePixelFormat": "32-bit ARGB",
+        "responsiveVariants": [
+          "/assets/couple/couple-main-480.webp",
+          "/assets/couple/couple-main-640.webp"
+        ],
+        "transparency": true,
+        "runtime": true,
+        "usedSeparateMasterPrompt": true,
+        "prompt": "couple-master"
+      },
+      "groomMain": {
+        "file": "/assets/couple/groom-main.webp",
+        "purpose": "Derived groom base layer matching the approved couple master.",
+        "generated": false,
+        "status": "derive-from-master",
+        "preferredMaster": "2048x3072",
+        "transparency": true,
+        "prompt": "groom-derived"
+      },
+      "brideMain": {
+        "file": "/assets/couple/bride-main.webp",
+        "purpose": "Derived bride base layer with mandatory fully covering hijab.",
+        "generated": false,
+        "status": "derive-from-master",
+        "preferredMaster": "2048x3072",
+        "transparency": true,
+        "prompt": "bride-derived"
+      },
+      "brideHijabVeil": {
+        "file": "/assets/couple/bride-hijab-veil.webp",
+        "purpose": "Optional transparent trailing veil/fabric layer for barely perceptible breeze motion.",
+        "generated": false,
+        "status": "derive-from-master-if-seamless",
+        "preferredMaster": "2048x3072",
+        "transparency": true,
+        "prompt": "bride-hijab-veil-derived"
+      },
+      "embraceOverlay": {
+        "file": "/assets/couple/couple-embrace-overlay.webp",
+        "purpose": "Foreground interlock needed to preserve seamless arm and hand occlusion.",
+        "generated": false,
+        "status": "derive-from-master-if-needed",
+        "preferredMaster": "2048x3072",
+        "transparency": true,
+        "prompt": "couple-master"
+      },
+      "brideRingHand": {
+        "file": "/assets/couple/bride-ring-hand.webp",
+        "purpose": "Exact derived hand and sleeve detail; never a separately invented hand.",
+        "generated": true,
+        "status": "available-derived-from-master",
+        "actualDimensions": "853x1844 full-canvas alignment layer",
+        "derivation": "Soft elliptical alpha extraction from the approved processed couple master; pixel-aligned with couple-main.webp.",
+        "responsiveVariants": [
+          "/assets/couple/bride-ring-hand-480.webp",
+          "/assets/couple/bride-ring-hand-640.webp"
+        ],
+        "transparency": true,
+        "runtime": true,
+        "prompt": "bride-ring-hand-derived"
+      },
+      "ringShadow": {
+        "file": "/assets/couple/ring-shadow.webp",
+        "purpose": "Optional ring contact shadow/reflection layer matching finger curvature.",
+        "generated": false,
+        "status": "derive-or-render-procedurally",
+        "preferredMaster": "512x512 detail crop",
+        "transparency": true,
+        "prompt": "ring-contact"
+      },
+      "ringHighlight": {
+        "file": "/assets/couple/ring-highlight.svg",
+        "purpose": "Editable transparent four-point glint; animation is applied externally.",
+        "generated": true,
+        "status": "available",
+        "viewBox": "0 0 128 128",
+        "transparency": true,
+        "runtime": true,
+        "prompt": "procedural-ring-highlight"
+      },
+      "lightOverlay": {
+        "file": "/assets/couple/couple-light-overlay.webp",
+        "purpose": "Optional extremely subtle warm changing-light overlay.",
+        "generated": false,
+        "status": "derive-or-render-procedurally",
+        "preferredMaster": "2048x3072",
+        "transparency": true,
+        "prompt": "couple-light-overlay"
+      },
+      "groundShadow": {
+        "file": "/assets/couple/couple-ground-shadow.webp",
+        "purpose": "Anchors the couple physically to the pavilion floor.",
+        "generated": false,
+        "status": "derive-from-final-composite",
+        "preferredMaster": "1536x768",
+        "transparency": true,
+        "prompt": "couple-ground-shadow"
+      },
+      "desktopCloseup": {
+        "file": "/assets/couple/couple-close-up-desktop.webp",
+        "purpose": "Optional desktop three-quarter crop; do not use on mobile unless all focal points survive.",
+        "generated": false,
+        "status": "optional",
+        "preferredMaster": "2560x1920",
+        "transparency": true,
+        "prompt": "couple-closeup"
+      }
+    },
+    "ornaments": {
+      "monogram": {
+        "file": "/assets/ornaments/monogram.svg",
+        "purpose": "Original editable A+A mark with abstract Alif–Ain influence.",
+        "generated": true,
+        "status": "available",
+        "viewBox": "0 0 320 240",
+        "transparency": true,
+        "runtime": true,
+        "originalArtwork": true
+      },
+      "divider": {
+        "file": "/assets/ornaments/divider.svg",
+        "purpose": "Original editable fine-line geometric and botanical divider.",
+        "generated": true,
+        "status": "available",
+        "viewBox": "0 0 720 64",
+        "transparency": true,
+        "runtime": true,
+        "originalArtwork": true
+      },
+      "floralLeft": {
+        "file": "/assets/ornaments/floral-accent-left.svg",
+        "purpose": "Original editable restrained left botanical accent.",
+        "generated": true,
+        "status": "available",
+        "viewBox": "0 0 360 260",
+        "transparency": true,
+        "runtime": true,
+        "originalArtwork": true
+      },
+      "floralRight": {
+        "file": "/assets/ornaments/floral-accent-right.svg",
+        "purpose": "Original editable restrained right botanical accent.",
+        "generated": true,
+        "status": "available",
+        "viewBox": "0 0 360 260",
+        "transparency": true,
+        "runtime": true,
+        "originalArtwork": true
+      }
+    }
+  }
+}

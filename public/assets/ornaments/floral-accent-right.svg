@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 260" role="img" aria-labelledby="floral-right-title floral-right-desc">
+  <title id="floral-right-title">Right floral wedding accent</title>
+  <desc id="floral-right-desc">A mirrored minimal sprig with tiny ivory blossoms and pale leaves.</desc>
+  <g id="right-sprig" transform="translate(360 0) scale(-1 1)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path id="main-stem" d="M22 235C89 221 137 181 171 137C205 94 242 64 311 38" stroke="#A88B59" stroke-width="1.25"/>
+    <path id="secondary-stem" d="M111 197C119 164 111 138 96 113" stroke="#A88B59" stroke-width="0.95"/>
+    <path id="upper-stem" d="M196 109C225 108 251 96 272 77" stroke="#A88B59" stroke-width="0.95"/>
+
+    <g id="leaves" fill="#E4E7DD" fill-opacity="0.72" stroke="#A9B1A0" stroke-width="0.85">
+      <path d="M70 218C76 200 89 191 104 191C99 207 89 216 70 218Z"/>
+      <path d="M104 201C111 216 124 222 137 219C130 205 120 199 104 201Z"/>
+      <path d="M129 174C135 155 148 146 164 146C158 163 147 172 129 174Z"/>
+      <path d="M153 158C165 170 179 172 191 166C181 155 169 152 153 158Z"/>
+      <path d="M183 122C188 104 201 94 216 95C211 111 201 120 183 122Z"/>
+      <path d="M217 93C231 101 244 100 255 91C242 84 230 85 217 93Z"/>
+      <path d="M111 158C96 151 85 140 82 125C98 129 108 140 111 158Z"/>
+      <path d="M104 132C112 119 112 106 105 95C95 106 95 119 104 132Z"/>
+      <path d="M245 86C253 70 266 63 280 66C273 80 261 87 245 86Z"/>
+    </g>
+
+    <g id="blossoms" fill="#FFFDF8" stroke="#BEA271" stroke-width="0.8">
+      <path d="M164 139C157 135 157 127 163 124C164 116 172 114 177 120C184 117 190 123 188 130C194 135 190 143 183 144C179 151 170 149 168 143Z"/>
+      <circle cx="175" cy="133" r="2.4" fill="#D7BE8F" stroke="none"/>
+      <path d="M278 72C274 68 275 63 279 61C280 56 286 55 289 59C294 57 298 61 296 66C300 69 297 75 292 75C289 80 283 78 282 74Z"/>
+      <circle cx="287" cy="67" r="1.7" fill="#D7BE8F" stroke="none"/>
+      <path d="M91 113C87 109 88 103 93 101C94 96 100 96 103 100C108 98 112 102 110 107C114 111 111 116 106 117C103 121 97 120 96 115Z"/>
+      <circle cx="101" cy="108" r="1.7" fill="#D7BE8F" stroke="none"/>
+    </g>
+  </g>
+</svg>

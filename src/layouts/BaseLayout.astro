@@ -1,0 +1,50 @@
+---
+import "@fontsource/cormorant-garamond/400.css";
+import "@fontsource/cormorant-garamond/500.css";
+import "@fontsource/manrope/400.css";
+import "@fontsource/manrope/500.css";
+import "@fontsource/manrope/600.css";
+import "../styles/global.css";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = "Aleem & A — Our Journey",
+  description = "A wedding invitation told as a cinematic journey through the clouds.",
+} = Astro.props;
+const baseUrl = import.meta.env.BASE_URL.endsWith("/")
+  ? import.meta.env.BASE_URL
+  : `${import.meta.env.BASE_URL}/`;
+const withBase = (path: string) => `${baseUrl}${path.replace(/^\/+/, "")}`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#edf4f8" />
+    <meta name="color-scheme" content="light" />
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <link rel="icon" type="image/svg+xml" href={withBase("favicon.svg")} />
+    <link
+      rel="preload"
+      as="image"
+      href={withBase("assets/sky/sky-gradient-480.webp")}
+      media="(max-width: 640px)"
+      fetchpriority="high"
+    />
+    <title>{title}</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to the invitation</a>
+    <slot />
+  </body>
+</html>

@@ -1,0 +1,407 @@
+---
+interface Props {
+	class?: string;
+	id?: string;
+}
+
+const { class: className, id } = Astro.props;
+---
+
+<div
+	id={id}
+	class:list={['cloud-field', className]}
+	data-cloud-field
+	aria-hidden="true"
+>
+	<div class="cloud-layer cloud-layer--back" data-layer="back">
+		<div class="cloud-mass cloud-mass--back-a" data-cloud="back-a"></div>
+		<div class="cloud-mass cloud-mass--back-b" data-cloud="back-b"></div>
+		<div class="cloud-mass cloud-mass--back-c" data-cloud="back-c"></div>
+	</div>
+
+	<div class="cloud-layer cloud-layer--mid" data-layer="mid">
+		<div class="cloud-mass cloud-mass--mid-a" data-cloud="mid-a"></div>
+		<div class="cloud-mass cloud-mass--mid-b" data-cloud="mid-b"></div>
+		<div class="cloud-mass cloud-mass--mid-c" data-cloud="mid-c"></div>
+	</div>
+
+	<div class="cloud-layer cloud-layer--mist" data-layer="mist">
+		<div class="mist-ribbon mist-ribbon--high" data-mist="high"></div>
+		<div class="mist-ribbon mist-ribbon--low" data-mist="low"></div>
+	</div>
+
+	<div class="cloud-layer cloud-layer--front" data-layer="front">
+		<div class="cloud-mass cloud-mass--front-a" data-cloud="front-a"></div>
+		<div class="cloud-mass cloud-mass--front-b" data-cloud="front-b"></div>
+		<div class="cloud-mass cloud-mass--front-c" data-cloud="front-c"></div>
+	</div>
+
+	<div class="cloud-layer cloud-layer--particles" data-layer="particles">
+		<div class="particle particle--1" data-particle="1"></div>
+		<div class="particle particle--2" data-particle="2"></div>
+		<div class="particle particle--3" data-particle="3"></div>
+		<div class="particle particle--4" data-particle="4"></div>
+		<div class="particle particle--5" data-particle="5"></div>
+		<div class="particle particle--6" data-particle="6"></div>
+		<div class="particle particle--7" data-particle="7"></div>
+		<div class="particle particle--8" data-particle="8"></div>
+	</div>
+</div>
+
+<style>
+	.cloud-field {
+		--pearl: 255 253 248;
+		--ivory: 250 246 236;
+		--blue-shadow: 191 207 223;
+		position: absolute;
+		inset: 0;
+		isolation: isolate;
+		overflow: hidden;
+		pointer-events: none;
+		user-select: none;
+	}
+
+	.cloud-layer {
+		position: absolute;
+		inset: -7%;
+		transform: translate3d(0, 0, 0);
+		transform-origin: center;
+	}
+
+	.cloud-layer--back {
+		z-index: 1;
+		opacity: 0.48;
+	}
+
+	.cloud-layer--mid {
+		z-index: 2;
+		opacity: 0.72;
+	}
+
+	.cloud-layer--mist {
+		z-index: 3;
+		opacity: 0.54;
+	}
+
+	.cloud-layer--front {
+		z-index: 4;
+	}
+
+	.cloud-layer--particles {
+		z-index: 5;
+	}
+
+	.cloud-mass,
+	.mist-ribbon,
+	.particle {
+		position: absolute;
+		will-change: transform, opacity;
+	}
+
+	.cloud-mass {
+		background-repeat: no-repeat;
+	}
+
+	.cloud-mass--back-a {
+		top: 7%;
+		left: -21%;
+		width: 72%;
+		aspect-ratio: 2.25;
+		background:
+			radial-gradient(ellipse 24% 45% at 12% 72%, rgb(var(--pearl) / 0.74) 0 68%, transparent 72%),
+			radial-gradient(ellipse 28% 62% at 35% 57%, rgb(var(--pearl) / 0.88) 0 61%, transparent 66%),
+			radial-gradient(ellipse 21% 49% at 57% 68%, rgb(var(--ivory) / 0.72) 0 65%, transparent 70%),
+			radial-gradient(ellipse 34% 42% at 79% 78%, rgb(var(--blue-shadow) / 0.25) 0 66%, transparent 72%);
+		animation: drift-back-a 31s ease-in-out infinite alternate;
+	}
+
+	.cloud-mass--back-b {
+		top: 21%;
+		right: -27%;
+		width: 69%;
+		aspect-ratio: 2.4;
+		background:
+			radial-gradient(ellipse 29% 42% at 10% 77%, rgb(var(--blue-shadow) / 0.22) 0 63%, transparent 69%),
+			radial-gradient(ellipse 23% 58% at 31% 62%, rgb(var(--pearl) / 0.68) 0 64%, transparent 70%),
+			radial-gradient(ellipse 31% 69% at 59% 55%, rgb(var(--pearl) / 0.84) 0 59%, transparent 65%),
+			radial-gradient(ellipse 27% 38% at 86% 78%, rgb(var(--ivory) / 0.67) 0 68%, transparent 73%);
+		animation: drift-back-b 37s ease-in-out infinite alternate;
+	}
+
+	.cloud-mass--back-c {
+		top: 46%;
+		left: 27%;
+		width: 47%;
+		aspect-ratio: 2.65;
+		background:
+			radial-gradient(ellipse 24% 59% at 18% 68%, rgb(var(--ivory) / 0.52) 0 63%, transparent 70%),
+			radial-gradient(ellipse 36% 75% at 49% 53%, rgb(var(--pearl) / 0.74) 0 59%, transparent 65%),
+			radial-gradient(ellipse 31% 46% at 83% 74%, rgb(var(--blue-shadow) / 0.2) 0 65%, transparent 71%);
+		animation: drift-back-c 34s ease-in-out infinite alternate;
+	}
+
+	.cloud-mass--mid-a {
+		top: 34%;
+		left: -30%;
+		width: 86%;
+		aspect-ratio: 2.08;
+		background:
+			radial-gradient(ellipse 29% 47% at 8% 74%, rgb(var(--blue-shadow) / 0.28) 0 66%, transparent 71%),
+			radial-gradient(ellipse 22% 63% at 30% 60%, rgb(var(--pearl) / 0.94) 0 62%, transparent 67%),
+			radial-gradient(ellipse 31% 78% at 55% 49%, rgb(var(--pearl) / 0.98) 0 58%, transparent 64%),
+			radial-gradient(ellipse 24% 53% at 76% 65%, rgb(var(--ivory) / 0.88) 0 65%, transparent 70%),
+			radial-gradient(ellipse 22% 36% at 94% 81%, rgb(var(--blue-shadow) / 0.25) 0 67%, transparent 73%);
+		animation: drift-mid-a 25s ease-in-out infinite alternate;
+	}
+
+	.cloud-mass--mid-b {
+		top: 28%;
+		right: -32%;
+		width: 82%;
+		aspect-ratio: 2.18;
+		background:
+			radial-gradient(ellipse 19% 38% at 8% 79%, rgb(var(--ivory) / 0.82) 0 67%, transparent 72%),
+			radial-gradient(ellipse 27% 69% at 27% 58%, rgb(var(--pearl) / 0.92) 0 61%, transparent 67%),
+			radial-gradient(ellipse 22% 53% at 49% 65%, rgb(var(--pearl) / 0.98) 0 64%, transparent 69%),
+			radial-gradient(ellipse 34% 77% at 72% 50%, rgb(var(--pearl) / 0.9) 0 58%, transparent 64%),
+			radial-gradient(ellipse 25% 42% at 94% 79%, rgb(var(--blue-shadow) / 0.29) 0 66%, transparent 72%);
+		animation: drift-mid-b 29s ease-in-out infinite alternate;
+	}
+
+	.cloud-mass--mid-c {
+		top: 62%;
+		left: 31%;
+		width: 57%;
+		aspect-ratio: 2.45;
+		background:
+			radial-gradient(ellipse 28% 50% at 14% 72%, rgb(var(--blue-shadow) / 0.27) 0 64%, transparent 70%),
+			radial-gradient(ellipse 25% 73% at 39% 54%, rgb(var(--pearl) / 0.9) 0 60%, transparent 66%),
+			radial-gradient(ellipse 30% 62% at 65% 61%, rgb(var(--ivory) / 0.86) 0 62%, transparent 68%),
+			radial-gradient(ellipse 25% 38% at 88% 79%, rgb(var(--pearl) / 0.8) 0 67%, transparent 73%);
+		animation: drift-mid-c 27s ease-in-out infinite alternate;
+	}
+
+	.cloud-mass--front-a {
+		bottom: -12%;
+		left: -39%;
+		width: 98%;
+		aspect-ratio: 1.7;
+		background:
+			radial-gradient(ellipse 26% 42% at 7% 79%, rgb(var(--blue-shadow) / 0.31) 0 67%, transparent 72%),
+			radial-gradient(ellipse 24% 67% at 26% 64%, rgb(var(--ivory) / 0.98) 0 61%, transparent 66%),
+			radial-gradient(ellipse 31% 72% at 51% 60%, rgb(var(--pearl)) 0 60%, transparent 66%),
+			radial-gradient(ellipse 26% 52% at 76% 69%, rgb(var(--pearl) / 0.97) 0 65%, transparent 70%),
+			radial-gradient(ellipse 23% 36% at 94% 82%, rgb(var(--ivory) / 0.88) 0 68%, transparent 73%);
+		animation: drift-front-a 21s ease-in-out infinite alternate;
+	}
+
+	.cloud-mass--front-b {
+		right: -36%;
+		bottom: -18%;
+		width: 94%;
+		aspect-ratio: 1.58;
+		background:
+			radial-gradient(ellipse 22% 35% at 8% 83%, rgb(var(--ivory) / 0.92) 0 68%, transparent 73%),
+			radial-gradient(ellipse 30% 72% at 29% 63%, rgb(var(--pearl)) 0 60%, transparent 65%),
+			radial-gradient(ellipse 22% 58% at 53% 69%, rgb(var(--ivory) / 0.96) 0 63%, transparent 69%),
+			radial-gradient(ellipse 33% 82% at 73% 57%, rgb(var(--pearl)) 0 57%, transparent 63%),
+			radial-gradient(ellipse 22% 42% at 94% 80%, rgb(var(--blue-shadow) / 0.28) 0 66%, transparent 72%);
+		animation: drift-front-b 24s ease-in-out infinite alternate;
+	}
+
+	.cloud-mass--front-c {
+		bottom: -29%;
+		left: 14%;
+		width: 77%;
+		aspect-ratio: 1.85;
+		background:
+			radial-gradient(ellipse 27% 49% at 13% 73%, rgb(var(--blue-shadow) / 0.24) 0 65%, transparent 71%),
+			radial-gradient(ellipse 38% 79% at 43% 59%, rgb(var(--pearl)) 0 59%, transparent 65%),
+			radial-gradient(ellipse 30% 62% at 72% 69%, rgb(var(--ivory) / 0.98) 0 64%, transparent 69%),
+			radial-gradient(ellipse 24% 37% at 94% 83%, rgb(var(--pearl) / 0.9) 0 68%, transparent 73%);
+		animation: drift-front-c 23s ease-in-out infinite alternate;
+	}
+
+	.mist-ribbon {
+		left: -18%;
+		width: 136%;
+		background-repeat: no-repeat;
+	}
+
+	.mist-ribbon--high {
+		top: 24%;
+		height: 25%;
+		background:
+			radial-gradient(ellipse 47% 48% at 28% 57%, rgb(var(--pearl) / 0.28) 0 38%, transparent 73%),
+			radial-gradient(ellipse 53% 42% at 79% 44%, rgb(var(--blue-shadow) / 0.16) 0 35%, transparent 75%);
+		animation: mist-high 24s ease-in-out infinite alternate;
+	}
+
+	.mist-ribbon--low {
+		top: 54%;
+		height: 34%;
+		background:
+			radial-gradient(ellipse 57% 45% at 21% 63%, rgb(var(--blue-shadow) / 0.14) 0 34%, transparent 72%),
+			radial-gradient(ellipse 48% 51% at 68% 52%, rgb(var(--pearl) / 0.34) 0 37%, transparent 74%),
+			radial-gradient(ellipse 32% 36% at 96% 68%, rgb(var(--ivory) / 0.22) 0 32%, transparent 72%);
+		animation: mist-low 29s ease-in-out infinite alternate;
+	}
+
+	.particle {
+		width: var(--particle-size);
+		aspect-ratio: 1;
+		border-radius: 50%;
+		background: radial-gradient(circle, rgb(var(--pearl) / 0.88) 0 12%, rgb(var(--pearl) / 0.26) 38%, transparent 72%);
+		opacity: var(--particle-opacity);
+		animation: particle-float var(--particle-duration) ease-in-out var(--particle-delay) infinite alternate;
+	}
+
+	.particle--1 {
+		--particle-size: 0.42rem;
+		--particle-opacity: 0.68;
+		--particle-duration: 9s;
+		--particle-delay: -2s;
+		top: 19%;
+		left: 13%;
+	}
+
+	.particle--2 {
+		--particle-size: 0.28rem;
+		--particle-opacity: 0.54;
+		--particle-duration: 12s;
+		--particle-delay: -7s;
+		top: 31%;
+		left: 72%;
+	}
+
+	.particle--3 {
+		--particle-size: 0.55rem;
+		--particle-opacity: 0.45;
+		--particle-duration: 14s;
+		--particle-delay: -4s;
+		top: 47%;
+		left: 24%;
+	}
+
+	.particle--4 {
+		--particle-size: 0.34rem;
+		--particle-opacity: 0.62;
+		--particle-duration: 10s;
+		--particle-delay: -1s;
+		top: 58%;
+		left: 84%;
+	}
+
+	.particle--5 {
+		--particle-size: 0.26rem;
+		--particle-opacity: 0.48;
+		--particle-duration: 13s;
+		--particle-delay: -9s;
+		top: 72%;
+		left: 58%;
+	}
+
+	.particle--6 {
+		--particle-size: 0.47rem;
+		--particle-opacity: 0.42;
+		--particle-duration: 11s;
+		--particle-delay: -5s;
+		top: 14%;
+		left: 91%;
+	}
+
+	.particle--7 {
+		--particle-size: 0.31rem;
+		--particle-opacity: 0.58;
+		--particle-duration: 15s;
+		--particle-delay: -3s;
+		top: 66%;
+		left: 8%;
+	}
+
+	.particle--8 {
+		--particle-size: 0.38rem;
+		--particle-opacity: 0.52;
+		--particle-duration: 12s;
+		--particle-delay: -8s;
+		top: 39%;
+		left: 49%;
+	}
+
+	@keyframes drift-back-a {
+		to { transform: translate3d(2.5%, -1.5%, 0) scale(1.015); }
+	}
+
+	@keyframes drift-back-b {
+		to { transform: translate3d(-2%, 1%, 0) scale(1.01); }
+	}
+
+	@keyframes drift-back-c {
+		to { transform: translate3d(1.5%, -2%, 0) scale(1.02); }
+	}
+
+	@keyframes drift-mid-a {
+		to { transform: translate3d(3%, -1%, 0) scale(1.018); }
+	}
+
+	@keyframes drift-mid-b {
+		to { transform: translate3d(-2.75%, -1.25%, 0) scale(1.012); }
+	}
+
+	@keyframes drift-mid-c {
+		to { transform: translate3d(2%, 1.5%, 0) scale(1.016); }
+	}
+
+	@keyframes drift-front-a {
+		to { transform: translate3d(2.1%, -0.8%, 0) scale(1.012); }
+	}
+
+	@keyframes drift-front-b {
+		to { transform: translate3d(-1.8%, -1.2%, 0) scale(1.015); }
+	}
+
+	@keyframes drift-front-c {
+		to { transform: translate3d(1.4%, -1.6%, 0) scale(1.01); }
+	}
+
+	@keyframes mist-high {
+		to { transform: translate3d(3%, 1.5%, 0); opacity: 0.76; }
+	}
+
+	@keyframes mist-low {
+		to { transform: translate3d(-2.5%, -1%, 0); opacity: 0.8; }
+	}
+
+	@keyframes particle-float {
+		from { transform: translate3d(0, 0.35rem, 0) scale(0.88); }
+		to { transform: translate3d(0.3rem, -0.55rem, 0) scale(1.08); }
+	}
+
+	@media (min-width: 64rem) {
+		.cloud-mass--back-a { left: -13%; width: 57%; }
+		.cloud-mass--back-b { right: -16%; width: 55%; }
+		.cloud-mass--mid-a { left: -18%; width: 68%; }
+		.cloud-mass--mid-b { right: -18%; width: 66%; }
+		.cloud-mass--front-a { left: -25%; width: 72%; }
+		.cloud-mass--front-b { right: -22%; width: 70%; }
+		.cloud-mass--front-c { left: 25%; width: 58%; }
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.cloud-mass,
+		.mist-ribbon,
+		.particle {
+			animation: none;
+			transform: translate3d(0, 0, 0);
+			will-change: auto;
+		}
+
+		.mist-ribbon {
+			opacity: 0.72;
+		}
+
+		.particle {
+			opacity: calc(var(--particle-opacity) * 0.65);
+		}
+	}
+</style>

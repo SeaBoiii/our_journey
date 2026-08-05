@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="ring-highlight-title ring-highlight-desc" data-ring-anchor-x="0.655" data-ring-anchor-y="0.279">
+  <title id="ring-highlight-title">Subtle wedding ring highlight</title>
+  <desc id="ring-highlight-desc">A transparent warm-white four-point glint intended to align to the bride's ring.</desc>
+  <defs>
+    <radialGradient id="ring-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#FFFDF4" stop-opacity="1"/>
+      <stop offset="0.2" stop-color="#FFECC2" stop-opacity="0.88"/>
+      <stop offset="0.58" stop-color="#E8C98E" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#E8C98E" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ray-horizontal" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FFF6DA" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#FFFDF4" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#FFF6DA" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="ray-vertical" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFF6DA" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#FFFDF4" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#FFF6DA" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="soft-glow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="4"/>
+    </filter>
+  </defs>
+
+  <!-- Animate this complete group externally; the SVG itself stays still and editable. -->
+  <g id="glint" transform-origin="64px 64px">
+    <circle id="diffuse-glow" cx="64" cy="64" r="23" fill="url(#ring-glow)" opacity="0.72" filter="url(#soft-glow)"/>
+    <path id="horizontal-ray" d="M18 64C39 62.7 52 62.7 64 64C76 65.3 89 65.3 110 64C89 66.1 76 66.1 64 64C52 61.9 39 61.9 18 64Z" fill="url(#ray-horizontal)"/>
+    <path id="vertical-ray" d="M64 25C62.8 43 62.8 54 64 64C65.2 74 65.2 85 64 103C66 85 66 74 64 64C62 54 62 43 64 25Z" fill="url(#ray-vertical)"/>
+    <circle id="central-point" cx="64" cy="64" r="3.2" fill="#FFFDF6"/>
+    <g id="secondary-micro-particle" opacity="0.68">
+      <circle cx="82" cy="47" r="1.2" fill="#FFF7DF"/>
+      <path d="M82 42V52M77 47H87" stroke="#FFF7DF" stroke-width="0.65" stroke-linecap="round"/>
+    </g>
+  </g>
+</svg>

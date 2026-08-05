@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" role="img" aria-labelledby="monogram-title monogram-desc">
+  <title id="monogram-title">A and A wedding monogram</title>
+  <desc id="monogram-desc">An original intertwined A and A monogram with abstract Alif and Ain inspired geometry.</desc>
+  <defs>
+    <linearGradient id="monogram-gold" x1="56" y1="38" x2="264" y2="202" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#D8C39A"/>
+      <stop offset="0.5" stop-color="#A98752"/>
+      <stop offset="1" stop-color="#C9AD79"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Every stroke remains independent so the emblem can be restyled or rearranged. -->
+  <g id="quiet-arch" fill="none" stroke="#B59662" stroke-width="1" opacity="0.28">
+    <path d="M62 199C75 119 111 57 160 36C209 57 245 119 258 199"/>
+    <path d="M76 199H244"/>
+  </g>
+
+  <g id="aa-letterforms" fill="none" stroke="url(#monogram-gold)" stroke-linecap="round" stroke-linejoin="round">
+    <g id="left-a" stroke-width="3">
+      <path d="M69 196C91 161 114 111 140 63"/>
+      <path d="M140 63C138 108 132 155 119 196"/>
+      <path d="M91 157C109 148 128 145 147 149"/>
+    </g>
+    <g id="right-a" stroke-width="3">
+      <path d="M251 196C229 161 206 111 180 63"/>
+      <path d="M180 63C182 108 188 155 201 196"/>
+      <path d="M229 157C211 148 192 145 173 149"/>
+    </g>
+  </g>
+
+  <g id="alif-ain-influence" fill="none" stroke="url(#monogram-gold)" stroke-linecap="round" stroke-linejoin="round">
+    <path id="alif-stroke" d="M160 44C157 91 158 146 160 198" stroke-width="3.4"/>
+    <path id="ain-bowl" d="M121 126C133 106 153 100 173 110C190 119 199 135 195 151C176 145 157 146 142 153C128 160 121 174 122 190" stroke-width="2.4"/>
+    <path id="intertwine" d="M198 128C187 137 175 145 160 151C145 157 132 166 124 181" stroke-width="1.4" opacity="0.76"/>
+  </g>
+
+  <g id="finishing-marks" fill="#B59662">
+    <path d="M160 28L164 36L160 42L156 36Z"/>
+    <circle cx="160" cy="209" r="2"/>
+  </g>
+</svg>

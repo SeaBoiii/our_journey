@@ -1,0 +1,642 @@
+---
+import CloudField from "./CloudField.astro";
+import PavilionCurtains from "./PavilionCurtains.astro";
+import RSVPForm from "./RSVPForm";
+import {
+  invitation,
+  type InviteCodeData,
+} from "../data/invitation";
+
+interface Props {
+  invite?: InviteCodeData;
+}
+
+const { invite } = Astro.props;
+const partnerDisplay = invitation.couple.partnerName.startsWith("[")
+  ? "A"
+  : invitation.couple.partnerName;
+const finalPartnerDisplay = invitation.couple.finalPartnerName.startsWith("[")
+  ? "A"
+  : invitation.couple.finalPartnerName;
+const maxGuests = invite?.maxPax ?? 4;
+const storageKey = invite
+  ? `our-journey:rsvp:${invite.code.toLowerCase()}`
+  : "our-journey:rsvp";
+const baseUrl = import.meta.env.BASE_URL.endsWith("/")
+  ? import.meta.env.BASE_URL
+  : `${import.meta.env.BASE_URL}/`;
+const withBase = (path: string) => `${baseUrl}${path.replace(/^\/+/, "")}`;
+const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
+  sources.map(([path, width]) => `${withBase(path)} ${width}w`).join(", ");
+---
+
+<div class="journey-shell" data-journey-root>
+  <div class="sky-world" aria-hidden="true">
+    <picture class="sky-picture">
+      <source
+        media="(max-width: 520px)"
+        srcset={assetSrcset([
+          ["assets/sky/sky-gradient-480.webp", 480],
+          ["assets/sky/sky-gradient-640.webp", 640],
+        ])}
+        sizes="100vw"
+      />
+      <source
+        srcset={assetSrcset([
+          ["assets/sky/sky-gradient-640.webp", 640],
+          ["assets/sky/sky-gradient.webp", 864],
+        ])}
+        sizes="100vw"
+      />
+      <img
+        src={withBase("assets/sky/sky-gradient.webp")}
+        alt=""
+        width="864"
+        height="1821"
+        decoding="async"
+        fetchpriority="high"
+      />
+    </picture>
+    <div class="sun-wash"></div>
+    <div class="sky-grain"></div>
+  </div>
+
+  <header class="journey-nav" aria-label="Invitation progress">
+    <a class="mini-monogram" href="#arrival" aria-label="Return to the beginning">
+      <img src={withBase("assets/ornaments/monogram.svg")} alt="" width="54" height="40" />
+    </a>
+    <div class="progress-track" aria-hidden="true">
+      <span class="progress-fill" data-progress></span>
+    </div>
+    <a class="nav-rsvp" href="#rsvp">RSVP</a>
+  </header>
+
+  <main id="main-content">
+    <section class="scene arrival" id="arrival" data-scene="arrival">
+      <div class="scene-sticky arrival-stage">
+        <CloudField class="arrival-clouds" id="arrival-clouds" />
+        <div class="opening-copy" data-opening-copy>
+          {
+            invite ? (
+              <div class="guest-welcome" data-opening-line>
+                <p>{invite.greeting}</p>
+                <span>{invite.reservationMessage}</span>
+              </div>
+            ) : null
+          }
+          <img
+            class="hero-monogram"
+            src={withBase("assets/ornaments/monogram.svg")}
+            alt="A plus A monogram"
+            width="160"
+            height="120"
+            data-opening-line
+          />
+          <p class="family-line" data-opening-line>{invitation.opening.familyLine}</p>
+          <h1 class="couple-names" data-opening-line>
+            <span>{invitation.couple.firstName}</span>
+            <span class="ampersand">&amp;</span>
+            <span>{partnerDisplay}</span>
+          </h1>
+          <p class="invitation-line" data-opening-line>
+            <span>{invitation.opening.invitationLine[0]}</span>
+            <span>{invitation.opening.invitationLine[1]}</span>
+          </p>
+        </div>
+        <a class="scroll-cue" href="#ascension" data-scroll-cue>
+          <span class="scroll-arrow" aria-hidden="true">↓</span>
+          <span>{invitation.opening.scrollCue}</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="scene skyward-journey" data-scene="skyward">
+      <div class="skyward-stage" data-shared-stage>
+        <CloudField class="pavilion-clouds" id="pavilion-clouds" />
+
+        <div class="stair-light" aria-hidden="true"></div>
+        <div class="staircase-anchor">
+          <picture class="staircase-picture" data-staircase>
+            <source
+              media="(max-width: 520px)"
+              srcset={assetSrcset([
+                ["assets/stairs/staircase-main-480.webp", 480],
+                ["assets/stairs/staircase-main-640.webp", 640],
+                ["assets/stairs/staircase-main.webp", 908],
+              ])}
+              sizes="116vw"
+            />
+            <img
+              src={withBase("assets/stairs/staircase-main.webp")}
+              alt="An ivory staircase rising through the clouds toward the pavilion"
+              width="908"
+              height="1732"
+              loading="eager"
+              fetchpriority="high"
+              decoding="async"
+            />
+          </picture>
+        </div>
+        <div class="stair-fog stair-fog--upper" data-stair-fog="upper" aria-hidden="true"></div>
+        <div class="stair-fog stair-fog--lower" data-stair-fog="lower" aria-hidden="true"></div>
+        <div class="edge-cloud edge-cloud--left" data-ascent-cloud aria-hidden="true"></div>
+        <div class="edge-cloud edge-cloud--right" data-ascent-cloud aria-hidden="true"></div>
+
+        <div class="pavilion-assembly" data-pavilion-assembly>
+          <picture class="pavilion-picture">
+            <source
+              media="(max-width: 700px)"
+              srcset={assetSrcset([
+                ["assets/pavilion/pavilion-main-640.webp", 640],
+                ["assets/pavilion/pavilion-main-768.webp", 768],
+                ["assets/pavilion/pavilion-main.webp", 1536],
+              ])}
+              sizes="180vw"
+            />
+            <source
+              srcset={assetSrcset([
+                ["assets/pavilion/pavilion-main-1024.webp", 1024],
+                ["assets/pavilion/pavilion-main.webp", 1536],
+              ])}
+              sizes="min(92vw, 1120px)"
+            />
+            <img
+              src={withBase("assets/pavilion/pavilion-main.webp")}
+              alt="An intimate ivory pavilion waiting at the top of the stairs"
+              width="1536"
+              height="1024"
+              loading="eager"
+              decoding="async"
+            />
+          </picture>
+
+          <div class="couple-anchor" data-couple>
+            <span class="couple-ground-shadow" aria-hidden="true"></span>
+            <picture class="couple-picture">
+              <source
+                media="(max-width: 520px)"
+                srcset={assetSrcset([
+                  ["assets/couple/couple-main-480.webp", 480],
+                  ["assets/couple/couple-main-640.webp", 640],
+                ])}
+                sizes="62vw"
+              />
+              <source
+                srcset={assetSrcset([
+                  ["assets/couple/couple-main-640.webp", 640],
+                  ["assets/couple/couple-main.webp", 853],
+                ])}
+                sizes="min(38vw, 440px)"
+              />
+              <img
+                src={withBase("assets/couple/couple-main.webp")}
+                alt="An illustrated Muslim newlywed couple sharing a quiet embrace"
+                width="853"
+                height="1844"
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
+            <img
+              class="ring-hand-layer"
+              src={withBase("assets/couple/bride-ring-hand.webp")}
+              srcset={assetSrcset([
+                ["assets/couple/bride-ring-hand-480.webp", 480],
+                ["assets/couple/bride-ring-hand-640.webp", 640],
+                ["assets/couple/bride-ring-hand.webp", 853],
+              ])}
+              sizes="(max-width: 520px) 62vw, min(38vw, 440px)"
+              alt=""
+              width="853"
+              height="1844"
+              loading="lazy"
+              decoding="async"
+              data-ring-hand
+              aria-hidden="true"
+            />
+            <span class="ring-contact" aria-hidden="true"></span>
+            <img
+              class="ring-glint"
+              src={withBase("assets/couple/ring-highlight.svg")}
+              alt=""
+              width="128"
+              height="128"
+              data-ring-glint
+              aria-hidden="true"
+            />
+            <span class="couple-light" aria-hidden="true"></span>
+          </div>
+
+          <PavilionCurtains class="pavilion-curtains" />
+          <div class="pavilion-cloud-bank pavilion-cloud-bank--left" aria-hidden="true"></div>
+          <div class="pavilion-cloud-bank pavilion-cloud-bank--right" aria-hidden="true"></div>
+        </div>
+
+        <div class="crest-haze" data-crest-haze aria-hidden="true"></div>
+        <div class="reveal-haze" data-reveal-haze aria-hidden="true"></div>
+
+        <div class="final-copy" data-final-copy>
+          <p class="final-message">
+            <span>{invitation.finalMessage[0]}</span>
+            <em>{invitation.finalMessage[1]}</em>
+          </p>
+          <p class="final-names">
+            {invitation.couple.firstName} &amp; {finalPartnerDisplay}
+          </p>
+          <time datetime={invitation.event.isoDate}>{invitation.event.numericDate}</time>
+          <img src={withBase("assets/ornaments/divider.svg")} alt="" width="300" height="28" />
+          <p class="attendance-request">
+            <span>{invitation.attendanceRequest[0]}</span>
+            <span>{invitation.attendanceRequest[1]}</span>
+          </p>
+          <a class="rsvp-link" href="#rsvp">
+            <span>RSVP</span>
+            <span aria-hidden="true">→</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="skyward-scroll-track">
+        <section class="ascension" id="ascension" data-phase="ascension">
+          <div class="ascent-copy-track">
+            <div class="ascent-breath" aria-hidden="true"></div>
+            <article class="ascent-beat event-details" data-ascent-beat>
+              <p class="eyebrow">The celebration</p>
+              <p class="weekday">{invitation.event.weekday}</p>
+              <time datetime={invitation.event.isoDate} class="event-date">
+                {invitation.event.date}
+              </time>
+              <p class="event-time">{invitation.event.time}</p>
+              <img src={withBase("assets/ornaments/divider.svg")} alt="" width="360" height="32" />
+              <p class="venue">{invitation.event.venue}</p>
+              <p class="location">{invitation.event.location}</p>
+            </article>
+
+            <article class="ascent-beat timeline-beat" data-ascent-beat>
+              <p class="eyebrow">Our day</p>
+              <ol class="timeline-list">
+                {
+                  invitation.timeline.map((item) => (
+                    <li>
+                      <time>{item.time}</time>
+                      <span aria-hidden="true"></span>
+                      <p>{item.label}</p>
+                    </li>
+                  ))
+                }
+              </ol>
+            </article>
+            <div class="ascent-breath ascent-breath--ending" aria-hidden="true"></div>
+          </div>
+        </section>
+
+        <section class="pavilion-journey" id="pavilion" data-phase="pavilion" aria-label="The pavilion">
+          <div class="pavilion-scroll-space" aria-hidden="true"></div>
+        </section>
+      </div>
+    </section>
+
+    <section class="rsvp-section" id="rsvp" aria-labelledby="rsvp-section-title">
+      <img
+        class="floral floral--left"
+        src={withBase("assets/ornaments/floral-accent-left.svg")}
+        alt=""
+        width="260"
+        height="188"
+        loading="lazy"
+      />
+      <img
+        class="floral floral--right"
+        src={withBase("assets/ornaments/floral-accent-right.svg")}
+        alt=""
+        width="260"
+        height="188"
+        loading="lazy"
+      />
+      <div class="rsvp-heading" data-soft-reveal>
+        <p class="eyebrow">One last step</p>
+        <h2 id="rsvp-section-title">Will you join us?</h2>
+        {
+          invite ? (
+            <div class="rsvp-reservation">
+              <p>{invite.greeting}</p>
+              <span>{invite.reservationMessage}</span>
+            </div>
+          ) : null
+        }
+      </div>
+      <RSVPForm
+        client:visible
+        defaultName={invite?.guestName ?? ""}
+        maxGuests={maxGuests}
+        storageKey={storageKey}
+      />
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <img
+      src={withBase("assets/ornaments/monogram.svg")}
+      alt=""
+      width="72"
+      height="54"
+      loading="lazy"
+    />
+    <p>Made with love, beneath the same sky.</p>
+    <a href="#arrival">Return to the clouds ↑</a>
+  </footer>
+</div>
+
+<script>
+  import gsap from "gsap";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const root = document.querySelector<HTMLElement>("[data-journey-root]");
+
+  if (root) {
+    const select = gsap.utils.selector(root);
+    const motion = gsap.matchMedia();
+
+    motion.add("(prefers-reduced-motion: no-preference)", () => {
+      const progress = root.querySelector<HTMLElement>("[data-progress]");
+
+      if (progress) {
+        gsap.set(progress, { scaleY: 0, transformOrigin: "top center" });
+        ScrollTrigger.create({
+          start: 0,
+          end: "max",
+          onUpdate: (self) => gsap.set(progress, { scaleY: self.progress }),
+        });
+      }
+
+      const openingLines = select("[data-opening-line]");
+      gsap.from(openingLines, {
+        autoAlpha: 0,
+        y: 18,
+        duration: 1.25,
+        stagger: 0.16,
+        ease: "power2.out",
+        delay: 0.15,
+      });
+
+      const arrival = root.querySelector<HTMLElement>("[data-scene='arrival']");
+      if (arrival) {
+        const frontA = arrival.querySelector<HTMLElement>("[data-cloud='front-a']");
+        const frontB = arrival.querySelector<HTMLElement>("[data-cloud='front-b']");
+        const frontC = arrival.querySelector<HTMLElement>("[data-cloud='front-c']");
+        const midA = arrival.querySelector<HTMLElement>("[data-cloud='mid-a']");
+        const midB = arrival.querySelector<HTMLElement>("[data-cloud='mid-b']");
+        const mist = arrival.querySelector<HTMLElement>("[data-layer='mist']");
+        const opening = arrival.querySelector<HTMLElement>("[data-opening-copy]");
+        const cue = arrival.querySelector<HTMLElement>("[data-scroll-cue]");
+        const movingClouds = [frontA, frontB, frontC, midA, midB].filter(Boolean);
+
+        gsap.set(movingClouds, { animation: "none" });
+
+        const arrivalTimeline = gsap.timeline({
+          scrollTrigger: {
+            trigger: arrival,
+            start: "top top",
+            end: "bottom bottom",
+            scrub: 1.1,
+          },
+        });
+
+        arrivalTimeline
+          .to(frontA, { x: "-28vw", y: "8vh", scale: 1.08, ease: "sine.inOut" }, 0)
+          .to(frontB, { x: "29vw", y: "-3vh", scale: 1.05, ease: "sine.inOut" }, 0)
+          .to(frontC, { x: "9vw", y: "18vh", scale: 1.12, autoAlpha: 0.3 }, 0)
+          .to(midA, { x: "-13vw", y: "3vh", scale: 1.03 }, 0.06)
+          .to(midB, { x: "14vw", y: "-1vh", scale: 1.02 }, 0.04)
+          .to(mist, { autoAlpha: 0.12, y: "5vh" }, 0)
+          .to(cue, { autoAlpha: 0, y: 18 }, 0)
+          .to(opening, { autoAlpha: 0.12, y: "-10vh", scale: 0.97 }, 0.18);
+      }
+
+      select("[data-ascent-beat]").forEach((beat) => {
+        gsap.fromTo(
+          beat,
+          { autoAlpha: 0, y: 42 },
+          {
+            autoAlpha: 1,
+            y: 0,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: beat,
+              start: "top 88%",
+              end: "top 55%",
+              scrub: 0.65,
+            },
+          },
+        );
+        gsap.to(beat, {
+          autoAlpha: 0,
+          y: -32,
+          scrollTrigger: {
+            trigger: beat,
+            start: "bottom 55%",
+            end: "bottom 20%",
+            scrub: 0.65,
+          },
+        });
+      });
+
+      const skywardJourney = root.querySelector<HTMLElement>("[data-scene='skyward']");
+      const staircase = root.querySelector<HTMLElement>("[data-staircase]");
+      const pavilionAssembly = root.querySelector<HTMLElement>("[data-pavilion-assembly]");
+      const pavilionClouds = root.querySelector<HTMLElement>(".pavilion-clouds");
+      const pavilionBanks = select(".pavilion-cloud-bank");
+      const ascentClouds = select("[data-ascent-cloud]");
+      const upperStairFog = root.querySelector<HTMLElement>("[data-stair-fog='upper']");
+      const lowerStairFog = root.querySelector<HTMLElement>("[data-stair-fog='lower']");
+      const crestHaze = root.querySelector<HTMLElement>("[data-crest-haze]");
+      const couple = root.querySelector<HTMLElement>("[data-couple]");
+      const ringHand = root.querySelector<HTMLElement>("[data-ring-hand]");
+      const glint = root.querySelector<HTMLElement>("[data-ring-glint]");
+      const revealHaze = root.querySelector<HTMLElement>("[data-reveal-haze]");
+      const finalCopy = root.querySelector<HTMLElement>("[data-final-copy]");
+      let glintTimer: number | undefined;
+      let ringMomentActive = false;
+
+      const clearGlintTimer = () => {
+        if (glintTimer !== undefined) {
+          window.clearTimeout(glintTimer);
+          glintTimer = undefined;
+        }
+      };
+
+      const scheduleGlint = (first = false) => {
+        clearGlintTimer();
+        if (!ringMomentActive || !glint) return;
+        glintTimer = window.setTimeout(
+          () => {
+            if (!ringMomentActive) return;
+            gsap
+              .timeline({ onComplete: () => scheduleGlint(false) })
+              .fromTo(
+                glint,
+                { autoAlpha: 0, scale: 0.4, rotate: -5 },
+                { autoAlpha: 0.9, scale: 1, rotate: 0, duration: 0.38, ease: "power2.out" },
+              )
+              .to(glint, { autoAlpha: 0, scale: 0.7, duration: 0.48, ease: "sine.inOut" });
+          },
+          first ? 2200 : 6500 + Math.random() * 3000,
+        );
+      };
+
+      if (skywardJourney && staircase && pavilionAssembly && couple && finalCopy) {
+        const stairAscentScale = () => {
+          if (window.innerWidth >= 1120) return 1.66;
+          if (window.innerWidth >= 768) return 1.82;
+          return 2.35;
+        };
+        gsap.set(staircase, {
+          autoAlpha: 0.22,
+          scale: 0.96,
+          y: 0,
+          transformOrigin: "50% 6.64%",
+          force3D: true,
+        });
+        gsap.set(pavilionAssembly, {
+          autoAlpha: 0,
+          scale: 0.14,
+          y: "-60vh",
+          transformOrigin: "50% 72%",
+          force3D: true,
+        });
+        gsap.set(couple, {
+          autoAlpha: 0,
+          clipPath: "inset(44% 0 0 0)",
+          force3D: true,
+        });
+        gsap.set(pavilionBanks, { autoAlpha: 0.3 });
+        gsap.set(crestHaze, { autoAlpha: 0, scale: 0.82, yPercent: -8, force3D: true });
+        gsap.set(revealHaze, { autoAlpha: 0, y: "6vh", force3D: true });
+        gsap.set(finalCopy, { autoAlpha: 0, y: 32, pointerEvents: "none" });
+        gsap.set(glint, { autoAlpha: 0, scale: 0.4 });
+
+        const skywardTimeline = gsap.timeline({
+          scrollTrigger: {
+            trigger: skywardJourney,
+            start: "top top",
+            end: "bottom bottom",
+            scrub: 0.55,
+            invalidateOnRefresh: true,
+            onUpdate: (self) => {
+              const shouldGlint = self.progress >= 0.76 && self.progress < 0.89;
+              if (shouldGlint !== ringMomentActive) {
+                ringMomentActive = shouldGlint;
+                if (ringMomentActive) scheduleGlint(true);
+                else clearGlintTimer();
+              }
+            },
+            onLeave: () => {
+              ringMomentActive = false;
+              clearGlintTimer();
+            },
+            onLeaveBack: () => {
+              ringMomentActive = false;
+              clearGlintTimer();
+            },
+          },
+        });
+
+        skywardTimeline
+          .fromTo(
+            staircase,
+            { autoAlpha: 0.22, scale: 0.96 },
+            { autoAlpha: 1, scale: 1.02, duration: 0.07, ease: "power2.out" },
+            0,
+          )
+          .to(staircase, { scale: stairAscentScale, duration: 0.45, ease: "none" }, 0.05)
+          .to(pavilionClouds, { autoAlpha: 0.74, scale: 1.025, duration: 0.35, ease: "none" }, 0.22)
+          .fromTo(
+            pavilionAssembly,
+            { autoAlpha: 0, scale: 0.14, y: "-60vh" },
+            { autoAlpha: 0.72, scale: 0.18, y: "-60vh", duration: 0.13, ease: "power1.out" },
+            0.32,
+          )
+          .to(pavilionAssembly, { autoAlpha: 0.96, scale: 0.3, y: "-63vh", duration: 0.13, ease: "none" }, 0.45)
+          .to(upperStairFog, { autoAlpha: 0.16, yPercent: 12, duration: 0.2, ease: "none" }, 0.36)
+          .to(
+            ascentClouds,
+            { autoAlpha: 0.18, yPercent: 46, scale: 1.55, duration: 0.3, ease: "none", stagger: 0.025 },
+            0.3,
+          )
+          .to(lowerStairFog, { autoAlpha: 0.12, yPercent: 48, scale: 1.62, duration: 0.31, ease: "none" }, 0.29)
+          .to(crestHaze, { autoAlpha: 0.88, scale: 1.08, yPercent: 12, duration: 0.17, ease: "sine.inOut" }, 0.42)
+          .to(
+            staircase,
+            { scale: () => stairAscentScale() * 1.22, duration: 0.24, ease: "none" },
+            0.49,
+          )
+          .to(staircase, { autoAlpha: 0.6, duration: 0.14, ease: "none" }, 0.58)
+          .to(
+            pavilionAssembly,
+            { autoAlpha: 1, scale: 1, y: 0, duration: 0.19, ease: "power1.inOut" },
+            0.57,
+          )
+          .to(staircase, { y: "76vh", duration: 0.19, ease: "power1.inOut" }, 0.57)
+          .to(pavilionBanks, { autoAlpha: 0.86, duration: 0.13, ease: "sine.inOut" }, 0.62)
+          .to(crestHaze, { autoAlpha: 0.12, scale: 1.32, yPercent: 52, duration: 0.18, ease: "sine.inOut" }, 0.59)
+          .to(revealHaze, { autoAlpha: 0.8, y: 0, duration: 0.09, ease: "sine.out" }, 0.58)
+          .fromTo(
+            couple,
+            { autoAlpha: 0, clipPath: "inset(44% 0 0 0)" },
+            { autoAlpha: 1, clipPath: "inset(0% 0 0 0)", duration: 0.15, ease: "sine.inOut" },
+            0.67,
+          )
+          .to(revealHaze, { autoAlpha: 0.08, y: "-8vh", duration: 0.2, ease: "sine.inOut" }, 0.65)
+          .fromTo(ringHand, { autoAlpha: 0.35 }, { autoAlpha: 1, duration: 0.09 }, 0.75)
+          .to(staircase, { autoAlpha: 0, duration: 0.09, ease: "sine.in" }, 0.75)
+          .to(pavilionAssembly, { scale: 1.045, duration: 0.1, ease: "sine.inOut" }, 0.79)
+          .to(couple, { scale: 1.035, duration: 0.1, ease: "sine.inOut" }, 0.79)
+          .to(couple, { autoAlpha: 0.22, duration: 0.1 }, 0.88)
+          .to(pavilionAssembly, { autoAlpha: 0.48, duration: 0.1 }, 0.88)
+          .set(finalCopy, { pointerEvents: "auto" }, 0.88)
+          .to(finalCopy, { autoAlpha: 1, y: 0, duration: 0.1, ease: "power2.out" }, 0.88);
+      }
+
+      select("[data-soft-reveal]").forEach((element) => {
+        gsap.from(element, {
+          autoAlpha: 0,
+          y: 24,
+          duration: 1,
+          ease: "power2.out",
+          scrollTrigger: { trigger: element, start: "top 86%", once: true },
+        });
+      });
+
+      return () => clearGlintTimer();
+    });
+
+    motion.add("(prefers-reduced-motion: reduce)", () => {
+      const pavilionPhase = root.querySelector<HTMLElement>("[data-phase='pavilion']");
+      if (!pavilionPhase) return;
+
+      const showPavilion = () => root.classList.add("is-reduced-pavilion");
+      const showAscent = () => root.classList.remove("is-reduced-pavilion");
+      const pavilionTop = () => window.scrollY + pavilionPhase.getBoundingClientRect().top;
+
+      if (window.scrollY >= pavilionTop()) showPavilion();
+      else showAscent();
+
+      const reducedTrigger = ScrollTrigger.create({
+        trigger: pavilionPhase,
+        start: "top top",
+        end: "bottom bottom",
+        onEnter: showPavilion,
+        onEnterBack: showPavilion,
+        onLeave: showPavilion,
+        onLeaveBack: showAscent,
+      });
+
+      return () => {
+        reducedTrigger.kill();
+        showAscent();
+      };
+    });
+  }
+</script>

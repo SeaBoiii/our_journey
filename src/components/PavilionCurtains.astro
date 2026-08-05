@@ -1,0 +1,239 @@
+---
+export interface Props {
+  class?: string;
+  /** Use a unique prefix if more than one curtain layer appears on a page. */
+  idPrefix?: string;
+}
+
+const {
+  class: className,
+  idPrefix = "pavilion-curtains",
+} = Astro.props;
+
+const safeIdPrefix =
+  idPrefix.replace(/[^a-zA-Z0-9_-]/g, "") || "pavilion-curtains";
+const leftGradientId = `${safeIdPrefix}-left-ivory`;
+const rightGradientId = `${safeIdPrefix}-right-ivory`;
+const leftDawnId = `${safeIdPrefix}-left-dawn`;
+const rightDawnId = `${safeIdPrefix}-right-dawn`;
+---
+
+<div
+  class:list={["curtainLayer", className]}
+  aria-hidden="true"
+  data-curtain-layer
+>
+  <svg
+    class="curtainArtwork"
+    viewBox="0 0 1200 900"
+    preserveAspectRatio="none"
+    focusable="false"
+  >
+    <defs>
+      <linearGradient id={leftGradientId} x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#eadfc9" stop-opacity="0.7"></stop>
+        <stop offset="0.42" stop-color="#f8f2e6" stop-opacity="0.62"></stop>
+        <stop offset="1" stop-color="#fffdf7" stop-opacity="0.82"></stop>
+      </linearGradient>
+      <linearGradient id={rightGradientId} x1="1" y1="0" x2="0" y2="0">
+        <stop offset="0" stop-color="#eadfc9" stop-opacity="0.7"></stop>
+        <stop offset="0.42" stop-color="#f8f2e6" stop-opacity="0.62"></stop>
+        <stop offset="1" stop-color="#fffdf7" stop-opacity="0.82"></stop>
+      </linearGradient>
+      <linearGradient id={leftDawnId} x1="0" y1="0" x2="1" y2="0.35">
+        <stop offset="0" stop-color="#d5ad71" stop-opacity="0.25"></stop>
+        <stop offset="0.58" stop-color="#f4dcb6" stop-opacity="0.1"></stop>
+        <stop offset="1" stop-color="#fffaf0" stop-opacity="0"></stop>
+      </linearGradient>
+      <linearGradient id={rightDawnId} x1="1" y1="0" x2="0" y2="0.35">
+        <stop offset="0" stop-color="#d5ad71" stop-opacity="0.25"></stop>
+        <stop offset="0.58" stop-color="#f4dcb6" stop-opacity="0.1"></stop>
+        <stop offset="1" stop-color="#fffaf0" stop-opacity="0"></stop>
+      </linearGradient>
+    </defs>
+
+    <g class="curtainAnchor" data-curtain="left">
+      <g class="breeze breezeLeft">
+        <path
+          class="curtainBody"
+          d="M0 0H445C428 91 402 173 371 258C337 352 311 448 275 544C231 663 198 784 177 900H0Z"
+          fill={`url(#${leftGradientId})`}
+        ></path>
+        <path
+          class="dawnShade"
+          d="M0 0H286C270 117 241 237 205 362C167 497 132 675 112 900H0Z"
+          fill={`url(#${leftDawnId})`}
+        ></path>
+        <path
+          class="sheerHighlight"
+          d="M326 0C310 120 279 238 247 352C211 481 176 653 151 900H177C198 784 231 663 275 544C311 448 337 352 371 258C402 173 428 91 445 0Z"
+        ></path>
+        <path
+          class="innerHem"
+          d="M445 0C428 91 402 173 371 258C337 352 311 448 275 544C231 663 198 784 177 900"
+        ></path>
+        <path
+          class="ivoryFold"
+          d="M88 0C97 173 92 340 81 495C72 633 69 771 76 900"
+        ></path>
+        <path
+          class="warmFold"
+          d="M192 0C186 151 164 298 147 429C129 575 119 741 124 900"
+        ></path>
+        <path
+          class="ivoryFold ivoryFoldSoft"
+          d="M290 0C274 143 244 284 217 407C188 543 166 713 157 900"
+        ></path>
+      </g>
+    </g>
+
+    <g class="curtainAnchor" data-curtain="right">
+      <g class="breeze breezeRight">
+        <path
+          class="curtainBody"
+          d="M1200 0H755C772 91 798 173 829 258C863 352 889 448 925 544C969 663 1002 784 1023 900H1200Z"
+          fill={`url(#${rightGradientId})`}
+        ></path>
+        <path
+          class="dawnShade"
+          d="M1200 0H914C930 117 959 237 995 362C1033 497 1068 675 1088 900H1200Z"
+          fill={`url(#${rightDawnId})`}
+        ></path>
+        <path
+          class="sheerHighlight"
+          d="M874 0C890 120 921 238 953 352C989 481 1024 653 1049 900H1023C1002 784 969 663 925 544C889 448 863 352 829 258C798 173 772 91 755 0Z"
+        ></path>
+        <path
+          class="innerHem"
+          d="M755 0C772 91 798 173 829 258C863 352 889 448 925 544C969 663 1002 784 1023 900"
+        ></path>
+        <path
+          class="ivoryFold"
+          d="M1112 0C1103 173 1108 340 1119 495C1128 633 1131 771 1124 900"
+        ></path>
+        <path
+          class="warmFold"
+          d="M1008 0C1014 151 1036 298 1053 429C1071 575 1081 741 1076 900"
+        ></path>
+        <path
+          class="ivoryFold ivoryFoldSoft"
+          d="M910 0C926 143 956 284 983 407C1012 543 1034 713 1043 900"
+        ></path>
+      </g>
+    </g>
+  </svg>
+</div>
+
+<style>
+  .curtainLayer {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .curtainArtwork {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .curtainAnchor,
+  .breeze {
+    transform-box: fill-box;
+  }
+
+  .breeze {
+    will-change: transform;
+  }
+
+  .breezeLeft {
+    transform-origin: 8% 0%;
+    animation: left-curtain-breeze 10.8s ease-in-out infinite;
+  }
+
+  .breezeRight {
+    transform-origin: 92% 0%;
+    animation: right-curtain-breeze 12.4s ease-in-out -2.7s infinite;
+  }
+
+  .curtainBody {
+    opacity: 0.88;
+  }
+
+  .dawnShade {
+    opacity: 0.78;
+    mix-blend-mode: multiply;
+  }
+
+  .sheerHighlight {
+    fill: rgba(255, 255, 251, 0.22);
+  }
+
+  .innerHem {
+    fill: none;
+    stroke: rgba(255, 253, 246, 0.7);
+    stroke-width: 3;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .ivoryFold,
+  .warmFold {
+    fill: none;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .ivoryFold {
+    stroke: rgba(255, 255, 252, 0.3);
+    stroke-width: 9;
+  }
+
+  .ivoryFoldSoft {
+    stroke-width: 16;
+    opacity: 0.48;
+  }
+
+  .warmFold {
+    stroke: rgba(183, 147, 94, 0.1);
+    stroke-width: 7;
+  }
+
+  @keyframes left-curtain-breeze {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) rotate(0deg);
+    }
+
+    33% {
+      transform: translate3d(2px, 1px, 0) rotate(0.34deg);
+    }
+
+    68% {
+      transform: translate3d(-1px, 2px, 0) rotate(-0.22deg);
+    }
+  }
+
+  @keyframes right-curtain-breeze {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) rotate(0deg);
+    }
+
+    38% {
+      transform: translate3d(-2px, 2px, 0) rotate(-0.38deg);
+    }
+
+    73% {
+      transform: translate3d(1px, 1px, 0) rotate(0.2deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .breezeLeft,
+    .breezeRight {
+      animation: none;
+      transform: none;
+    }
+  }
+</style>
