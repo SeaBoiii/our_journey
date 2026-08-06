@@ -18,11 +18,12 @@ npm run preview
 npm run audit:journey -- http://127.0.0.1:4321
 npm run audit:reverse -- http://127.0.0.1:4321
 npm run audit:motion -- http://127.0.0.1:4321
+npm run audit:viewport -- http://127.0.0.1:4321
 ```
 
 `npm run smoke -- http://127.0.0.1:4321` runs the personalized RSVP flow in local Chrome/Edge. `npm run capture -- <url> <output> <width> <height> <scroll>` captures a visual checkpoint; `scroll` can be a page fraction such as `0.5` or a section target such as `#pavilion@0.74`.
 
-The journey audit checks scene pacing, main-branch scroll reduction, stair/pavilion continuity, and final-title centring across phone, tablet, and desktop sizes. The reverse audit repeatedly travels from the pavilion back through every text beat, verifies sky/cloud parallax restoration, and observes the first ring glint. The motion audit traces both directions for frame pacing and transform continuity.
+The journey audit checks scene pacing, main-branch scroll reduction, stair/pavilion continuity, and final-title centring across phone, tablet, and desktop sizes. The reverse audit repeatedly travels from the pavilion back through every text beat, verifies sky/cloud parallax restoration, and observes the first ring glint. The motion audit traces both directions for frame pacing and transform continuity. The viewport audit repeatedly emulates Android Chrome's expanded and collapsed browser toolbar at the final pavilion scene and checks dynamic camera/sky coverage plus transform restoration.
 
 ## Deploy to GitHub Pages
 

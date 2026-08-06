@@ -93,12 +93,13 @@ textarea {
   position: relative;
   isolation: isolate;
   overflow: clip;
+  background-color: #eaf2f7;
 }
 
 .sky-world {
   position: fixed;
   z-index: -2;
-  inset: 0;
+  inset: -2px;
   overflow: hidden;
   background: linear-gradient(180deg, #dfeaf5 0%, #faf2e3 55%, #e2e9f2 100%);
   pointer-events: none;
@@ -216,7 +217,8 @@ textarea {
   position: sticky;
   top: 0;
   width: 100%;
-  height: 100svh;
+  height: 100vh;
+  height: 100dvh;
   min-height: 36rem;
   overflow: hidden;
 }
@@ -362,7 +364,8 @@ textarea {
 
 .skyward-journey {
   position: relative;
-  background:
+  background-color: rgba(234, 242, 247, 0.08);
+  background-image:
     radial-gradient(ellipse 72% 25% at 50% 56%, rgba(255, 247, 223, 0.16), transparent 76%),
     linear-gradient(180deg, rgba(236, 243, 248, 0.08), rgba(255, 248, 231, 0.2) 64%, rgba(235, 241, 247, 0.18));
 }

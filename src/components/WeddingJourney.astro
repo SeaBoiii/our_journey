@@ -464,6 +464,28 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
   import { ScrollTrigger } from "gsap/ScrollTrigger";
 
   gsap.registerPlugin(ScrollTrigger);
+  ScrollTrigger.config({
+    ignoreMobileResize: true,
+  });
+
+  let orientationRefreshTimer: number | undefined;
+  const refreshAfterOrientationChange = () => {
+    if (orientationRefreshTimer !== undefined) window.clearTimeout(orientationRefreshTimer);
+    orientationRefreshTimer = window.setTimeout(() => {
+      ScrollTrigger.refresh();
+      orientationRefreshTimer = undefined;
+    }, 250);
+  };
+
+  window.addEventListener("orientationchange", refreshAfterOrientationChange);
+  window.addEventListener(
+    "pagehide",
+    () => {
+      if (orientationRefreshTimer !== undefined) window.clearTimeout(orientationRefreshTimer);
+      window.removeEventListener("orientationchange", refreshAfterOrientationChange);
+    },
+    { once: true },
+  );
 
   const root = document.querySelector<HTMLElement>("[data-journey-root]");
 
