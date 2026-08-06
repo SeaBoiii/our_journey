@@ -315,25 +315,36 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
               <p class="location">{wedding.venue.address}</p>
             </article>
 
-            <section class="itinerary-ascent" aria-labelledby="itinerary-title">
-              <div class="ascent-beat itinerary-heading" data-ascent-beat>
-                <p class="eyebrow">Our day</p>
-                <h2 id="itinerary-title">The staircase becomes our timeline</h2>
+            <article class="ascent-beat story-beat" data-ascent-beat data-story-beat="story">
+              <h2 class="eyebrow">{wedding.story.heading}</h2>
+              <blockquote>“{wedding.story.quote}”</blockquote>
+              <div class="story-lines">
+                {wedding.story.lines.map((line) => <p>{line}</p>)}
               </div>
-              <ol class="stair-schedule">
-                {
-                  wedding.schedule.map((item, index) => (
-                    <li
-                      class:list={["schedule-level", index % 2 === 0 ? "schedule-level--left" : "schedule-level--right"]}
-                      data-ascent-beat
-                    >
-                      <span class="schedule-ornament" aria-hidden="true"></span>
-                      <time>{item.time}</time>
-                      <p>{item.label}</p>
-                    </li>
-                  ))
-                }
-              </ol>
+            </article>
+
+            <section class="itinerary-ascent" aria-labelledby="itinerary-title">
+              <div
+                class="ascent-beat itinerary-scene"
+                data-ascent-beat
+                data-story-beat="itinerary"
+              >
+                <p class="eyebrow">The celebration</p>
+                <h2 id="itinerary-title">Itinerary</h2>
+                <ol class="stair-schedule">
+                  {
+                    wedding.schedule.map((item, index) => (
+                      <li
+                        class:list={["schedule-level", index % 2 === 0 ? "schedule-level--left" : "schedule-level--right"]}
+                      >
+                        <span class="schedule-ornament" aria-hidden="true"></span>
+                        <time>{item.time}</time>
+                        <p>{item.label}</p>
+                      </li>
+                    ))
+                  }
+                </ol>
+              </div>
             </section>
 
             <article class="ascent-beat doa-beat" data-ascent-beat data-story-beat="doa" lang="ms">
@@ -481,6 +492,8 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
 
     motion.add("(prefers-reduced-motion: no-preference)", () => {
       const progress = root.querySelector<HTMLElement>("[data-progress]");
+      const skyPicture = root.querySelector<HTMLElement>(".sky-picture");
+      const farCloudLayers = select<HTMLElement>("[data-cloud-field] [data-layer='back']");
 
       if (progress) {
         gsap.set(progress, { scaleY: 0, transformOrigin: "top center" });
@@ -489,6 +502,40 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
           end: "max",
           onUpdate: (self) => gsap.set(progress, { scaleY: self.progress }),
         });
+      }
+
+      if (skyPicture) {
+        gsap.fromTo(
+          skyPicture,
+          { y: "-1.1vh" },
+          {
+            y: "1.1vh",
+            ease: "none",
+            scrollTrigger: {
+              trigger: root,
+              start: "top top",
+              end: "bottom bottom",
+              scrub: 1.5,
+            },
+          },
+        );
+      }
+
+      if (farCloudLayers.length) {
+        gsap.fromTo(
+          farCloudLayers,
+          { y: "-1.5vh" },
+          {
+            y: "1.5vh",
+            ease: "none",
+            scrollTrigger: {
+              trigger: root,
+              start: "top top",
+              end: "bottom bottom",
+              scrub: 1.35,
+            },
+          },
+        );
       }
 
       const openingLines = select("[data-opening-line]");
@@ -536,31 +583,24 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
       }
 
       select("[data-ascent-beat]").forEach((beat) => {
-        gsap.fromTo(
-          beat,
-          { autoAlpha: 0.06, y: 18 },
-          {
-            autoAlpha: 1,
-            y: 0,
-            ease: "sine.out",
-            scrollTrigger: {
-              trigger: beat,
-              start: "top 86%",
-              end: "top 62%",
-              scrub: 0.85,
-            },
-          },
-        );
-        gsap.to(beat, {
-          autoAlpha: 0.08,
-          y: -14,
+        const beatTimeline = gsap.timeline({
           scrollTrigger: {
             trigger: beat,
-            start: "bottom 58%",
-            end: "bottom 28%",
-            scrub: 0.85,
+            start: "top 92%",
+            end: "bottom 8%",
+            scrub: 0.6,
+            invalidateOnRefresh: true,
           },
         });
+
+        beatTimeline
+          .fromTo(
+            beat,
+            { autoAlpha: 0.08, y: 16 },
+            { autoAlpha: 1, y: 0, duration: 0.24, ease: "none", immediateRender: true },
+          )
+          .to(beat, { autoAlpha: 1, y: 0, duration: 0.52, ease: "none" })
+          .to(beat, { autoAlpha: 0.08, y: -12, duration: 0.24, ease: "none" });
       });
 
       const ascensionPhase = root.querySelector<HTMLElement>("[data-phase='ascension']");
@@ -607,7 +647,7 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
               )
               .to(glint, { autoAlpha: 0, scale: 0.7, duration: 0.48, ease: "sine.inOut" });
           },
-          first ? 2200 : 6500 + Math.random() * 3000,
+          first ? 900 : 6500 + Math.random() * 3000,
         );
       };
 
@@ -628,10 +668,12 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
           return stairLandingY() - (origin + (pavilionBaseY() - origin) * scale);
         };
         const stairSummitTravel = () => pavilionBaseY() - stairLandingY();
+        const pavilionApproachY = (scale: number, stairProgress: number) =>
+          pavilionDistantY(scale) + stairSummitTravel() * stairProgress;
         const finalSceneLift = () => {
-          if (window.innerWidth >= 1120) return "-10vh";
-          if (window.innerWidth >= 768) return "-31vh";
-          return "-29vh";
+          if (window.innerWidth >= 1120) return "-30vh";
+          if (window.innerWidth >= 768) return "-34vh";
+          return "-31vh";
         };
 
         gsap.set(staircase, {
@@ -659,7 +701,13 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
         gsap.set(crestHaze, { autoAlpha: 0, scale: 0.82, yPercent: -8, force3D: true });
         gsap.set(revealHaze, { autoAlpha: 0, y: "6vh", force3D: true });
         gsap.set(finalAscentGlow, { autoAlpha: 0, scale: 0.9, force3D: true });
-        gsap.set(finalCopy, { autoAlpha: 0, y: 32, pointerEvents: "none" });
+        gsap.set(finalCopy, {
+          autoAlpha: 0,
+          xPercent: -50,
+          yPercent: -50,
+          y: 24,
+          pointerEvents: "none",
+        });
         gsap.set(glint, { autoAlpha: 0, scale: 0.4 });
 
         const ascensionTimeline = gsap.timeline({
@@ -703,8 +751,8 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
             { autoAlpha: 0.22, yPercent: 52, scale: 1.34, duration: 1, ease: "none", stagger: 0.02 },
             0,
           )
-          .to(stairLight, { autoAlpha: 0.92, scale: 1.12, duration: 0.24, ease: "sine.inOut" }, 0.76)
-          .to(finalAscentGlow, { autoAlpha: 0.82, scale: 1.08, duration: 0.22, ease: "sine.out" }, 0.78);
+          .to(stairLight, { autoAlpha: 0.92, scale: 1.12, duration: 0.14, ease: "sine.inOut" }, 0.86)
+          .to(finalAscentGlow, { autoAlpha: 0.82, scale: 1.08, duration: 0.14, ease: "sine.out" }, 0.86);
 
         const pavilionTimeline = gsap.timeline({
           scrollTrigger: {
@@ -714,7 +762,7 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
             scrub: 0.85,
             invalidateOnRefresh: true,
             onUpdate: (self) => {
-              const shouldGlint = self.progress >= 0.76 && self.progress < 0.9;
+              const shouldGlint = self.progress >= 0.8 && self.progress < 0.9;
               if (shouldGlint !== ringMomentActive) {
                 ringMomentActive = shouldGlint;
                 if (ringMomentActive) scheduleGlint(true);
@@ -738,9 +786,9 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
             { autoAlpha: 1, scale: stairAscentScale, y: 0 },
             {
               autoAlpha: 1,
-              scale: () => stairAscentScale() * 1.08,
+              scale: () => stairAscentScale() * 1.06,
               y: 0,
-              duration: 0.26,
+              duration: 0.15,
               ease: "none",
               immediateRender: false,
             },
@@ -750,36 +798,53 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
             pavilionAssembly,
             { autoAlpha: 0, scale: 0.14, y: () => pavilionDistantY(0.14) },
             {
-              autoAlpha: 0.54,
-              scale: 0.17,
-              y: () => pavilionDistantY(0.17),
-              duration: 0.16,
+              autoAlpha: 0.56,
+              scale: 0.2,
+              y: () => pavilionDistantY(0.2),
+              duration: 0.13,
               ease: "sine.out",
               immediateRender: false,
             },
-            0.14,
+            0.02,
           )
-          .to(crestHaze, { autoAlpha: 0.9, scale: 1.12, yPercent: 12, duration: 0.2, ease: "sine.inOut" }, 0.12)
-          .to(pavilionClouds, { autoAlpha: 0.8, scale: 1.07, duration: 0.42, ease: "none" }, 0.08)
+          .to(crestHaze, { autoAlpha: 0.9, scale: 1.12, yPercent: 12, duration: 0.18, ease: "sine.inOut" }, 0.02)
+          .to(pavilionClouds, { autoAlpha: 0.8, scale: 1.07, duration: 0.5, ease: "none" }, 0)
           .to(
             pavilionAssembly,
-            { autoAlpha: 1, scale: 1, y: 0, duration: 0.34, ease: "power1.inOut" },
-            0.3,
+            {
+              autoAlpha: 0.9,
+              scale: 0.62,
+              y: () => pavilionApproachY(0.62, 0.5),
+              duration: 0.2,
+              ease: "none",
+            },
+            0.15,
           )
+          .to(
+            staircase,
+            {
+              scale: () => stairAscentScale() * 1.16,
+              y: () => stairSummitTravel() * 0.5,
+              duration: 0.2,
+              ease: "none",
+            },
+            0.15,
+          )
+          .to(pavilionAssembly, { autoAlpha: 1, scale: 1, y: 0, duration: 0.15, ease: "none" }, 0.35)
           .to(
             staircase,
             {
               scale: () => stairAscentScale() * 1.27,
               y: stairSummitTravel,
-              duration: 0.34,
-              ease: "power1.inOut",
+              duration: 0.15,
+              ease: "none",
             },
-            0.3,
+            0.35,
           )
-          .to(pavilionCurtains, { autoAlpha: 0.2, duration: 0.16, ease: "sine.out" }, 0.48)
-          .to(pavilionBanks, { autoAlpha: 0.9, duration: 0.18, ease: "sine.inOut" }, 0.44)
-          .to(crestHaze, { autoAlpha: 0.08, scale: 1.34, yPercent: 58, duration: 0.25, ease: "sine.inOut" }, 0.42)
-          .to(revealHaze, { autoAlpha: 0.84, y: 0, duration: 0.1, ease: "sine.out" }, 0.52)
+          .to(pavilionCurtains, { autoAlpha: 0.2, duration: 0.12, ease: "sine.out" }, 0.5)
+          .to(pavilionBanks, { autoAlpha: 0.9, duration: 0.14, ease: "sine.inOut" }, 0.48)
+          .to(crestHaze, { autoAlpha: 0.08, scale: 1.34, yPercent: 58, duration: 0.2, ease: "sine.inOut" }, 0.44)
+          .to(revealHaze, { autoAlpha: 0.84, y: 0, duration: 0.1, ease: "sine.out" }, 0.54)
           .fromTo(
             couple,
             { autoAlpha: 0, clipPath: "inset(48% 0 0 0)" },
@@ -790,17 +855,17 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
               ease: "sine.out",
               immediateRender: false,
             },
-            0.58,
+            0.62,
           )
-          .to(couple, { autoAlpha: 1, clipPath: "inset(0% 0 0 0)", duration: 0.13, ease: "sine.inOut" }, 0.67)
-          .to(revealHaze, { autoAlpha: 0.06, y: "-9vh", duration: 0.22, ease: "sine.inOut" }, 0.64)
-          .fromTo(ringHand, { autoAlpha: 0.35 }, { autoAlpha: 1, duration: 0.08 }, 0.74)
-          .to(staircase, { autoAlpha: 0, duration: 0.1, ease: "sine.in" }, 0.7)
-          .to(pavilionAssembly, { scale: 1.025, duration: 0.1, ease: "sine.inOut" }, 0.76)
-          .to(pavilionAssembly, { scale: 0.96, y: finalSceneLift, autoAlpha: 0.62, duration: 0.1, ease: "sine.inOut" }, 0.87)
-          .to(couple, { autoAlpha: 0.74, duration: 0.08, ease: "sine.inOut" }, 0.88)
-          .set(finalCopy, { pointerEvents: "auto" }, 0.9)
-          .to(finalCopy, { autoAlpha: 1, y: 0, duration: 0.1, ease: "power2.out" }, 0.9);
+          .to(couple, { autoAlpha: 1, clipPath: "inset(0% 0 0 0)", duration: 0.08, ease: "sine.inOut" }, 0.72)
+          .to(revealHaze, { autoAlpha: 0.06, y: "-9vh", duration: 0.14, ease: "sine.inOut" }, 0.7)
+          .fromTo(ringHand, { autoAlpha: 0.35 }, { autoAlpha: 1, duration: 0.04 }, 0.78)
+          .to(staircase, { autoAlpha: 0, duration: 0.08, ease: "sine.in" }, 0.72)
+          .to(pavilionAssembly, { scale: 1.025, duration: 0.08, ease: "sine.inOut" }, 0.78)
+          .to(pavilionAssembly, { scale: 0.96, y: finalSceneLift, autoAlpha: 0.62, duration: 0.12, ease: "sine.inOut" }, 0.88)
+          .to(couple, { autoAlpha: 0.74, duration: 0.1, ease: "sine.inOut" }, 0.88)
+          .set(finalCopy, { pointerEvents: "auto" }, 0.89)
+          .to(finalCopy, { autoAlpha: 1, y: 0, duration: 0.11, ease: "power2.out" }, 0.89);
       }
 
       select("[data-soft-reveal]").forEach((element) => {

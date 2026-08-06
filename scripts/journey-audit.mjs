@@ -25,6 +25,16 @@ const viewports = viewportFilter
 
 if (viewports.length === 0) throw new Error(`Unknown viewport filter: ${viewportFilter}`);
 
+// Captured from the published main branch on 2026-08-06 before the pacing pass.
+const mainBranchScrollHeights = new Map([
+  ["390x844", 18585],
+  ["393x852", 18744],
+  ["430x932", 20331],
+  ["768x1024", 22225],
+  ["1440x900", 19824],
+  ["1920x1080", 23395],
+]);
+
 const browser = await puppeteer.launch({ executablePath, headless: true });
 const failures = [];
 const results = [];
@@ -58,11 +68,19 @@ async function readSceneState(page) {
     const finalCopy = rect("[data-final-copy]");
     const transform = getComputedStyle(document.querySelector("[data-staircase]")).transform;
     const matrix = transform === "none" ? new DOMMatrix() : new DOMMatrix(transform);
-    const intersection = couple && finalCopy
-      ? Math.max(0, Math.min(couple.right, finalCopy.right) - Math.max(couple.left, finalCopy.left))
-        * Math.max(0, Math.min(couple.bottom, finalCopy.bottom) - Math.max(couple.top, finalCopy.top))
+    const faceZone = couple
+      ? {
+          left: couple.left + couple.width * 0.18,
+          right: couple.left + couple.width * 0.82,
+          top: couple.top + couple.height * 0.07,
+          bottom: couple.top + couple.height * 0.31,
+        }
+      : null;
+    const faceIntersection = faceZone && finalCopy
+      ? Math.max(0, Math.min(faceZone.right, finalCopy.right) - Math.max(faceZone.left, finalCopy.left))
+        * Math.max(0, Math.min(faceZone.bottom, finalCopy.bottom) - Math.max(faceZone.top, finalCopy.top))
       : 0;
-    const finalArea = finalCopy ? finalCopy.width * finalCopy.height : 1;
+    const faceArea = faceZone ? (faceZone.right - faceZone.left) * (faceZone.bottom - faceZone.top) : 1;
 
     return {
       pavilionOpacity: opacity("[data-pavilion-assembly]"),
@@ -71,7 +89,9 @@ async function readSceneState(page) {
       staircaseScale: Math.hypot(matrix.a, matrix.b),
       stairLandingY: staircase ? staircase.top + staircase.height * 0.0631 : null,
       pavilionBaseY: pavilionPicture ? pavilionPicture.top + pavilionPicture.height * 0.913 : null,
-      finalOverlapRatio: intersection / finalArea,
+      finalCenterOffsetX: finalCopy ? finalCopy.left + finalCopy.width / 2 - window.innerWidth / 2 : null,
+      finalCenterOffsetY: finalCopy ? finalCopy.top + finalCopy.height / 2 - window.innerHeight / 2 : null,
+      finalFaceOverlapRatio: faceIntersection / faceArea,
     };
   });
 }
@@ -92,42 +112,98 @@ try {
         const element = document.querySelector(selector);
         return element ? window.scrollY + element.getBoundingClientRect().top : -1;
       };
+      const svh = (selector) => {
+        const element = document.querySelector(selector);
+        return element ? element.getBoundingClientRect().height / window.innerHeight * 100 : -1;
+      };
       const order = [
         '[data-story-beat="date"]',
         '[data-story-beat="invitation"]',
         '[data-story-beat="celebration"]',
-        ".itinerary-ascent",
+        '[data-story-beat="story"]',
+        '[data-story-beat="itinerary"]',
         '[data-story-beat="doa"]',
         '[data-story-beat="location"]',
         "[data-final-ascent]",
         "[data-phase='pavilion']",
         "#rsvp",
       ].map(top);
+      const scheduleRows = [...document.querySelectorAll(".schedule-level")];
+      const pageText = document.body.textContent ?? "";
       return {
         horizontalOverflow: document.documentElement.scrollWidth > window.innerWidth,
         order,
         hasTopRsvp: Boolean(document.querySelector(".nav-rsvp")),
         scrollHeight: document.documentElement.scrollHeight,
+        rsvpTop: top("#rsvp"),
+        removedMetaphorPresent: /Our day|The staircase becomes our timeline/i.test(pageText),
+        scheduleCount: scheduleRows.length,
+        maximumScheduleRowSvh: Math.max(...scheduleRows.map((row) => row.getBoundingClientRect().height / window.innerHeight * 100)),
+        sceneSvh: {
+          arrival: svh(".arrival"),
+          initialBreath: svh(".ascent-breath"),
+          saveDate: svh(".save-date-beat"),
+          formalInvitation: svh(".formal-invitation"),
+          celebration: svh(".event-details"),
+          story: svh(".story-beat"),
+          itinerary: svh(".itinerary-scene"),
+          doa: svh(".doa-beat"),
+          location: svh(".location-beat"),
+          finalBreath: svh(".final-ascent-breath"),
+          pavilion: svh(".pavilion-journey"),
+        },
       };
     });
 
+    const viewportKey = `${viewport.width}x${viewport.height}`;
+    const mainScrollHeight = mainBranchScrollHeights.get(viewportKey);
+    const reductionPercent = mainScrollHeight
+      ? (1 - staticState.scrollHeight / mainScrollHeight) * 100
+      : null;
+
     if (staticState.horizontalOverflow) failures.push(`${viewport.width}x${viewport.height}: horizontal overflow`);
     if (staticState.hasTopRsvp) failures.push(`${viewport.width}x${viewport.height}: prominent top RSVP remains`);
+    if (staticState.removedMetaphorPresent) failures.push(`${viewport.width}x${viewport.height}: removed staircase metaphor copy remains`);
+    if (staticState.scheduleCount !== 4 || staticState.maximumScheduleRowSvh > 18) {
+      failures.push(`${viewport.width}x${viewport.height}: itinerary is not one compact four-event composition`);
+    }
     if (!staticState.order.every((value, index, values) => index === 0 || value > values[index - 1])) {
       failures.push(`${viewport.width}x${viewport.height}: narrative order is not strictly ascending`);
+    }
+    const sceneRanges = {
+      arrival: [150, 165],
+      initialBreath: [30, 40],
+      saveDate: [55, 65],
+      formalInvitation: [70, 80],
+      celebration: [55, 65],
+      story: [70, 80],
+      itinerary: [85, 100],
+      doa: [60, 72],
+      location: [55, 65],
+      finalBreath: [70, 90],
+      pavilion: [280, 340],
+    };
+    for (const [scene, [minimum, maximum]] of Object.entries(sceneRanges)) {
+      const value = staticState.sceneSvh[scene];
+      if (value < minimum - 0.5 || value > maximum + 0.5) {
+        failures.push(`${viewport.width}x${viewport.height}: ${scene} track is ${value.toFixed(1)}svh`);
+      }
+    }
+    if (reductionPercent !== null && reductionPercent < 40) {
+      failures.push(`${viewport.width}x${viewport.height}: scroll reduction is only ${reductionPercent.toFixed(1)}%`);
     }
 
     await scrollPhase(page, "#ascension", 0.55);
     const ascentMiddle = await readSceneState(page);
     await scrollPhase(page, "#ascension", 0.98);
     const ascentEnd = await readSceneState(page);
-    await scrollPhase(page, "#pavilion", 0.05);
+    await scrollPhase(page, "#pavilion", 0);
     const pavilionStart = await readSceneState(page);
-    await scrollPhase(page, "#pavilion", 0.22);
+    await scrollPhase(page, "#pavilion", 0.1);
     const pavilionDistant = await readSceneState(page);
-    await scrollPhase(page, "#pavilion", 0.48);
+    await scrollPhase(page, "#pavilion", 0.44);
     const pavilionApproach = await readSceneState(page);
-    await scrollPhase(page, "#pavilion", 0.8);
+    await scrollPhase(page, "#pavilion", 0.84);
     const coupleHold = await readSceneState(page);
     await scrollPhase(page, "#pavilion", 0.96);
     const finalState = await readSceneState(page);
@@ -147,8 +223,13 @@ try {
     if (coupleHold.coupleOpacity < 0.68 || coupleHold.finalOpacity > 0.08) {
       failures.push(`${viewport.width}x${viewport.height}: couple hold/final-message ordering regressed`);
     }
-    if (finalState.finalOpacity < 0.82 || finalState.finalOverlapRatio > 0.08) {
-      failures.push(`${viewport.width}x${viewport.height}: final message is hidden or overlaps the couple`);
+    if (
+      finalState.finalOpacity < 0.82
+      || Math.abs(finalState.finalCenterOffsetX ?? Number.POSITIVE_INFINITY) > 2
+      || Math.abs(finalState.finalCenterOffsetY ?? Number.POSITIVE_INFINITY) > 2
+      || finalState.finalFaceOverlapRatio > 0.02
+    ) {
+      failures.push(`${viewport.width}x${viewport.height}: final message is hidden, off-centre, or obscures the couple's faces`);
     }
     const landingGap = pavilionApproach.stairLandingY === null || pavilionApproach.pavilionBaseY === null
       ? Number.POSITIVE_INFINITY
@@ -161,12 +242,20 @@ try {
     results.push({
       viewport: `${viewport.width}x${viewport.height}`,
       scrollHeight: staticState.scrollHeight,
+      rsvpTop: Number(staticState.rsvpTop.toFixed(1)),
+      mainBranchScrollHeight: mainScrollHeight,
+      reductionPercent: reductionPercent === null ? null : Number(reductionPercent.toFixed(1)),
+      sceneSvh: Object.fromEntries(
+        Object.entries(staticState.sceneSvh).map(([scene, value]) => [scene, Number(value.toFixed(1))]),
+      ),
       landingGap: Number.isFinite(landingGap) ? Number(landingGap.toFixed(1)) : null,
       stairLandingY: pavilionApproach.stairLandingY === null ? null : Number(pavilionApproach.stairLandingY.toFixed(1)),
       pavilionBaseY: pavilionApproach.pavilionBaseY === null ? null : Number(pavilionApproach.pavilionBaseY.toFixed(1)),
       distantPavilionOpacity: pavilionDistant.pavilionOpacity,
       coupleHoldOpacity: coupleHold.coupleOpacity,
-      finalOverlapRatio: Number(finalState.finalOverlapRatio.toFixed(3)),
+      finalCenterOffsetX: finalState.finalCenterOffsetX === null ? null : Number(finalState.finalCenterOffsetX.toFixed(2)),
+      finalCenterOffsetY: finalState.finalCenterOffsetY === null ? null : Number(finalState.finalCenterOffsetY.toFixed(2)),
+      finalFaceOverlapRatio: Number(finalState.finalFaceOverlapRatio.toFixed(3)),
     });
     await page.close();
   }

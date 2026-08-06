@@ -44,6 +44,11 @@ export interface WeddingContent {
     honorifics: readonly [string, string];
     ceremonyLine: string;
   };
+  story: {
+    heading: string;
+    quote: string;
+    lines: readonly string[];
+  };
   event: {
     weekday: string;
     date: string;
@@ -115,6 +120,16 @@ export const wedding = {
     ],
     honorifics: ["Dato' / Datin / Tuan / Puan /", "Encik / Cik"],
     ceremonyLine: "ke majlis perkahwinan",
+  },
+  story: {
+    heading: "Our Story",
+    quote:
+      "Some meetings feel less like chance and more like a promise finally finding its way home.",
+    lines: [
+      "What began with an ordinary conversation grew into friendship, and then a quiet certainty.",
+      "Through shared days, long prayers, and all the ordinary moments between, we found a home in one another.",
+      "By the grace of Allah, we are ready for our next chapter.",
+    ],
   },
   event: {
     weekday: "Saturday",

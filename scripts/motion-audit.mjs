@@ -63,13 +63,19 @@ async function tracePhase(page, selector, startProgress, endProgress, duration) 
         else {
           const sorted = [...deltas].sort((a, b) => a - b);
           const percentile = (value) => sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * value))] ?? 0;
-          const regressions = scales.slice(1).filter((scale, index) => scale + 0.002 < scales[index]).length;
+          const expectsIncrease = endScroll >= startScroll;
+          const regressions = scales.slice(1).filter((scale, index) => (
+            expectsIncrease
+              ? scale + 0.002 < scales[index]
+              : scale - 0.002 > scales[index]
+          )).length;
           resolve({
             frames: deltas.length,
             p95FrameMs: percentile(0.95),
             maxFrameMs: sorted.at(-1) ?? 0,
             longFrames: deltas.filter((delta) => delta > 34).length,
             scaleRegressions: regressions,
+            direction: expectsIncrease ? "forward" : "reverse",
             maxLandingGap: landingGaps.length ? Math.max(...landingGaps) : 0,
             maxPavilionOpacity: Math.max(...pavilionOpacities),
           });
@@ -90,21 +96,35 @@ try {
     const ascent = await tracePhase(page, "#ascension", 0, 0.98, 3600);
     await new Promise((resolve) => setTimeout(resolve, 1200));
     const pavilion = await tracePhase(page, "#pavilion", 0, 0.72, 5200);
+    await new Promise((resolve) => setTimeout(resolve, 900));
+    const pavilionReverse = await tracePhase(page, "#pavilion", 0.72, 0, 4200);
+    await new Promise((resolve) => setTimeout(resolve, 900));
+    const ascentReverse = await tracePhase(page, "#ascension", 0.98, 0, 3200);
 
-    if (ascent.scaleRegressions > 0 || pavilion.scaleRegressions > 0) {
-      failures.push(`${viewport.width}x${viewport.height}: staircase scale regressed during ascent`);
+    if (
+      ascent.scaleRegressions > 0
+      || pavilion.scaleRegressions > 0
+      || pavilionReverse.scaleRegressions > 0
+      || ascentReverse.scaleRegressions > 0
+    ) {
+      failures.push(`${viewport.width}x${viewport.height}: staircase scale regressed during forward/reverse travel`);
     }
     if (ascent.maxPavilionOpacity > 0.02) {
       failures.push(`${viewport.width}x${viewport.height}: pavilion leaked into ascent trace`);
     }
-    if (pavilion.maxLandingGap > 8) {
-      failures.push(`${viewport.width}x${viewport.height}: moving landing gap reached ${pavilion.maxLandingGap.toFixed(1)}px`);
+    if (pavilion.maxLandingGap > 8 || pavilionReverse.maxLandingGap > 8) {
+      failures.push(`${viewport.width}x${viewport.height}: moving landing gap exceeded 8px during forward/reverse travel`);
     }
-    if (ascent.p95FrameMs > 25 || pavilion.p95FrameMs > 25) {
+    if (
+      ascent.p95FrameMs > 25
+      || pavilion.p95FrameMs > 25
+      || pavilionReverse.p95FrameMs > 25
+      || ascentReverse.p95FrameMs > 25
+    ) {
       failures.push(`${viewport.width}x${viewport.height}: p95 frame pacing exceeded 25ms`);
     }
 
-    results.push({ viewport: `${viewport.width}x${viewport.height}`, ascent, pavilion });
+    results.push({ viewport: `${viewport.width}x${viewport.height}`, ascent, pavilion, pavilionReverse, ascentReverse });
     await page.close();
   }
 

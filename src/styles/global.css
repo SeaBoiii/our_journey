@@ -104,17 +104,31 @@ textarea {
   pointer-events: none;
 }
 
-.sky-picture,
-.sky-picture img {
-  width: 100%;
-  height: 100%;
+.sky-picture {
+  position: absolute;
+  inset: -3vh -2vw;
+  display: block;
+  max-width: none;
+  overflow: hidden;
+  will-change: transform;
 }
 
 .sky-picture img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   object-position: 51% center;
   filter: saturate(0.78) contrast(0.92) brightness(1.035);
-  transform: scale(1.035);
+  animation: sky-drift 26s ease-in-out infinite alternate;
+  transform: scale(1.055) translateY(-0.5%);
+}
+
+@keyframes sky-drift {
+  to {
+    transform: scale(1.055) translateY(0.5%);
+  }
 }
 
 .sun-wash {
@@ -208,8 +222,8 @@ textarea {
 }
 
 .arrival {
-  height: 205svh;
-  min-height: 74rem;
+  height: 155svh;
+  min-height: 60rem;
 }
 
 .arrival-stage {
@@ -471,7 +485,7 @@ textarea {
 }
 
 .ascent-breath {
-  height: 70svh;
+  height: 36svh;
 }
 
 .ascent-breath--ending {
@@ -480,12 +494,12 @@ textarea {
 
 .ascent-beat {
   display: grid;
-  min-height: 94svh;
+  min-height: 68svh;
   width: min(84vw, 32rem);
   margin: 0 auto;
   align-content: center;
   justify-items: center;
-  padding: 6.5rem 0;
+  padding: 3.5rem 0;
   text-align: center;
   text-shadow:
     0 2px 0.8rem rgba(255, 255, 255, 0.96),
@@ -502,7 +516,7 @@ textarea {
 }
 
 .save-date-beat {
-  min-height: 100svh;
+  min-height: 62svh;
 }
 
 .save-date-lockup {
@@ -541,7 +555,7 @@ textarea {
 }
 
 .formal-invitation {
-  min-height: 125svh;
+  min-height: 78svh;
   width: min(84vw, 34rem);
 }
 
@@ -557,17 +571,17 @@ textarea {
 }
 
 .formal-gratitude {
-  margin-block: 0.25rem 1.55rem;
+  margin-block: 0.2rem 1.1rem;
   font: 400 clamp(1.35rem, 6vw, 1.75rem)/1.32 var(--font-display);
 }
 
 .formal-family {
-  margin-block: 0 1.35rem;
+  margin-block: 0 1rem;
   font: 400 clamp(1.05rem, 4.8vw, 1.3rem)/1.42 var(--font-display);
 }
 
 .formal-honorifics {
-  margin-block: 0 1.3rem;
+  margin-block: 0 1rem;
   font: 500 clamp(0.58rem, 2.6vw, 0.7rem)/1.7 var(--font-sans);
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -580,7 +594,7 @@ textarea {
 }
 
 .formal-ceremony-line {
-  margin-block: 0 1.35rem;
+  margin-block: 0 1rem;
   font: 400 1.1rem/1.4 var(--font-display);
 }
 
@@ -599,6 +613,10 @@ textarea {
   color: var(--gold);
   font-size: 0.42em;
   font-weight: 400;
+}
+
+.event-details {
+  min-height: 62svh;
 }
 
 .weekday {
@@ -643,24 +661,58 @@ textarea {
   text-transform: uppercase;
 }
 
+.story-beat {
+  min-height: 78svh;
+  width: min(86vw, 38rem);
+}
+
+.story-beat blockquote {
+  max-width: 36rem;
+  margin: 0.75rem 0 clamp(1.15rem, 3vh, 1.7rem);
+  color: #465b63;
+  font: 400 clamp(1.55rem, 7vw, 2.45rem)/1.2 var(--font-display);
+  text-wrap: balance;
+}
+
+.story-lines {
+  display: grid;
+  max-width: 32rem;
+  gap: clamp(0.55rem, 1.5vh, 0.85rem);
+}
+
+.story-lines p {
+  margin: 0;
+  color: #6b777a;
+  font: 400 clamp(0.92rem, 3.8vw, 1.08rem)/1.48 var(--font-display);
+  text-wrap: balance;
+}
+
+.story-lines p:last-child {
+  margin-top: 0.15rem;
+  color: #8f764c;
+  font-style: italic;
+}
+
 .itinerary-ascent {
   position: relative;
 }
 
-.itinerary-heading {
-  min-height: 70svh;
-  width: min(78vw, 27rem);
+.itinerary-scene {
+  min-height: 96svh;
+  width: min(90vw, 39rem);
 }
 
-.itinerary-heading h2 {
+.itinerary-scene h2 {
   margin: 0;
   color: #4d6066;
   font: 400 clamp(2rem, 8vw, 2.8rem)/1.05 var(--font-display);
 }
 
 .stair-schedule {
+  display: grid;
   width: 100%;
-  margin: 0;
+  gap: clamp(0.8rem, 2vh, 1.2rem);
+  margin: clamp(1.35rem, 4vh, 2rem) 0 0;
   padding: 0;
   list-style: none;
 }
@@ -668,14 +720,13 @@ textarea {
 .schedule-level {
   position: relative;
   display: grid;
-  min-height: 76svh;
-  width: min(69vw, 23rem);
+  min-height: 0;
+  width: min(72vw, 23rem);
   align-content: center;
-  padding-block: 4rem;
+  padding: 0;
   text-shadow:
     0 2px 0.9rem rgba(255, 255, 255, 0.98),
     0 0 2.8rem rgba(255, 255, 255, 0.9);
-  will-change: transform, opacity;
 }
 
 .schedule-level--left {
@@ -702,18 +753,18 @@ textarea {
   display: block;
   width: 3.8rem;
   height: 1px;
-  margin-block: 0.7rem 0.65rem;
+  margin-block: 0.42rem 0.38rem;
   background: linear-gradient(90deg, transparent, rgba(173, 142, 85, 0.68), transparent);
 }
 
 .schedule-level p {
   margin: 0;
   color: #4b5f65;
-  font: 400 clamp(1.5rem, 6.8vw, 2rem)/1.08 var(--font-display);
+  font: 400 clamp(1.25rem, 5.6vw, 1.75rem)/1.08 var(--font-display);
 }
 
 .doa-beat {
-  min-height: 122svh;
+  min-height: 70svh;
   width: min(84vw, 36rem);
 }
 
@@ -754,7 +805,7 @@ textarea {
 }
 
 .location-beat {
-  min-height: 102svh;
+  min-height: 62svh;
 }
 
 .location-venue {
@@ -796,7 +847,7 @@ textarea {
 }
 
 .contact-beat {
-  min-height: 96svh;
+  min-height: 70svh;
   pointer-events: auto;
 }
 
@@ -827,7 +878,7 @@ textarea {
 
 .final-ascent-breath {
   position: relative;
-  height: 172svh;
+  height: 82svh;
 }
 
 .final-ascent-breath span {
@@ -841,8 +892,8 @@ textarea {
 }
 
 .pavilion-journey {
-  height: 620svh;
-  min-height: 230rem;
+  height: 320svh;
+  min-height: 126rem;
 }
 
 .pavilion-clouds {
@@ -1041,15 +1092,15 @@ textarea {
 .final-copy {
   position: absolute;
   z-index: 8;
-  top: auto;
-  bottom: max(1.75rem, calc(env(safe-area-inset-bottom) + 0.75rem));
+  top: 50%;
+  bottom: auto;
   left: 50%;
   width: min(86vw, 34rem);
   color: #425764;
   opacity: 0;
   text-align: center;
   text-shadow: 0 1px 1.2rem rgba(255, 255, 255, 0.96);
-  transform: translateX(-50%);
+  transform: none;
   visibility: hidden;
   will-change: transform, opacity;
 }
@@ -1286,7 +1337,6 @@ textarea {
 
   .final-copy {
     width: min(68vw, 39rem);
-    bottom: 2.75rem;
   }
 }
 
@@ -1302,11 +1352,11 @@ textarea {
 
   .final-copy {
     top: 50%;
-    right: 6vw;
+    right: auto;
     bottom: auto;
-    left: auto;
-    width: min(32vw, 29rem);
-    transform: translateY(-50%);
+    left: 50%;
+    width: min(40vw, 34rem);
+    transform: none;
   }
 
   .edge-cloud {
@@ -1351,6 +1401,11 @@ textarea {
     transition-duration: 0.01ms !important;
   }
 
+  .sky-picture img {
+    animation: none !important;
+    transform: scale(1.055) !important;
+  }
+
   .arrival {
     height: 100svh;
     min-height: 42rem;
@@ -1387,8 +1442,8 @@ textarea {
   }
 
   .pavilion-journey {
-    height: 220svh;
-    min-height: 92rem;
+    height: 180svh;
+    min-height: 72rem;
   }
 
   .staircase-picture {
@@ -1424,7 +1479,7 @@ textarea {
   .final-copy {
     opacity: 0 !important;
     visibility: hidden !important;
-    transform: translateX(-50%) !important;
+    transform: translate(-50%, -50%) !important;
   }
 
   .crest-haze {
@@ -1464,7 +1519,7 @@ textarea {
 
   [data-journey-root].is-reduced-final .pavilion-assembly {
     opacity: 0.62 !important;
-    transform: translateY(-29vh) scale(0.96) !important;
+    transform: translateY(-31vh) scale(0.96) !important;
   }
 
   [data-journey-root].is-reduced-final .couple-anchor {
@@ -1481,8 +1536,14 @@ textarea {
   }
 }
 
+@media (min-width: 48rem) and (prefers-reduced-motion: reduce) {
+  [data-journey-root].is-reduced-final .pavilion-assembly {
+    transform: translateY(-34vh) scale(0.96) !important;
+  }
+}
+
 @media (min-width: 70rem) and (prefers-reduced-motion: reduce) {
-  .final-copy {
-    transform: translateY(-50%) !important;
+  [data-journey-root].is-reduced-final .pavilion-assembly {
+    transform: translateY(-30vh) scale(0.96) !important;
   }
 }

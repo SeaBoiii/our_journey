@@ -12,6 +12,7 @@
     "capture": "node scripts/capture.mjs",
     "audit:journey": "node scripts/journey-audit.mjs",
     "audit:motion": "node scripts/motion-audit.mjs",
+    "audit:reverse": "node scripts/reverse-audit.mjs",
     "smoke": "node scripts/smoke.mjs",
     "preview": "astro preview",
     "astro": "astro"
