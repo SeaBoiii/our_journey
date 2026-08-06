@@ -16,6 +16,26 @@ export interface WeddingContact {
   phone: string;
 }
 
+export type WeddingSide = "bride" | "groom";
+
+export interface WeddingAudioConfig {
+  enabled: boolean;
+  title: string;
+  src: string;
+}
+
+export interface WeddingCountdownConfig {
+  enabled: boolean;
+  targetDateTime: string;
+  todayMessage: string;
+  completedMessage: string;
+}
+
+export interface WeddingContactVariant {
+  heading: string;
+  contacts: readonly WeddingContact[];
+}
+
 export interface WeddingContent {
   monogram: string;
   couple: {
@@ -53,6 +73,7 @@ export interface WeddingContent {
     weekday: string;
     date: string;
     isoDate: string;
+    isoDateTime: string;
     numericDate: string;
     time: string;
   };
@@ -69,6 +90,10 @@ export interface WeddingContent {
     meaning: string;
     languageLabel: string;
   };
+  audio: WeddingAudioConfig;
+  countdown: WeddingCountdownConfig;
+  defaultContactSide: WeddingSide;
+  contactVariants: Readonly<Record<WeddingSide, WeddingContactVariant>>;
   contacts: readonly WeddingContact[];
   finalMessage: readonly [string, string];
   attendanceRequest: readonly [string, string];
@@ -79,6 +104,8 @@ export interface WeddingContent {
     submitLabel: string;
   };
 }
+
+const weddingDateTime = "2027-06-14T11:00:00+08:00";
 
 /**
  * The single editable source for public wedding content.
@@ -135,6 +162,7 @@ export const wedding = {
     weekday: "Saturday",
     date: "14 June 2027",
     isoDate: "2027-06-14",
+    isoDateTime: weddingDateTime,
     numericDate: "14 · 06 · 2027",
     time: "11:00 AM — 4:00 PM",
   },
@@ -157,7 +185,42 @@ export const wedding = {
       "Semoga Allah memberkatimu, melimpahkan keberkatan ke atasmu, dan menghimpunkan kamu berdua dalam kebaikan.",
     languageLabel: "Maksudnya",
   },
+  audio: {
+    enabled: true,
+    title: "Our Song",
+    // GitHub Pages-safe, BASE_URL-relative placeholder. Add the licensed audio
+    // file at public/assets/audio/our-song.mp3 or replace this path.
+    src: "assets/audio/our-song.mp3",
+  },
+  countdown: {
+    enabled: true,
+    targetDateTime: weddingDateTime,
+    todayMessage: "Today is the day.",
+    completedMessage: "Our celebration has begun.",
+  },
+  // The public landing page has no invite metadata, so it uses this variant.
+  defaultContactSide: "bride",
+  contactVariants: {
+    bride: {
+      heading: "For the bride’s family",
+      // Replace these placeholder names and blank numbers before launch.
+      contacts: [
+        { label: "Bride’s Father", name: "Name to be confirmed", phone: "" },
+        { label: "Bride’s Mother", name: "Name to be confirmed", phone: "" },
+      ],
+    },
+    groom: {
+      heading: "For the groom’s family",
+      // Replace these placeholder names and blank numbers before launch.
+      contacts: [
+        { label: "Groom’s Father", name: "Name to be confirmed", phone: "" },
+        { label: "Groom’s Mother", name: "Name to be confirmed", phone: "" },
+      ],
+    },
+  },
   // Leave empty until the couple supplies real, public contact details.
+  // This legacy list controls the optional contact beat in the ascent; family
+  // contacts for the RSVP scene live in contactVariants above.
   contacts: [] as readonly WeddingContact[],
   finalMessage: [
     "And so, beneath the same sky,",

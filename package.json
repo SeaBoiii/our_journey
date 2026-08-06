@@ -14,6 +14,7 @@
     "audit:motion": "node scripts/motion-audit.mjs",
     "audit:reverse": "node scripts/reverse-audit.mjs",
     "audit:rsvp": "node scripts/rsvp-gating-audit.mjs",
+    "audit:features": "node scripts/feature-audit.mjs",
     "audit:viewport": "node scripts/viewport-audit.mjs",
     "smoke": "node scripts/smoke.mjs",
     "preview": "astro preview",

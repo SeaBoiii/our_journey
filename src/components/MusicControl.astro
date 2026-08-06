@@ -1,0 +1,357 @@
+---
+export interface Props {
+  enabled?: boolean;
+  title?: string;
+  src?: string;
+}
+
+const {
+  enabled = true,
+  title = "Our song",
+  src = "",
+} = Astro.props;
+
+const baseUrl = import.meta.env.BASE_URL.endsWith("/")
+  ? import.meta.env.BASE_URL
+  : `${import.meta.env.BASE_URL}/`;
+const isAbsoluteSource = /^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(src);
+const resolvedSource = src
+  ? isAbsoluteSource
+    ? src
+    : `${baseUrl}${src.replace(/^\/+/, "")}`
+  : "";
+const hasSource = resolvedSource.length > 0;
+---
+
+{
+  enabled ? (
+    <div
+      class:list={["music-control", !hasSource && "music-control--unavailable"]}
+      data-music-control
+      data-music-title={title}
+      data-music-source={resolvedSource}
+    >
+      <audio
+        data-music-audio
+        src={resolvedSource || undefined}
+        preload="none"
+      />
+      <button
+        type="button"
+        class="music-button"
+        data-music-toggle
+        aria-label={hasSource ? `Play ${title}` : `${title} is coming soon`}
+        aria-pressed="false"
+        disabled={!hasSource}
+      >
+        <span class="music-note" aria-hidden="true">♪</span>
+        <span class="music-copy">
+          <span class="music-title" data-music-label>
+            {hasSource ? "Click to play our song" : "Song coming soon"}
+          </span>
+          <span class="music-action" data-music-action>
+            {hasSource ? "Play" : "Unavailable"}
+          </span>
+        </span>
+        <span class="music-levels" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </span>
+      </button>
+      <span class="visually-hidden" role="status" aria-live="polite" data-music-status />
+    </div>
+  ) : null
+}
+
+<script>
+  type MusicUiState = "idle" | "loading" | "playing" | "paused" | "error";
+
+  const controls = document.querySelectorAll<HTMLElement>("[data-music-control]");
+
+  controls.forEach((control) => {
+    if (control.dataset.musicInitialized === "true") return;
+    control.dataset.musicInitialized = "true";
+
+    const audio = control.querySelector<HTMLAudioElement>("[data-music-audio]");
+    const toggle = control.querySelector<HTMLButtonElement>("[data-music-toggle]");
+    const label = control.querySelector<HTMLElement>("[data-music-label]");
+    const action = control.querySelector<HTMLElement>("[data-music-action]");
+    const status = control.querySelector<HTMLElement>("[data-music-status]");
+    const title = control.dataset.musicTitle?.trim() || "Our song";
+    const source = control.dataset.musicSource || "";
+
+    if (!audio || !toggle || !label || !action || !status || !source) return;
+
+    const storageKey = `our-journey:music-position:${source}`;
+    let uiState: MusicUiState = "idle";
+    let pendingPosition = 0;
+
+    const readPosition = () => {
+      try {
+        const storedValue = Number.parseFloat(sessionStorage.getItem(storageKey) || "0");
+        return Number.isFinite(storedValue) && storedValue > 0 ? storedValue : 0;
+      } catch {
+        return 0;
+      }
+    };
+
+    const savePosition = () => {
+      if (!Number.isFinite(audio.currentTime)) return;
+      try {
+        if (audio.ended || audio.currentTime <= 0) sessionStorage.removeItem(storageKey);
+        else sessionStorage.setItem(storageKey, String(audio.currentTime));
+      } catch {
+        // Playback remains fully functional when storage is unavailable.
+      }
+    };
+
+    const restorePosition = () => {
+      pendingPosition = readPosition();
+      if (audio.readyState < HTMLMediaElement.HAVE_METADATA || pendingPosition <= 0) return;
+
+      const maximumPosition = Number.isFinite(audio.duration)
+        ? Math.max(0, audio.duration - 1)
+        : pendingPosition;
+      audio.currentTime = Math.min(pendingPosition, maximumPosition);
+      pendingPosition = 0;
+    };
+
+    const render = (nextState: MusicUiState) => {
+      uiState = nextState;
+      control.dataset.musicState = nextState;
+      const isPlaying = nextState === "playing";
+      toggle.setAttribute("aria-pressed", String(isPlaying));
+
+      if (nextState === "loading") {
+        label.textContent = title;
+        action.textContent = "Loading…";
+        toggle.setAttribute("aria-label", `Loading ${title}`);
+        status.textContent = `${title} is loading.`;
+        return;
+      }
+
+      if (nextState === "playing") {
+        label.textContent = title;
+        action.textContent = "Pause";
+        toggle.setAttribute("aria-label", `Pause ${title}`);
+        status.textContent = `${title} is playing.`;
+        return;
+      }
+
+      if (nextState === "error") {
+        label.textContent = "Song coming soon";
+        action.textContent = "Retry";
+        toggle.setAttribute("aria-label", `Retry ${title}`);
+        status.textContent = `${title} is not available yet.`;
+        return;
+      }
+
+      label.textContent = nextState === "idle" ? "Click to play our song" : title;
+      action.textContent = nextState === "paused" ? "Resume" : "Play";
+      toggle.setAttribute("aria-label", `Play ${title}`);
+      status.textContent = nextState === "paused" ? `${title} is paused.` : "";
+    };
+
+    toggle.addEventListener("click", async () => {
+      if (!audio.paused && !audio.ended) {
+        audio.pause();
+        return;
+      }
+
+      if (uiState === "error") audio.load();
+      render("loading");
+      restorePosition();
+      try {
+        await audio.play();
+      } catch {
+        render("error");
+      }
+    });
+
+    audio.addEventListener("loadedmetadata", () => {
+      if (pendingPosition <= 0) return;
+      const maximumPosition = Number.isFinite(audio.duration)
+        ? Math.max(0, audio.duration - 1)
+        : pendingPosition;
+      audio.currentTime = Math.min(pendingPosition, maximumPosition);
+      pendingPosition = 0;
+    });
+    audio.addEventListener("playing", () => render("playing"));
+    audio.addEventListener("pause", () => {
+      savePosition();
+      if (!audio.ended && uiState !== "error") render("paused");
+    });
+    audio.addEventListener("ended", () => {
+      savePosition();
+      render("idle");
+    });
+    audio.addEventListener("error", () => render("error"));
+    window.addEventListener("pagehide", savePosition);
+  });
+</script>
+
+<style>
+  .music-control {
+    position: fixed;
+    z-index: 95;
+    right: max(0.85rem, env(safe-area-inset-right));
+    bottom: max(0.85rem, env(safe-area-inset-bottom));
+    width: min(14rem, calc(100vw - 1.7rem));
+    color: var(--ink, #4c514f);
+  }
+
+  :global(html.is-rsvp-open) .music-control {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .music-button {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    width: 100%;
+    min-height: 2.9rem;
+    padding: 0.48rem 0.65rem 0.48rem 0.55rem;
+    color: inherit;
+    background: rgba(252, 250, 245, 0.94);
+    border: 1px solid rgba(173, 142, 88, 0.34);
+    border-radius: 999px;
+    box-shadow: 0 0.45rem 1.2rem rgba(79, 94, 103, 0.13);
+    cursor: pointer;
+    transition:
+      border-color 180ms ease,
+      box-shadow 180ms ease,
+      transform 180ms ease;
+  }
+
+  .music-button:hover {
+    border-color: rgba(173, 142, 88, 0.58);
+    box-shadow: 0 0.55rem 1.35rem rgba(79, 94, 103, 0.17);
+  }
+
+  .music-button:active {
+    transform: translateY(1px);
+  }
+
+  .music-button:focus-visible {
+    outline: 2px solid var(--gold, #ad8e58);
+    outline-offset: 3px;
+  }
+
+  .music-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+
+  .music-note {
+    display: grid;
+    flex: 0 0 2rem;
+    width: 2rem;
+    height: 2rem;
+    place-items: center;
+    color: #fffdf8;
+    background: linear-gradient(145deg, var(--gold-light, #d8c294), var(--gold, #ad8e58));
+    border-radius: 50%;
+    font-family: var(--font-display, Georgia, serif);
+    font-size: 1.15rem;
+    line-height: 1;
+  }
+
+  .music-copy {
+    display: grid;
+    flex: 1 1 auto;
+    min-width: 0;
+    text-align: left;
+  }
+
+  .music-title,
+  .music-action {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .music-title {
+    color: var(--ink, #4c514f);
+    font-family: var(--font-display, Georgia, serif);
+    font-size: 0.94rem;
+    font-weight: 600;
+    line-height: 1.05;
+  }
+
+  .music-action {
+    margin-top: 0.12rem;
+    color: var(--ink-soft, #6f7778);
+    font-family: var(--font-sans, sans-serif);
+    font-size: 0.58rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    line-height: 1.1;
+    text-transform: uppercase;
+  }
+
+  .music-levels {
+    display: flex;
+    flex: 0 0 1rem;
+    height: 1rem;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 2px;
+    opacity: 0.42;
+  }
+
+  .music-levels span {
+    width: 2px;
+    height: 35%;
+    background: var(--gold, #ad8e58);
+    border-radius: 999px;
+  }
+
+  .music-levels span:nth-child(2) {
+    height: 75%;
+  }
+
+  .music-levels span:nth-child(3) {
+    height: 52%;
+  }
+
+  .music-control[data-music-state="playing"] .music-levels {
+    opacity: 0.86;
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  @media (max-width: 30rem) {
+    .music-control {
+      width: min(14rem, calc(100vw - 1.7rem));
+    }
+
+    .music-button {
+      min-height: 2.75rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .music-button {
+      transition: none;
+    }
+  }
+
+  @media print {
+    .music-control {
+      display: none;
+    }
+  }
+</style>

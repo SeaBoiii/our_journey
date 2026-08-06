@@ -1,10 +1,18 @@
+import type { WeddingSide } from "./wedding";
+
 export {
   wedding as invitation,
   type AttendanceOption,
+  type WeddingAudioConfig,
+  type WeddingContactVariant,
   type WeddingContent,
   type WeddingContact,
+  type WeddingCountdownConfig,
   type WeddingScheduleItem,
+  type WeddingSide,
 } from "./wedding";
+
+export type InviteSide = WeddingSide;
 
 export interface InviteCodeData {
   code: string;
@@ -12,6 +20,7 @@ export interface InviteCodeData {
   maxPax: number;
   greeting: string;
   reservationMessage: string;
+  side: InviteSide;
 }
 
 export const inviteCodes = {
@@ -21,6 +30,8 @@ export const inviteCodes = {
     maxPax: 2,
     greeting: "Assalamualaikum Ivan,",
     reservationMessage: "This invitation is reserved for up to 2 guests.",
+    // Sample metadata only; select the correct host-family side per invite.
+    side: "groom",
   },
 } as const satisfies Record<string, InviteCodeData>;
 

@@ -1,0 +1,260 @@
+---
+export interface Props {
+  target: string;
+  enabled?: boolean;
+  label?: string;
+  todayMessage?: string;
+  completedMessage?: string;
+  invalidMessage?: string;
+}
+
+const {
+  target,
+  enabled = true,
+  label = "Until we celebrate",
+  todayMessage = "Today is the day.",
+  completedMessage = "Our celebration has begun.",
+  invalidMessage = "Our celebration date will be shared soon.",
+} = Astro.props;
+---
+
+{
+  enabled ? (
+    <section
+      class="wedding-countdown"
+      data-wedding-countdown
+      data-countdown-target={target}
+      data-countdown-today={todayMessage}
+      data-countdown-complete={completedMessage}
+      data-countdown-invalid={invalidMessage}
+      aria-label={label}
+    >
+      <time class="countdown-heading" datetime={target}>{label}</time>
+      <div
+        class="countdown-grid"
+        data-countdown-grid
+        role="timer"
+        aria-live="off"
+        aria-label={`Time remaining ${label.toLowerCase()}`}
+      >
+        <span class="countdown-unit">
+          <strong data-countdown-days>--</strong>
+          <span>Days</span>
+        </span>
+        <span class="countdown-unit">
+          <strong data-countdown-hours>--</strong>
+          <span>Hours</span>
+        </span>
+        <span class="countdown-unit">
+          <strong data-countdown-minutes>--</strong>
+          <span>Minutes</span>
+        </span>
+        <span class="countdown-unit">
+          <strong data-countdown-seconds>--</strong>
+          <span>Seconds</span>
+        </span>
+      </div>
+      <p class="countdown-message" data-countdown-message role="status" hidden />
+    </section>
+  ) : null
+}
+
+<script>
+  const SECOND = 1_000;
+  const MINUTE = 60 * SECOND;
+  const HOUR = 60 * MINUTE;
+  const DAY = 24 * HOUR;
+
+  const countdowns = document.querySelectorAll<HTMLElement>("[data-wedding-countdown]");
+
+  countdowns.forEach((countdown) => {
+    if (countdown.dataset.countdownInitialized === "true") return;
+    countdown.dataset.countdownInitialized = "true";
+
+    const targetValue = countdown.dataset.countdownTarget || "";
+    const targetTime = Date.parse(targetValue);
+    const grid = countdown.querySelector<HTMLElement>("[data-countdown-grid]");
+    const message = countdown.querySelector<HTMLElement>("[data-countdown-message]");
+    const days = countdown.querySelector<HTMLElement>("[data-countdown-days]");
+    const hours = countdown.querySelector<HTMLElement>("[data-countdown-hours]");
+    const minutes = countdown.querySelector<HTMLElement>("[data-countdown-minutes]");
+    const seconds = countdown.querySelector<HTMLElement>("[data-countdown-seconds]");
+
+    if (!grid || !message || !days || !hours || !minutes || !seconds) return;
+
+    let intervalId: number | undefined;
+    let isComplete = false;
+
+    const targetOffsetMinutes = () => {
+      if (/z$/i.test(targetValue)) return 0;
+      const match = targetValue.match(/([+-])(\d{2}):?(\d{2})$/);
+      if (!match) return -new Date(targetTime).getTimezoneOffset();
+      const direction = match[1] === "+" ? 1 : -1;
+      return direction * (Number(match[2]) * 60 + Number(match[3]));
+    };
+
+    const occursOnTargetDate = (now: number) => {
+      const offset = targetOffsetMinutes() * MINUTE;
+      const targetDate = new Date(targetTime + offset);
+      const currentDate = new Date(now + offset);
+      return targetDate.getUTCFullYear() === currentDate.getUTCFullYear()
+        && targetDate.getUTCMonth() === currentDate.getUTCMonth()
+        && targetDate.getUTCDate() === currentDate.getUTCDate();
+    };
+
+    const stop = () => {
+      if (intervalId === undefined) return;
+      window.clearInterval(intervalId);
+      intervalId = undefined;
+    };
+
+    const showMessage = (copy: string) => {
+      isComplete = true;
+      grid.hidden = true;
+      message.hidden = false;
+      message.textContent = copy;
+      stop();
+    };
+
+    const update = () => {
+      if (!Number.isFinite(targetTime)) {
+        showMessage(countdown.dataset.countdownInvalid || "Our celebration date will be shared soon.");
+        return;
+      }
+
+      const now = Date.now();
+      const remaining = targetTime - now;
+      if (remaining <= 0) {
+        showMessage(
+          occursOnTargetDate(now)
+            ? countdown.dataset.countdownToday || "Today is the day."
+            : countdown.dataset.countdownComplete || "Our celebration has begun.",
+        );
+        return;
+      }
+
+      const remainingDays = Math.floor(remaining / DAY);
+      const remainingHours = Math.floor((remaining % DAY) / HOUR);
+      const remainingMinutes = Math.floor((remaining % HOUR) / MINUTE);
+      const remainingSeconds = Math.floor((remaining % MINUTE) / SECOND);
+
+      days.textContent = String(remainingDays);
+      hours.textContent = String(remainingHours).padStart(2, "0");
+      minutes.textContent = String(remainingMinutes).padStart(2, "0");
+      seconds.textContent = String(remainingSeconds).padStart(2, "0");
+    };
+
+    const start = () => {
+      stop();
+      update();
+      if (!isComplete && !document.hidden) intervalId = window.setInterval(update, SECOND);
+    };
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) stop();
+      else start();
+    });
+    window.addEventListener("pagehide", stop);
+    window.addEventListener("pageshow", start);
+    start();
+  });
+</script>
+
+<style>
+  .wedding-countdown {
+    width: min(100%, 32rem);
+    margin: 0 auto;
+    color: var(--ink, #4c514f);
+    text-align: center;
+  }
+
+  .countdown-heading {
+    display: block;
+    margin-bottom: 0.85rem;
+    color: var(--gold, #ad8e58);
+    font-family: var(--font-sans, sans-serif);
+    font-size: clamp(0.58rem, 1.8vw, 0.68rem);
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    line-height: 1.4;
+    text-transform: uppercase;
+  }
+
+  .countdown-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    overflow: hidden;
+    background: rgba(255, 253, 248, 0.54);
+    border: 1px solid rgba(173, 142, 88, 0.24);
+    border-radius: 0.8rem;
+  }
+
+  .countdown-unit {
+    position: relative;
+    display: grid;
+    min-width: 0;
+    padding: 0.75rem 0.2rem 0.65rem;
+    place-items: center;
+  }
+
+  .countdown-unit + .countdown-unit::before {
+    position: absolute;
+    top: 22%;
+    bottom: 22%;
+    left: 0;
+    width: 1px;
+    content: "";
+    background: rgba(173, 142, 88, 0.2);
+  }
+
+  .countdown-unit strong {
+    color: var(--ink, #4c514f);
+    font-family: var(--font-display, Georgia, serif);
+    font-size: clamp(1.35rem, 5.5vw, 2rem);
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  .countdown-unit > span {
+    margin-top: 0.35rem;
+    overflow: hidden;
+    color: var(--ink-soft, #6f7778);
+    font-family: var(--font-sans, sans-serif);
+    font-size: clamp(0.45rem, 1.65vw, 0.56rem);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .countdown-message {
+    margin: 0;
+    padding: 0.85rem 1rem;
+    color: var(--ink, #4c514f);
+    background: rgba(255, 253, 248, 0.54);
+    border: 1px solid rgba(173, 142, 88, 0.24);
+    border-radius: 0.8rem;
+    font-family: var(--font-display, Georgia, serif);
+    font-size: clamp(1.2rem, 4vw, 1.55rem);
+    font-style: italic;
+    line-height: 1.3;
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+
+  @media (max-width: 22rem) {
+    .countdown-unit {
+      padding-inline: 0.1rem;
+    }
+
+    .countdown-unit > span {
+      letter-spacing: 0.05em;
+    }
+  }
+</style>

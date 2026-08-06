@@ -49,6 +49,12 @@ const profiles = [
 
 const performanceScenarios = [
   {
+    name: "itineraryText",
+    selector: "[data-story-beat='itinerary']",
+    range: "element",
+    duration: 2200,
+  },
+  {
     name: "storyAmbient",
     selector: "[data-story-beat='story']",
     range: "element",

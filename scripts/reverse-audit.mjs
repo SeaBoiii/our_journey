@@ -109,12 +109,48 @@ async function readBeat(page, selector) {
     if (!element) throw new Error(`Missing reverse-audit beat: ${selector}`);
     const style = getComputedStyle(element);
     const matrix = style.transform === "none" ? new DOMMatrix() : new DOMMatrix(style.transform);
+    const ascentBeats = [...document.querySelectorAll(".ascent-beat")];
+    const activeBeats = ascentBeats.filter((beat) => beat.classList.contains("is-active"));
+    const otherVisibleBeats = ascentBeats
+      .filter((beat) => beat !== element)
+      .map((beat) => {
+        const bounds = beat.getBoundingClientRect();
+        return {
+          name: beat.getAttribute("data-story-beat") ?? "unnamed",
+          opacity: Number.parseFloat(getComputedStyle(beat).opacity),
+          intersectsViewport: bounds.bottom > 0 && bounds.top < window.innerHeight,
+        };
+      })
+      .filter((beat) => beat.intersectsViewport);
     return {
       opacity: Number.parseFloat(style.opacity),
       y: matrix.m42,
       visibility: style.visibility,
+      isActive: element.classList.contains("is-active"),
+      activeCount: activeBeats.length,
+      activeNames: activeBeats.map((beat) => beat.getAttribute("data-story-beat") ?? "unnamed"),
+      otherVisibleBeats,
+      maximumOtherVisibleOpacity: Math.max(0, ...otherVisibleBeats.map((beat) => beat.opacity)),
     };
   }, selector);
+}
+
+function assertFocusedBeat(label, direction, name, state) {
+  if (!state.isActive || state.activeCount !== 1) {
+    failures.push(
+      `${label}: ${name} does not own the single active ascent state on ${direction} scroll `
+      + `(active: ${state.activeNames.join(", ") || "none"})`,
+    );
+  }
+  if (state.maximumOtherVisibleOpacity > 0.1) {
+    failures.push(
+      `${label}: another in-viewport beat is too prominent beside ${name} on ${direction} scroll `
+      + `(${state.otherVisibleBeats
+        .filter((beat) => beat.opacity > 0.1)
+        .map((beat) => `${beat.name} ${beat.opacity.toFixed(3)}`)
+        .join(", ")})`,
+    );
+  }
 }
 
 async function readWorld(page) {
@@ -197,6 +233,7 @@ try {
       if (forward[name].opacity < 0.97 || Math.abs(forward[name].y) > 1.5) {
         failures.push(`${label}: ${name} is not fully readable when centred on forward scroll`);
       }
+      assertFocusedBeat(label, "forward", name, forward[name]);
     }
 
     await phaseProgress(page, "#pavilion", 0);
@@ -259,6 +296,7 @@ try {
       ) {
         failures.push(`${label}: ${name} retained a stale state after reversing from the pavilion`);
       }
+      assertFocusedBeat(label, "reverse", name, reverse[name]);
       const world = await readWorld(page);
       if (
         world.pavilionOpacity > 0.03
@@ -281,6 +319,7 @@ try {
       if (state.opacity < 0.97 || Math.abs(state.y) > 1.5) {
         failures.push(`${label}: ${name} failed during repeated direction changes`);
       }
+      assertFocusedBeat(label, "repeated-direction", name, state);
     }
 
     const maximumScroll = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
@@ -327,7 +366,13 @@ try {
       glintMaximum: Number(glintMaximum.toFixed(2)),
       finalCenterOffset: [Number((final.finalCenterX ?? 0).toFixed(2)), Number((final.finalCenterY ?? 0).toFixed(2))],
       reverseBeatStates: Object.fromEntries(
-        Object.entries(reverse).map(([name, state]) => [name, { opacity: Number(state.opacity.toFixed(3)), y: Number(state.y.toFixed(2)) }]),
+        Object.entries(reverse).map(([name, state]) => [name, {
+          opacity: Number(state.opacity.toFixed(3)),
+          y: Number(state.y.toFixed(2)),
+          isActive: state.isActive,
+          activeCount: state.activeCount,
+          maximumOtherVisibleOpacity: Number(state.maximumOtherVisibleOpacity.toFixed(3)),
+        }]),
       ),
     });
     await page.close();

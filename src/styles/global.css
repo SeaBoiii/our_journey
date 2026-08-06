@@ -510,6 +510,25 @@ textarea {
     0 0 2.5rem rgba(255, 255, 255, 0.86);
 }
 
+.has-ascent-reveals .ascent-beat {
+  opacity: 0.06;
+  pointer-events: none;
+  transform: translate3d(0, 0.7rem, 0);
+  transition:
+    opacity 220ms ease-out,
+    transform 220ms ease-out;
+}
+
+.has-ascent-reveals .ascent-beat.is-active {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate3d(0, 0, 0);
+}
+
+.has-ascent-reveals .ascent-beat:not(.is-active) :is(a, button) {
+  pointer-events: none;
+}
+
 .eyebrow {
   margin: 0 0 0.85rem;
   color: #967b4e;
@@ -1351,6 +1370,74 @@ html.is-rsvp-transitioning [data-final-copy-shift] {
   font-size: 0.67rem;
 }
 
+.rsvp-countdown {
+  position: relative;
+  z-index: 2;
+  width: min(88vw, 32rem);
+  margin: -0.9rem auto clamp(1.8rem, 6vw, 3rem);
+}
+
+.rsvp-assistance {
+  position: relative;
+  z-index: 2;
+  width: min(88vw, 32rem);
+  margin: clamp(2.5rem, 8vw, 4rem) auto 0;
+  padding-top: clamp(2.4rem, 7vw, 3.5rem);
+  border-top: 1px solid rgba(177, 148, 94, 0.28);
+  text-align: center;
+}
+
+.rsvp-assistance h3 {
+  margin: 0;
+  color: #4d6069;
+  font: 400 clamp(1.55rem, 6vw, 2rem)/1.15 var(--font-display);
+}
+
+.rsvp-assistance ul {
+  display: grid;
+  gap: 1.55rem;
+  margin: 1.8rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rsvp-assistance li {
+  display: grid;
+  justify-items: center;
+  gap: 0.22rem;
+}
+
+.rsvp-assistance li > span {
+  color: #8f764b;
+  font-size: 0.59rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.rsvp-assistance strong {
+  color: #4b5d66;
+  font: 500 1.08rem/1.3 var(--font-display);
+}
+
+.rsvp-assistance a,
+.rsvp-assistance small {
+  color: #6f7e85;
+  font-size: 0.66rem;
+  font-style: normal;
+  line-height: 1.5;
+}
+
+.rsvp-assistance a {
+  border-bottom: 1px solid rgba(173, 142, 88, 0.36);
+}
+
+.rsvp-assistance a:hover,
+.rsvp-assistance a:focus-visible {
+  color: #80663b;
+  border-bottom-color: currentColor;
+}
+
 .floral {
   position: absolute;
   z-index: 0;
@@ -1424,6 +1511,19 @@ html.is-rsvp-transitioning [data-final-copy-shift] {
 }
 
 @media (max-width: 47.9375rem) {
+  .ascent-beat {
+    text-shadow: 0 1px 0.4rem rgba(255, 255, 255, 0.68);
+  }
+
+  .schedule-level {
+    text-shadow: none;
+  }
+
+  .has-ascent-reveals .ascent-beat {
+    transform: none;
+    transition: opacity 180ms ease-out;
+  }
+
   .sky-picture img {
     filter: none;
   }
@@ -1470,6 +1570,7 @@ html.is-rsvp-transitioning [data-final-copy-shift] {
   }
 
   .staircase-picture img,
+  .pavilion-distant-preview img,
   .pavilion-picture {
     filter: none;
   }
@@ -1497,6 +1598,51 @@ html.is-rsvp-transitioning [data-final-copy-shift] {
   .reveal-haze {
     inset: 24% -8% 7%;
     background: radial-gradient(ellipse at center 64%, rgba(255, 255, 252, 0.82) 0 13%, rgba(246, 246, 242, 0.46) 38%, transparent 70%);
+  }
+}
+
+@media (max-width: 47.9375rem) and (orientation: portrait) {
+  .couple-anchor {
+    bottom: 0;
+    width: min(70vw, 20rem);
+  }
+
+  .final-copy {
+    top: 0;
+    bottom: 0;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto auto auto auto auto;
+    justify-items: center;
+    width: min(88vw, 34rem);
+    padding: max(5.75rem, 13svh) 0 max(3.5rem, 10svh);
+    text-shadow: 0 1px 0.4rem rgba(255, 255, 255, 0.72);
+  }
+
+  .final-message {
+    grid-row: 1;
+  }
+
+  .final-names {
+    grid-row: 3;
+    margin: 0 0 0.2rem;
+  }
+
+  .final-copy time {
+    grid-row: 4;
+  }
+
+  .final-copy > img {
+    grid-row: 5;
+    margin: 0.55rem auto 0.4rem;
+  }
+
+  .attendance-request {
+    grid-row: 6;
+  }
+
+  .rsvp-link {
+    grid-row: 7;
+    margin-top: 0.8rem;
   }
 }
 
@@ -1758,6 +1904,25 @@ html.is-rsvp-transitioning [data-final-copy-shift] {
 
   .pavilion-scroll-space {
     height: 100%;
+  }
+}
+
+@media (max-width: 47.9375rem) and (orientation: portrait) and (prefers-reduced-motion: reduce) {
+  [data-journey-root].is-reduced-final .pavilion-assembly {
+    opacity: 1 !important;
+    transform: translateY(-15vh) scale(0.96) !important;
+  }
+
+  [data-journey-root].is-reduced-final .pavilion-picture {
+    opacity: 0.62 !important;
+  }
+
+  [data-journey-root].is-reduced-final .couple-anchor {
+    opacity: 0.96 !important;
+  }
+
+  [data-journey-root].is-reduced-final .final-copy {
+    transform: translateX(-50%) !important;
   }
 }
 

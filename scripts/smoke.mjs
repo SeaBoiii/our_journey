@@ -46,12 +46,19 @@ try {
 
   await page.click('input[value="attending"]');
   await page.click('button[aria-label="Increase number of guests"]');
-  await page.type('textarea[name="notes"]', "No shellfish, please.");
+  await page.$eval('textarea[name="notes"]', (textarea, value) => {
+    const valueSetter = Object.getOwnPropertyDescriptor(
+      HTMLTextAreaElement.prototype,
+      "value",
+    )?.set;
+    valueSetter?.call(textarea, value);
+    textarea.dispatchEvent(new Event("input", { bubbles: true }));
+  }, "No shellfish, please.");
   await page.click('button[type="submit"]');
   await new Promise((resolve) => setTimeout(resolve, 1800));
 
   const submissionStatus = await page.evaluate(() => ({
-    message: document.querySelector('[role="status"], [role="alert"]')?.textContent?.trim() ?? "",
+    message: document.querySelector('form [role="status"], form [role="alert"]')?.textContent?.trim() ?? "",
     attendance: document.querySelector('input[name="attendance"]:checked')?.value ?? "",
     guestCount: document.querySelector('input[name="guestCount"]')?.value ?? "",
     validationMessages: [...document.querySelectorAll('[id$="-error"]')].map((element) => element.textContent?.trim()),

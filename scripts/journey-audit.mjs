@@ -79,6 +79,14 @@ async function readSceneState(page) {
     const pavilionPicture = rect(".pavilion-picture");
     const couple = rect("[data-couple]");
     const finalCopy = rect("[data-final-copy]");
+    const finalRowSelectors = {
+      message: ".final-message",
+      names: ".final-names",
+      time: ".final-copy time",
+      divider: ".final-copy > img",
+      attendance: ".attendance-request",
+      cta: ".final-copy [data-rsvp-open]",
+    };
     const transform = getComputedStyle(document.querySelector("[data-staircase]")).transform;
     const matrix = transform === "none" ? new DOMMatrix() : new DOMMatrix(transform);
     const faceZone = couple
@@ -89,11 +97,32 @@ async function readSceneState(page) {
           bottom: couple.top + couple.height * 0.31,
         }
       : null;
-    const faceIntersection = faceZone && finalCopy
-      ? Math.max(0, Math.min(faceZone.right, finalCopy.right) - Math.max(faceZone.left, finalCopy.left))
-        * Math.max(0, Math.min(faceZone.bottom, finalCopy.bottom) - Math.max(faceZone.top, finalCopy.top))
-      : 0;
     const faceArea = faceZone ? (faceZone.right - faceZone.left) * (faceZone.bottom - faceZone.top) : 1;
+    const finalRows = Object.fromEntries(
+      Object.entries(finalRowSelectors).map(([name, selector]) => {
+        const row = rect(selector);
+        const faceIntersection = faceZone && row
+          ? Math.max(0, Math.min(faceZone.right, row.right) - Math.max(faceZone.left, row.left))
+            * Math.max(0, Math.min(faceZone.bottom, row.bottom) - Math.max(faceZone.top, row.top))
+          : 0;
+        return [name, row
+          ? {
+              top: row.top,
+              right: row.right,
+              bottom: row.bottom,
+              left: row.left,
+              width: row.width,
+              height: row.height,
+              faceOverlapRatio: faceIntersection / faceArea,
+            }
+          : null];
+      }),
+    );
+    const rowFaceOverlapRatios = Object.fromEntries(
+      Object.entries(finalRows).map(([name, row]) => [name, row?.faceOverlapRatio ?? 1]),
+    );
+    const maximumRowFaceOverlapRatio = Math.max(...Object.values(rowFaceOverlapRatios));
+    const ctaBottomGap = finalRows.cta ? window.innerHeight - finalRows.cta.bottom : null;
 
     return {
       pavilionOpacity: opacity("[data-pavilion-assembly]"),
@@ -105,7 +134,11 @@ async function readSceneState(page) {
       pavilionBaseY: pavilionPicture ? pavilionPicture.top + pavilionPicture.height * 0.913 : null,
       finalCenterOffsetX: finalCopy ? finalCopy.left + finalCopy.width / 2 - window.innerWidth / 2 : null,
       finalCenterOffsetY: finalCopy ? finalCopy.top + finalCopy.height / 2 - window.innerHeight / 2 : null,
-      finalFaceOverlapRatio: faceIntersection / faceArea,
+      faceZone,
+      finalRows,
+      rowFaceOverlapRatios,
+      maximumRowFaceOverlapRatio,
+      ctaBottomGap,
     };
   });
 }
@@ -252,13 +285,57 @@ try {
     if (coupleHold.coupleOpacity < 0.68 || coupleHold.finalOpacity > 0.08) {
       failures.push(`${viewport.width}x${viewport.height}: couple hold/final-message ordering regressed`);
     }
+    const rowFaceOverlap = Object.entries(finalState.rowFaceOverlapRatios)
+      .filter(([, ratio]) => ratio > 0.02);
     if (
       finalState.finalOpacity < 0.82
       || Math.abs(finalState.finalCenterOffsetX ?? Number.POSITIVE_INFINITY) > 2
       || Math.abs(finalState.finalCenterOffsetY ?? Number.POSITIVE_INFINITY) > 2
-      || finalState.finalFaceOverlapRatio > 0.02
+      || rowFaceOverlap.length > 0
     ) {
-      failures.push(`${viewport.width}x${viewport.height}: final message is hidden, off-centre, or obscures the couple's faces`);
+      failures.push(
+        `${viewport.width}x${viewport.height}: final message is hidden, off-centre, or a final row obscures the couple's faces`
+        + (rowFaceOverlap.length
+          ? ` (${rowFaceOverlap.map(([row, ratio]) => `${row} ${ratio.toFixed(3)}`).join(", ")})`
+          : ""),
+      );
+    }
+    if (viewport.width < 600) {
+      const { faceZone, finalRows, ctaBottomGap } = finalState;
+      const hierarchyRows = ["names", "time", "divider", "attendance", "cta"]
+        .map((name) => [name, finalRows[name]])
+        .filter(([, row]) => row !== null);
+      const rowsAreOrdered = hierarchyRows.every(([, row], index, rows) => (
+        index === 0 || row.top >= rows[index - 1][1].bottom - 1
+      ));
+      const faceClearance = Math.max(6, viewport.height * 0.008);
+      const messageClearsFaces = Boolean(
+        finalRows.message
+        && faceZone
+        && finalRows.message.bottom <= faceZone.top - faceClearance,
+      );
+      const lowerCopyClearsFaces = Boolean(
+        finalRows.names
+        && faceZone
+        && finalRows.names.top >= faceZone.bottom + faceClearance,
+      );
+      if (!rowsAreOrdered || !messageClearsFaces || !lowerCopyClearsFaces) {
+        failures.push(
+          `${viewport.width}x${viewport.height}: mobile final hierarchy does not keep copy clearly above and below the faces`,
+        );
+      }
+      const minimumCtaBottomGap = 20;
+      const maximumCtaBottomGap = Math.min(112, viewport.height * 0.13);
+      if (
+        ctaBottomGap === null
+        || ctaBottomGap < minimumCtaBottomGap
+        || ctaBottomGap > maximumCtaBottomGap
+      ) {
+        failures.push(
+          `${viewport.width}x${viewport.height}: final CTA bottom gap ${ctaBottomGap?.toFixed(1) ?? "missing"}px is outside `
+          + `${minimumCtaBottomGap}-${maximumCtaBottomGap.toFixed(1)}px`,
+        );
+      }
     }
     const landingGap = pavilionApproach.stairLandingY === null || pavilionApproach.pavilionBaseY === null
       ? Number.POSITIVE_INFINITY
@@ -284,7 +361,26 @@ try {
       coupleHoldOpacity: coupleHold.coupleOpacity,
       finalCenterOffsetX: finalState.finalCenterOffsetX === null ? null : Number(finalState.finalCenterOffsetX.toFixed(2)),
       finalCenterOffsetY: finalState.finalCenterOffsetY === null ? null : Number(finalState.finalCenterOffsetY.toFixed(2)),
-      finalFaceOverlapRatio: Number(finalState.finalFaceOverlapRatio.toFixed(3)),
+      finalRowFaceOverlapRatios: Object.fromEntries(
+        Object.entries(finalState.rowFaceOverlapRatios)
+          .map(([row, ratio]) => [row, Number(ratio.toFixed(3))]),
+      ),
+      maximumFinalRowFaceOverlapRatio: Number(finalState.maximumRowFaceOverlapRatio.toFixed(3)),
+      mobileFinalHierarchy: viewport.width < 600
+        ? {
+            messageBottom: finalState.finalRows.message
+              ? Number(finalState.finalRows.message.bottom.toFixed(1))
+              : null,
+            faceTop: finalState.faceZone ? Number(finalState.faceZone.top.toFixed(1)) : null,
+            faceBottom: finalState.faceZone ? Number(finalState.faceZone.bottom.toFixed(1)) : null,
+            namesTop: finalState.finalRows.names
+              ? Number(finalState.finalRows.names.top.toFixed(1))
+              : null,
+            ctaBottomGap: finalState.ctaBottomGap === null
+              ? null
+              : Number(finalState.ctaBottomGap.toFixed(1)),
+          }
+        : null,
     });
     await page.close();
   }
