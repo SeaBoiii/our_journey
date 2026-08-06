@@ -89,8 +89,8 @@ export const wedding = {
   monogram: "A + A",
   couple: {
     groom: "ALEEM",
-    bride: "[PARTNER NAME]",
-    finalBride: "[PARTNER]",
+    bride: "NURULAIN",
+    finalBride: "AIN",
   },
   opening: {
     basmala: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
@@ -118,7 +118,7 @@ export const wedding = {
       "kami sekeluarga dengan sukacitanya",
       "menjemput",
     ],
-    honorifics: ["Dato' / Datin / Tuan / Puan /", "Encik / Cik"],
+    honorifics: ["Tuan / Puan /", "Encik / Cik"],
     ceremonyLine: "ke majlis perkahwinan",
   },
   story: {
@@ -139,10 +139,10 @@ export const wedding = {
     time: "11:00 AM — 4:00 PM",
   },
   venue: {
-    name: "VENUE NAME",
-    address: "Singapore",
-    googleMapsUrl: "",
-    wazeUrl: "",
+    name: "The Fullerton Hotel",
+    address: "1 Fullerton Square, Singapore 049178",
+    googleMapsUrl: "https://maps.app.goo.gl/PNjUGDSRr3GHKTnV6",
+    wazeUrl: "https://ul.waze.com/ul?venue_id=68091917.680591489.628873&overview=yes&utm_campaign=default&utm_source=waze_website&utm_medium=lm_share_location",
   },
   schedule: [
     { time: "11:00 AM", label: "Guest Arrival" },
