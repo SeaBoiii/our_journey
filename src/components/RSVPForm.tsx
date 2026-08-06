@@ -262,6 +262,7 @@ export default function RSVPForm({
 
   const isDeclining = values.attendance === "declining";
   const isSubmitting = submission.phase === "submitting";
+  const confirmationName = values.name.trim().split(/\s+/)[0] || "dear guest";
   const shellClassName = [styles.shell, className].filter(Boolean).join(" ");
 
   return (
@@ -486,7 +487,20 @@ export default function RSVPForm({
             role={submission.phase === "error" ? "alert" : "status"}
             aria-live={submission.phase === "error" ? "assertive" : "polite"}
           >
-            {submission.message}
+            {submission.phase === "success" ? (
+              <>
+                <span className={styles.confirmationFlourish} aria-hidden="true">✦</span>
+                <strong className={styles.confirmationTitle}>
+                  Thank you, {confirmationName}.
+                </strong>
+                <span className={styles.confirmationCopy}>
+                  {isDeclining
+                    ? "Thank you for letting us know. You will be in our thoughts beneath the same sky."
+                    : "We can’t wait to celebrate with you."}
+                </span>
+                <small className={styles.confirmationNote}>{submission.message}</small>
+              </>
+            ) : submission.message}
           </div>
         </div>
       </form>

@@ -22,10 +22,20 @@ try {
   });
 
   await page.goto(`${baseUrl}/invite/ABC123/`, { waitUntil: "networkidle0" });
-  await page.evaluate(() => document.querySelector("#rsvp")?.scrollIntoView({ block: "start" }));
   await page.waitForFunction(() => {
-    const island = document.querySelector("astro-island[client='visible']");
+    const island = document.querySelector("astro-island");
     return island && !island.hasAttribute("ssr");
+  });
+  await page.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" }));
+  await new Promise((resolve) => setTimeout(resolve, 1400));
+  await page.click("[data-rsvp-open]");
+  await page.waitForFunction(() => {
+    const scene = document.querySelector("[data-rsvp-scene]");
+    if (!scene) return false;
+    const style = getComputedStyle(scene);
+    return scene.getAttribute("aria-hidden") === "false"
+      && style.visibility === "visible"
+      && Number.parseFloat(style.opacity) > 0.9;
   });
   await page.waitForSelector('input[name="name"]');
 

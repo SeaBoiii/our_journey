@@ -55,6 +55,19 @@ async function scrollPhase(page, selector, progress, settle = 1150) {
   await wait(settle);
 }
 
+async function scrollShortPhase(page, selector, progress, settle = 900) {
+  await page.evaluate(
+    ({ selector, progress }) => {
+      const element = document.querySelector(selector);
+      if (!element) throw new Error(`Missing short phase ${selector}`);
+      const top = window.scrollY + element.getBoundingClientRect().top;
+      window.scrollTo({ top: top + element.getBoundingClientRect().height * progress, behavior: "instant" });
+    },
+    { selector, progress },
+  );
+  await wait(settle);
+}
+
 async function readSceneState(page) {
   return page.evaluate(() => {
     const opacity = (selector) => {
@@ -84,6 +97,7 @@ async function readSceneState(page) {
 
     return {
       pavilionOpacity: opacity("[data-pavilion-assembly]"),
+      pavilionPreviewOpacity: opacity("[data-pavilion-preview] img"),
       coupleOpacity: opacity("[data-couple]"),
       finalOpacity: opacity("[data-final-copy]"),
       staircaseScale: Math.hypot(matrix.a, matrix.b),
@@ -126,7 +140,6 @@ try {
         '[data-story-beat="location"]',
         "[data-final-ascent]",
         "[data-phase='pavilion']",
-        "#rsvp",
       ].map(top);
       const scheduleRows = [...document.querySelectorAll(".schedule-level")];
       const pageText = document.body.textContent ?? "";
@@ -180,7 +193,7 @@ try {
       itinerary: [85, 100],
       doa: [60, 72],
       location: [55, 65],
-      finalBreath: [70, 90],
+      finalBreath: [30, 40],
       pavilion: [280, 340],
     };
     for (const [scene, [minimum, maximum]] of Object.entries(sceneRanges)) {
@@ -195,7 +208,9 @@ try {
 
     await scrollPhase(page, "#ascension", 0.55);
     const ascentMiddle = await readSceneState(page);
-    await scrollPhase(page, "#ascension", 0.98);
+    await scrollShortPhase(page, "[data-final-ascent]", 0.76);
+    const ascentReveal = await readSceneState(page);
+    await scrollShortPhase(page, "[data-final-ascent]", 0.98);
     const ascentEnd = await readSceneState(page);
     await scrollPhase(page, "#pavilion", 0);
     const pavilionStart = await readSceneState(page);
@@ -208,14 +223,28 @@ try {
     await scrollPhase(page, "#pavilion", 0.96);
     const finalState = await readSceneState(page);
 
-    if (ascentMiddle.pavilionOpacity > 0.02 || ascentEnd.pavilionOpacity > 0.02) {
-      failures.push(`${viewport.width}x${viewport.height}: pavilion visible during informational ascent`);
+    if (ascentMiddle.pavilionOpacity > 0.02 || ascentMiddle.pavilionPreviewOpacity > 0.02) {
+      failures.push(`${viewport.width}x${viewport.height}: pavilion visible before the final ascent`);
     }
-    if (ascentEnd.coupleOpacity > 0.02 || pavilionDistant.coupleOpacity > 0.02) {
+    if (
+      ascentReveal.pavilionPreviewOpacity < 0.04
+      || ascentReveal.pavilionPreviewOpacity > 0.18
+      || ascentEnd.pavilionPreviewOpacity < 0.1
+      || ascentEnd.pavilionPreviewOpacity > 0.18
+      || ascentReveal.pavilionOpacity > 0.02
+      || ascentEnd.pavilionOpacity > 0.02
+    ) {
+      failures.push(`${viewport.width}x${viewport.height}: faint pavilion does not emerge during the final ascent`);
+    }
+    if (ascentReveal.coupleOpacity > 0.02 || ascentEnd.coupleOpacity > 0.02 || pavilionDistant.coupleOpacity > 0.02) {
       failures.push(`${viewport.width}x${viewport.height}: couple visible before reveal`);
     }
-    if (pavilionStart.pavilionOpacity > 0.03) {
-      failures.push(`${viewport.width}x${viewport.height}: pavilion visible at pavilion phase start`);
+    if (
+      pavilionStart.pavilionPreviewOpacity < 0.1
+      || pavilionStart.pavilionPreviewOpacity > 0.2
+      || pavilionStart.pavilionOpacity > 0.03
+    ) {
+      failures.push(`${viewport.width}x${viewport.height}: pavilion continuity breaks at the pavilion phase start`);
     }
     if (pavilionDistant.pavilionOpacity < 0.12 || pavilionDistant.pavilionOpacity > 0.8) {
       failures.push(`${viewport.width}x${viewport.height}: distant pavilion opacity is not atmospheric`);

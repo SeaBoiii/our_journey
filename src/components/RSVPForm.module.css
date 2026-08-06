@@ -415,7 +415,46 @@
 }
 
 .successStatus {
+  display: grid;
+  width: min(100%, 28rem);
+  justify-items: center;
+  gap: 0.45rem;
+  margin-top: 1.25rem;
+  padding: 1.5rem clamp(1rem, 5vw, 2rem);
   color: #557168;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 252, 0.72), transparent 62%),
+    rgba(249, 247, 239, 0.52);
+  border: 1px solid rgba(174, 143, 88, 0.28);
+  border-radius: 0.35rem;
+}
+
+.confirmationFlourish {
+  color: #aa8b54;
+  font-size: 0.72rem;
+}
+
+.confirmationTitle {
+  color: #4f625f;
+  font-family: var(--font-display, "Cormorant Garamond", Georgia, serif);
+  font-size: clamp(1.55rem, 6vw, 2rem);
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.confirmationCopy {
+  max-width: 22rem;
+  color: #61726f;
+  font-family: var(--font-display, "Cormorant Garamond", Georgia, serif);
+  font-size: 1.05rem;
+  line-height: 1.4;
+}
+
+.confirmationNote {
+  margin-top: 0.2rem;
+  color: #84908c;
+  font-size: 0.66rem;
+  line-height: 1.45;
 }
 
 .errorStatus {

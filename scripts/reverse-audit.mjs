@@ -138,6 +138,7 @@ async function readWorld(page) {
     const skyRect = skyPicture?.getBoundingClientRect() ?? null;
     return {
       pavilionOpacity: styleNumber("[data-pavilion-assembly]", "opacity"),
+      pavilionPreviewOpacity: styleNumber("[data-pavilion-preview] img", "opacity"),
       coupleOpacity: styleNumber("[data-couple]", "opacity"),
       finalOpacity: styleNumber("[data-final-copy]", "opacity"),
       glintOpacity: styleNumber("[data-ring-glint]", "opacity"),
@@ -212,7 +213,13 @@ try {
     await phaseProgress(page, "#pavilion", 0.96);
     const final = await readWorld(page);
 
-    if (pavilionStart.pavilionOpacity > 0.03) failures.push(`${label}: pavilion is visible at phase start`);
+    if (
+      pavilionStart.pavilionOpacity > 0.03
+      || pavilionStart.pavilionPreviewOpacity < 0.1
+      || pavilionStart.pavilionPreviewOpacity > 0.2
+    ) {
+      failures.push(`${label}: distant pavilion continuity breaks at phase start`);
+    }
     if (pavilionDistant.pavilionOpacity < 0.12 || pavilionDistant.pavilionOpacity > 0.8) {
       failures.push(`${label}: distant pavilion is not atmospheric`);
     }
@@ -253,8 +260,17 @@ try {
         failures.push(`${label}: ${name} retained a stale state after reversing from the pavilion`);
       }
       const world = await readWorld(page);
-      if (world.pavilionOpacity > 0.03 || world.coupleOpacity > 0.03 || world.finalOpacity > 0.03) {
-        failures.push(`${label}: pavilion state leaked back into the ${name} scene`);
+      if (
+        world.pavilionOpacity > 0.03
+        || world.pavilionPreviewOpacity > 0.03
+        || world.coupleOpacity > 0.03
+        || world.finalOpacity > 0.03
+      ) {
+        failures.push(
+          `${label}: pavilion state leaked back into the ${name} scene `
+          + `(pavilion ${world.pavilionOpacity.toFixed(3)}, preview ${world.pavilionPreviewOpacity.toFixed(3)}, `
+          + `couple ${world.coupleOpacity.toFixed(3)}, final ${world.finalOpacity.toFixed(3)})`,
+        );
       }
     }
 

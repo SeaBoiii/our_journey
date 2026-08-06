@@ -147,6 +147,19 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
         <div class="edge-cloud edge-cloud--left" data-ascent-cloud aria-hidden="true"></div>
         <div class="edge-cloud edge-cloud--right" data-ascent-cloud aria-hidden="true"></div>
 
+        <div class="pavilion-distant-preview" data-pavilion-preview aria-hidden="true">
+          <img
+            src={withBase("assets/pavilion/pavilion-painterly-640.webp")}
+            alt=""
+            width="640"
+            height="427"
+            loading="lazy"
+            decoding="async"
+            fetchpriority="low"
+          />
+        </div>
+
+        <div class="pavilion-rsvp-shift" data-pavilion-rsvp-shift>
         <div class="pavilion-assembly" data-pavilion-assembly>
           <picture class="pavilion-picture">
             <source
@@ -246,10 +259,12 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
             aria-hidden="true"
           />
         </div>
+        </div>
 
         <div class="crest-haze" data-crest-haze aria-hidden="true"></div>
         <div class="reveal-haze" data-reveal-haze aria-hidden="true"></div>
 
+        <div class="final-copy-shift" data-final-copy-shift>
         <div class="final-copy" data-final-copy>
           <p class="final-message">
             <span>{wedding.finalMessage[0]}</span>
@@ -264,10 +279,17 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
             <span>{wedding.attendanceRequest[0]}</span>
             <span>{wedding.attendanceRequest[1]}</span>
           </p>
-          <a class="rsvp-link" href="#rsvp">
+          <a
+            class="rsvp-link"
+            href="#rsvp"
+            data-rsvp-open
+            aria-haspopup="dialog"
+            aria-controls="rsvp"
+          >
             <span>RSVP</span>
             <span aria-hidden="true">→</span>
           </a>
+        </div>
         </div>
       </div>
 
@@ -436,56 +458,84 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
       </div>
     </section>
 
-    <section class="rsvp-section" id="rsvp" aria-labelledby="rsvp-section-title">
-      <img
-        class="floral floral--left"
-        src={withBase("assets/ornaments/floral-accent-left.svg")}
-        alt=""
-        width="260"
-        height="188"
-        loading="lazy"
-      />
-      <img
-        class="floral floral--right"
-        src={withBase("assets/ornaments/floral-accent-right.svg")}
-        alt=""
-        width="260"
-        height="188"
-        loading="lazy"
-      />
-      <div class="rsvp-heading" data-soft-reveal>
-        <p class="eyebrow">One last step</p>
-        <h2 id="rsvp-section-title">Will you join us?</h2>
-        {
-          invite ? (
-            <div class="rsvp-reservation">
-              <p>{invite.greeting}</p>
-              <span>{invite.reservationMessage}</span>
-            </div>
-          ) : null
-        }
-      </div>
-      <RSVPForm
-        client:visible
-        defaultName={invite?.guestName ?? ""}
-        maxGuests={maxGuests}
-        storageKey={storageKey}
-      />
-    </section>
   </main>
+</div>
 
-  <footer class="site-footer">
+<div class="rsvp-transition-cloud" data-rsvp-transition-cloud aria-hidden="true">
+  <img
+    src={withBase("assets/clouds/cloud-foreground-bank.webp")}
+    alt=""
+    width="960"
+    height="391"
+    decoding="async"
+  />
+</div>
+
+<section
+  class="rsvp-section"
+  id="rsvp"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="rsvp-section-title"
+  aria-hidden="true"
+  inert
+  data-rsvp-scene
+  data-rsvp-scroll
+>
+  <button class="rsvp-back" type="button" data-rsvp-close aria-label="Back to invitation">
+    <span aria-hidden="true">←</span>
+    <span>Back to invitation</span>
+  </button>
+
+  <div class="rsvp-scene-content">
     <img
-      src={withBase("assets/ornaments/monogram.svg")}
+      class="floral floral--left"
+      src={withBase("assets/ornaments/floral-accent-left.svg")}
       alt=""
-      width="72"
-      height="54"
+      width="260"
+      height="188"
       loading="lazy"
     />
-    <p>Made with love, beneath the same sky.</p>
-    <a href="#arrival">Return to the clouds ↑</a>
-  </footer>
-</div>
+    <img
+      class="floral floral--right"
+      src={withBase("assets/ornaments/floral-accent-right.svg")}
+      alt=""
+      width="260"
+      height="188"
+      loading="lazy"
+    />
+    <div class="rsvp-heading">
+      <p class="eyebrow">One last step</p>
+      <h2 id="rsvp-section-title" tabindex="-1" data-rsvp-focus>Will you join us?</h2>
+      {
+        invite ? (
+          <div class="rsvp-reservation">
+            <p>{invite.greeting}</p>
+            <span>{invite.reservationMessage}</span>
+          </div>
+        ) : null
+      }
+    </div>
+    <RSVPForm
+      client:load
+      defaultName={invite?.guestName ?? ""}
+      maxGuests={maxGuests}
+      storageKey={storageKey}
+    />
+
+    <footer class="site-footer">
+      <img
+        src={withBase("assets/ornaments/monogram.svg")}
+        alt=""
+        width="72"
+        height="54"
+        loading="lazy"
+      />
+      <p>Made with love, beneath the same sky.</p>
+      <button type="button" data-rsvp-close>← Return to invitation</button>
+    </footer>
+  </div>
+</section>
 
 <script>
   import gsap from "gsap";
@@ -497,11 +547,16 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
   });
 
   let orientationRefreshTimer: number | undefined;
+  let orientationRefreshPending = false;
   const refreshAfterOrientationChange = () => {
     if (orientationRefreshTimer !== undefined) window.clearTimeout(orientationRefreshTimer);
     orientationRefreshTimer = window.setTimeout(() => {
-      ScrollTrigger.refresh();
       orientationRefreshTimer = undefined;
+      if (document.documentElement.classList.contains("is-rsvp-open")) {
+        orientationRefreshPending = true;
+        return;
+      }
+      ScrollTrigger.refresh();
     }, 250);
   };
 
@@ -666,8 +721,11 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
       });
 
       const ascensionPhase = root.querySelector<HTMLElement>("[data-phase='ascension']");
+      const finalAscentPhase = root.querySelector<HTMLElement>("[data-final-ascent]");
       const pavilionPhase = root.querySelector<HTMLElement>("[data-phase='pavilion']");
       const staircase = root.querySelector<HTMLElement>("[data-staircase]");
+      const pavilionPreview = root.querySelector<HTMLElement>("[data-pavilion-preview]");
+      const pavilionPreviewPicture = pavilionPreview?.querySelector<HTMLElement>("img");
       const pavilionAssembly = root.querySelector<HTMLElement>("[data-pavilion-assembly]");
       const pavilionPicture = root.querySelector<HTMLElement>(".pavilion-picture");
       const pavilionClouds = root.querySelector<HTMLElement>(".pavilion-clouds");
@@ -729,7 +787,7 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
         );
       };
 
-      if (ascensionPhase && pavilionPhase && staircase && pavilionAssembly && pavilionPicture && couple && finalCopy) {
+      if (ascensionPhase && finalAscentPhase && pavilionPhase && staircase && pavilionPreview && pavilionPreviewPicture && pavilionAssembly && pavilionPicture && couple && finalCopy) {
         const stairAscentScale = () => {
           if (window.innerWidth >= 1120) return 1.54;
           if (window.innerWidth >= 768) return 1.7;
@@ -766,6 +824,13 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
           y: () => pavilionDistantY(0.14),
           transformOrigin: "50% 72%",
         });
+        gsap.set(pavilionPreview, {
+          autoAlpha: 1,
+          scale: 0.14,
+          y: () => pavilionDistantY(0.14),
+          transformOrigin: "50% 72%",
+        });
+        gsap.set(pavilionPreviewPicture, { autoAlpha: 0 });
         gsap.set(couple, {
           autoAlpha: 0,
           y: compactEffects ? 8 : 0,
@@ -790,8 +855,8 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
           ? [staircase, pavilionClouds]
           : [staircase, pavilionClouds, upperStairFog, lowerStairFog, finalAscentGlow];
         const pavilionMotionLayers = compactEffects
-          ? [staircase, pavilionAssembly]
-          : [staircase, pavilionAssembly, pavilionClouds, crestHaze, revealHaze, finalCopy];
+          ? [staircase, pavilionPreview, pavilionAssembly]
+          : [staircase, pavilionPreview, pavilionAssembly, pavilionClouds, crestHaze, revealHaze, finalCopy];
 
         const ascensionTimeline = gsap.timeline({
           scrollTrigger: {
@@ -837,6 +902,36 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
           )
           .to(stairLight, { autoAlpha: 0.92, scale: 1.12, duration: 0.14, ease: "sine.inOut" }, 0.86)
           .to(finalAscentGlow, { autoAlpha: 0.82, scale: 1.08, duration: 0.14, ease: "sine.out" }, 0.86);
+
+        gsap.timeline({
+          scrollTrigger: {
+            trigger: finalAscentPhase,
+            start: "top top",
+            end: "bottom top",
+            scrub: 0.5,
+            invalidateOnRefresh: true,
+            onToggle: (self) => pavilionPreview.classList.toggle("is-moving", self.isActive),
+          },
+        })
+          .fromTo(
+            pavilionPreviewPicture,
+            { autoAlpha: 0 },
+            {
+              autoAlpha: 0,
+              duration: 0.65,
+              ease: "none",
+            },
+            0,
+          )
+          .to(
+            pavilionPreviewPicture,
+            {
+              autoAlpha: 0.16,
+              duration: 0.35,
+              ease: "none",
+            },
+            0.65,
+          );
 
         const pavilionTimeline = gsap.timeline({
           scrollTrigger: {
@@ -898,6 +993,7 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
             },
             0.02,
           )
+          .to(pavilionPreview, { autoAlpha: 0, duration: 0.12, ease: "sine.in" }, 0)
           .to(crestHaze, { autoAlpha: 0.9, scale: 1.12, yPercent: 12, duration: 0.18, ease: "sine.inOut" }, 0.02)
           .to(pavilionClouds, { autoAlpha: 0.8, scale: 1.07, duration: 0.5, ease: "none" }, 0)
           .to(
@@ -1041,5 +1137,349 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
         showAscent();
       };
     });
+
+    const rsvpScene = document.querySelector<HTMLElement>("[data-rsvp-scene]");
+    const rsvpOpener = root.querySelector<HTMLElement>("[data-rsvp-open]");
+    const rsvpFocusTarget = document.querySelector<HTMLElement>("[data-rsvp-focus]");
+    const rsvpTransitionCloud = document.querySelector<HTMLElement>("[data-rsvp-transition-cloud]");
+    const pavilionRsvpShift = root.querySelector<HTMLElement>("[data-pavilion-rsvp-shift]");
+    const finalCopyShift = root.querySelector<HTMLElement>("[data-final-copy-shift]");
+
+    if (
+      rsvpScene
+      && rsvpOpener
+      && rsvpFocusTarget
+      && rsvpTransitionCloud
+      && pavilionRsvpShift
+      && finalCopyShift
+    ) {
+      const documentElement = document.documentElement;
+      const body = document.body;
+      const skipLink = document.querySelector<HTMLElement>(".skip-link");
+      const closeControls = Array.from(rsvpScene.querySelectorAll<HTMLElement>("[data-rsvp-close]"));
+      const historyMarker = "ourJourneyRsvpGate";
+      const backgroundSurfaces = [root, skipLink].filter(
+        (surface): surface is HTMLElement => Boolean(surface),
+      );
+      const backgroundState = new Map<HTMLElement, { hadInert: boolean; ariaHidden: string | null }>();
+      let rsvpState: "closed" | "opening" | "open" | "closing" = "closed";
+      let returnFocusTarget: HTMLElement | null = rsvpOpener;
+      let ownsRsvpHistoryEntry = false;
+      let savedScrollX = 0;
+      let savedScrollY = 0;
+      let previousScrollRestoration: ScrollRestoration | null = null;
+      let suspendedScrollTriggers = [] as ReturnType<typeof ScrollTrigger.getAll>;
+      let bodyStyleSnapshot: {
+        position: string;
+        top: string;
+        right: string;
+        left: string;
+        width: string;
+        paddingRight: string;
+      } | null = null;
+
+      const historyStateObject = () =>
+        history.state && typeof history.state === "object" ? { ...history.state } : {};
+
+      const setBackgroundInactive = (inactive: boolean) => {
+        if (inactive) {
+          backgroundSurfaces.forEach((surface) => {
+            if (!backgroundState.has(surface)) {
+              backgroundState.set(surface, {
+                hadInert: surface.hasAttribute("inert"),
+                ariaHidden: surface.getAttribute("aria-hidden"),
+              });
+            }
+            surface.inert = true;
+            surface.setAttribute("inert", "");
+            surface.setAttribute("aria-hidden", "true");
+          });
+          return;
+        }
+
+        backgroundSurfaces.forEach((surface) => {
+          const previous = backgroundState.get(surface);
+          if (!previous) return;
+          surface.inert = previous.hadInert;
+          if (previous.hadInert) surface.setAttribute("inert", "");
+          else surface.removeAttribute("inert");
+          if (previous.ariaHidden === null) surface.removeAttribute("aria-hidden");
+          else surface.setAttribute("aria-hidden", previous.ariaHidden);
+        });
+        backgroundState.clear();
+      };
+
+      const lockInvitation = () => {
+        if (bodyStyleSnapshot) return;
+
+        savedScrollX = window.scrollX;
+        savedScrollY = window.scrollY;
+        bodyStyleSnapshot = {
+          position: body.style.position,
+          top: body.style.top,
+          right: body.style.right,
+          left: body.style.left,
+          width: body.style.width,
+          paddingRight: body.style.paddingRight,
+        };
+        previousScrollRestoration = history.scrollRestoration;
+        history.scrollRestoration = "manual";
+
+        suspendedScrollTriggers = ScrollTrigger.getAll();
+        suspendedScrollTriggers.forEach((trigger) => trigger.disable(false, true));
+
+        const scrollbarGap = Math.max(0, window.innerWidth - documentElement.clientWidth);
+        const computedPaddingRight = Number.parseFloat(getComputedStyle(body).paddingRight) || 0;
+        body.style.position = "fixed";
+        body.style.top = `-${savedScrollY}px`;
+        body.style.right = "0";
+        body.style.left = "0";
+        body.style.width = "100%";
+        if (scrollbarGap > 0) body.style.paddingRight = `${computedPaddingRight + scrollbarGap}px`;
+      };
+
+      const unlockInvitation = () => {
+        if (!bodyStyleSnapshot) return;
+
+        const previousStyles = bodyStyleSnapshot;
+        bodyStyleSnapshot = null;
+        body.style.position = previousStyles.position;
+        body.style.top = previousStyles.top;
+        body.style.right = previousStyles.right;
+        body.style.left = previousStyles.left;
+        body.style.width = previousStyles.width;
+        body.style.paddingRight = previousStyles.paddingRight;
+
+        const previousScrollBehavior = documentElement.style.scrollBehavior;
+        documentElement.style.scrollBehavior = "auto";
+        window.scrollTo(savedScrollX, savedScrollY);
+        suspendedScrollTriggers.forEach((trigger) => trigger.enable(false, false));
+        suspendedScrollTriggers = [] as ReturnType<typeof ScrollTrigger.getAll>;
+        ScrollTrigger.update();
+
+        if (previousScrollRestoration !== null) {
+          history.scrollRestoration = previousScrollRestoration;
+          previousScrollRestoration = null;
+        }
+
+        window.requestAnimationFrame(() => {
+          documentElement.style.scrollBehavior = previousScrollBehavior;
+          if (orientationRefreshPending) {
+            orientationRefreshPending = false;
+            ScrollTrigger.refresh();
+          }
+        });
+      };
+
+      const setSceneAccessibility = (open: boolean) => {
+        rsvpScene.inert = !open;
+        if (open) rsvpScene.removeAttribute("inert");
+        else rsvpScene.setAttribute("inert", "");
+        rsvpScene.setAttribute("aria-hidden", open ? "false" : "true");
+      };
+
+      const finishOpen = () => {
+        if (rsvpState !== "opening") return;
+        rsvpState = "open";
+        documentElement.classList.remove("is-rsvp-transitioning");
+        rsvpFocusTarget.focus({ preventScroll: true });
+      };
+
+      const finishClose = () => {
+        if (rsvpState !== "closing") return;
+        rsvpState = "closed";
+        documentElement.classList.remove("is-rsvp-open", "is-rsvp-transitioning");
+        setSceneAccessibility(false);
+        gsap.set(rsvpScene, { opacity: 0, y: 0, yPercent: 100 });
+        gsap.set(rsvpTransitionCloud, { autoAlpha: 0, y: 0, yPercent: 58 });
+        rsvpScene.scrollTop = 0;
+        setBackgroundInactive(false);
+        unlockInvitation();
+        if (returnFocusTarget?.isConnected) returnFocusTarget.focus({ preventScroll: true });
+        ownsRsvpHistoryEntry = false;
+      };
+
+      gsap.set(rsvpScene, { opacity: 0, y: 0, yPercent: 100 });
+      gsap.set(rsvpTransitionCloud, { autoAlpha: 0, y: 0, yPercent: 58 });
+
+      const rsvpTimeline = gsap.timeline({
+        paused: true,
+        onComplete: finishOpen,
+        onReverseComplete: finishClose,
+      });
+
+      rsvpTimeline
+        .to(rsvpOpener, { y: -2, duration: 0.1, ease: "power1.out" }, 0)
+        .to(rsvpOpener, { y: 0, duration: 0.12, ease: "power1.in" }, 0.1)
+        .to(
+          pavilionRsvpShift,
+          { y: "-3vh", autoAlpha: 0.75, duration: 0.48, ease: "power1.inOut" },
+          0.16,
+        )
+        .to(
+          finalCopyShift,
+          { y: "-2vh", autoAlpha: 0, duration: 0.34, ease: "power1.in" },
+          0.26,
+        )
+        .fromTo(
+          rsvpScene,
+          { opacity: 0, y: 0, yPercent: 100 },
+          { opacity: 1, y: 0, yPercent: 0, duration: 0.68, ease: "power2.inOut" },
+          0.22,
+        )
+        .fromTo(
+          rsvpTransitionCloud,
+          { autoAlpha: 0, y: 0, yPercent: 58 },
+          { autoAlpha: 1, y: 0, yPercent: 0, duration: 0.36, ease: "power1.out" },
+          0.1,
+        )
+        .to(
+          rsvpTransitionCloud,
+          { autoAlpha: 0, y: 0, yPercent: -60, duration: 0.45, ease: "power1.in" },
+          0.46,
+        );
+
+      const openRsvp = (pushHistory: boolean, focusTarget: HTMLElement | null = rsvpOpener) => {
+        if (rsvpState === "open" || rsvpState === "opening") return;
+
+        if (rsvpState === "closing") {
+          rsvpState = "opening";
+          documentElement.classList.add("is-rsvp-transitioning");
+          rsvpTimeline.play();
+          return;
+        }
+
+        const activeElement = document.activeElement;
+        returnFocusTarget = activeElement instanceof HTMLElement && activeElement !== body
+          ? activeElement
+          : focusTarget;
+        rsvpState = "opening";
+        lockInvitation();
+        setBackgroundInactive(true);
+        setSceneAccessibility(true);
+        rsvpScene.scrollTop = 0;
+        documentElement.classList.add("is-rsvp-open", "is-rsvp-transitioning");
+
+        if (pushHistory) {
+          history.pushState(
+            { ...historyStateObject(), rsvpOpen: true, [historyMarker]: true },
+            "",
+            "#rsvp",
+          );
+          ownsRsvpHistoryEntry = true;
+        } else {
+          ownsRsvpHistoryEntry = Boolean(history.state?.[historyMarker]);
+        }
+
+        if (prefersReducedMotion) {
+          rsvpTimeline.progress(1).pause();
+          finishOpen();
+        } else {
+          rsvpTimeline.play(0);
+        }
+      };
+
+      const closeRsvp = () => {
+        if (rsvpState === "closed" || rsvpState === "closing") return;
+        rsvpState = "closing";
+        documentElement.classList.add("is-rsvp-transitioning");
+        if (prefersReducedMotion) {
+          rsvpTimeline.progress(0).pause();
+          finishClose();
+        } else {
+          rsvpTimeline.reverse();
+        }
+      };
+
+      const requestClose = () => {
+        if (rsvpState === "closed" || rsvpState === "closing") return;
+        if (ownsRsvpHistoryEntry && history.state?.[historyMarker]) {
+          history.back();
+          return;
+        }
+
+        const nextState = historyStateObject();
+        delete nextState.rsvpOpen;
+        delete nextState[historyMarker];
+        history.replaceState(nextState, "", `${location.pathname}${location.search}`);
+        ownsRsvpHistoryEntry = false;
+        closeRsvp();
+      };
+
+      const focusableElements = () =>
+        Array.from(
+          rsvpScene.querySelectorAll<HTMLElement>(
+            "a[href], button:not(:disabled), input:not([type='hidden']):not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex='-1'])",
+          ),
+        ).filter((element) => {
+          const style = getComputedStyle(element);
+          return style.display !== "none" && style.visibility !== "hidden" && element.getClientRects().length > 0;
+        });
+
+      const handleDialogKeydown = (event: KeyboardEvent) => {
+        if (rsvpState === "closed") return;
+        if (event.key === "Escape") {
+          event.preventDefault();
+          requestClose();
+          return;
+        }
+        if (event.key !== "Tab") return;
+
+        const focusable = focusableElements();
+        if (focusable.length === 0) {
+          event.preventDefault();
+          rsvpFocusTarget.focus({ preventScroll: true });
+          return;
+        }
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        const active = document.activeElement;
+        if (!rsvpScene.contains(active)) {
+          event.preventDefault();
+          (event.shiftKey ? last : first).focus();
+        } else if (event.shiftKey && active === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && active === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      };
+
+      const handlePopState = (event: PopStateEvent) => {
+        if (location.hash === "#rsvp") {
+          ownsRsvpHistoryEntry = Boolean(event.state?.[historyMarker]);
+          openRsvp(false);
+        } else {
+          ownsRsvpHistoryEntry = false;
+          closeRsvp();
+        }
+      };
+
+      const handlePageHide = () => {
+        rsvpTimeline.kill();
+        document.removeEventListener("keydown", handleDialogKeydown);
+        window.removeEventListener("popstate", handlePopState);
+        setSceneAccessibility(false);
+        setBackgroundInactive(false);
+        unlockInvitation();
+        documentElement.classList.remove("is-rsvp-open", "is-rsvp-transitioning");
+      };
+
+      rsvpOpener.addEventListener("click", (event) => {
+        event.preventDefault();
+        openRsvp(true, rsvpOpener);
+      });
+      closeControls.forEach((control) => control.addEventListener("click", requestClose));
+      document.addEventListener("keydown", handleDialogKeydown);
+      window.addEventListener("popstate", handlePopState);
+      window.addEventListener("pagehide", handlePageHide, { once: true });
+
+      if (location.hash === "#rsvp") {
+        history.replaceState({ ...historyStateObject(), rsvpOpen: true }, "", location.href);
+        window.requestAnimationFrame(() => openRsvp(false));
+      }
+    }
   }
 </script>
