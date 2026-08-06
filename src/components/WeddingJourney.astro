@@ -1,5 +1,6 @@
 ---
 import CloudField from "./CloudField.astro";
+import CloudPass from "./CloudPass.astro";
 import PavilionCurtains from "./PavilionCurtains.astro";
 import RSVPForm from "./RSVPForm";
 import type { InviteCodeData } from "../data/invitation";
@@ -233,8 +234,17 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
           </div>
 
           <PavilionCurtains class="pavilion-curtains" />
-          <div class="pavilion-cloud-bank pavilion-cloud-bank--left" aria-hidden="true"></div>
-          <div class="pavilion-cloud-bank pavilion-cloud-bank--right" aria-hidden="true"></div>
+          <img
+            class="pavilion-cloud-bank"
+            src={withBase("assets/clouds/cloud-foreground-rise.webp")}
+            alt=""
+            width="1040"
+            height="453"
+            loading="lazy"
+            decoding="async"
+            fetchpriority="low"
+            aria-hidden="true"
+          />
         </div>
 
         <div class="crest-haze" data-crest-haze aria-hidden="true"></div>
@@ -316,6 +326,12 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
             </article>
 
             <article class="ascent-beat story-beat" data-ascent-beat data-story-beat="story">
+              <CloudPass
+                event="story"
+                src="assets/clouds/cloud-mid-drift.webp"
+                width={720}
+                height={248}
+              />
               <h2 class="eyebrow">{wedding.story.heading}</h2>
               <blockquote>“{wedding.story.quote}”</blockquote>
               <div class="story-lines">
@@ -348,6 +364,12 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
             </section>
 
             <article class="ascent-beat doa-beat" data-ascent-beat data-story-beat="doa" lang="ms">
+              <CloudPass
+                event="doa"
+                src="assets/clouds/cloud-distant-wisp.webp"
+                width={520}
+                height={114}
+              />
               <h2>{wedding.doa.heading}</h2>
               <p class="doa-arabic" lang="ar" dir="rtl">{wedding.doa.arabic}</p>
               <img src={withBase("assets/ornaments/divider.svg")} alt="" width="300" height="28" />
@@ -397,6 +419,12 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
             }
 
             <div class="final-ascent-breath" data-final-ascent aria-hidden="true">
+              <CloudPass
+                event="final"
+                src="assets/clouds/cloud-foreground-bank.webp"
+                width={960}
+                height={391}
+              />
               <span></span>
             </div>
           </div>
@@ -493,6 +521,8 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
     const select = gsap.utils.selector(root);
     const motion = gsap.matchMedia();
     const cloudFields = select<HTMLElement>("[data-cloud-field]");
+    const cloudPasses = select<HTMLElement>("[data-cloud-pass]");
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     if ("IntersectionObserver" in window) {
       const cloudObserver = new IntersectionObserver(
@@ -505,59 +535,60 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
               });
           });
         },
-        { rootMargin: "100% 0px" },
+        { rootMargin: "35% 0px" },
       );
 
       cloudFields.forEach((field) => cloudObserver.observe(field));
-      window.addEventListener("pagehide", () => cloudObserver.disconnect(), { once: true });
+
+      const cloudPassObserver = prefersReducedMotion
+        ? null
+        : new IntersectionObserver(
+            (entries) => {
+              entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                  cloudPasses.forEach((pass) => {
+                    pass.classList.toggle("is-active", pass === entry.target);
+                  });
+                } else {
+                  entry.target.classList.remove("is-active");
+                }
+              });
+            },
+            { rootMargin: "30% 0px" },
+          );
+
+      const cloudPassEndHandlers = cloudPasses.map((pass) => {
+        const image = pass.querySelector("img");
+        const handleEnd = () => pass.classList.remove("is-active");
+        image?.addEventListener("animationend", handleEnd);
+        cloudPassObserver?.observe(pass);
+        return { image, handleEnd };
+      });
+
+      window.addEventListener(
+        "pagehide",
+        () => {
+          cloudObserver.disconnect();
+          cloudPassObserver?.disconnect();
+          cloudPassEndHandlers.forEach(({ image, handleEnd }) => {
+            image?.removeEventListener("animationend", handleEnd);
+          });
+        },
+        { once: true },
+      );
     }
 
     motion.add("(prefers-reduced-motion: no-preference)", () => {
       const progress = root.querySelector<HTMLElement>("[data-progress]");
-      const skyPicture = root.querySelector<HTMLElement>(".sky-picture");
-      const farCloudLayers = select<HTMLElement>("[data-cloud-field] [data-layer='back']");
 
       if (progress) {
         gsap.set(progress, { scaleY: 0, transformOrigin: "top center" });
+        const setProgress = gsap.quickSetter(progress, "scaleY");
         ScrollTrigger.create({
           start: 0,
           end: "max",
-          onUpdate: (self) => gsap.set(progress, { scaleY: self.progress }),
+          onUpdate: (self) => setProgress(self.progress),
         });
-      }
-
-      if (skyPicture) {
-        gsap.fromTo(
-          skyPicture,
-          { y: "-1.1vh" },
-          {
-            y: "1.1vh",
-            ease: "none",
-            scrollTrigger: {
-              trigger: root,
-              start: "top top",
-              end: "bottom bottom",
-              scrub: 1.5,
-            },
-          },
-        );
-      }
-
-      if (farCloudLayers.length) {
-        gsap.fromTo(
-          farCloudLayers,
-          { y: "-1.5vh" },
-          {
-            y: "1.5vh",
-            ease: "none",
-            scrollTrigger: {
-              trigger: root,
-              start: "top top",
-              end: "bottom bottom",
-              scrub: 1.35,
-            },
-          },
-        );
       }
 
       const openingLines = select("[data-opening-line]");
@@ -572,17 +603,22 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
 
       const arrival = root.querySelector<HTMLElement>("[data-scene='arrival']");
       if (arrival) {
+        const compactCloudBudget = window.matchMedia("(max-width: 47.9375rem)").matches;
         const frontA = arrival.querySelector<HTMLElement>("[data-cloud='front-a']");
         const frontB = arrival.querySelector<HTMLElement>("[data-cloud='front-b']");
-        const frontC = arrival.querySelector<HTMLElement>("[data-cloud='front-c']");
         const midA = arrival.querySelector<HTMLElement>("[data-cloud='mid-a']");
-        const midB = arrival.querySelector<HTMLElement>("[data-cloud='mid-b']");
         const mist = arrival.querySelector<HTMLElement>("[data-layer='mist']");
         const opening = arrival.querySelector<HTMLElement>("[data-opening-copy]");
         const cue = arrival.querySelector<HTMLElement>("[data-scroll-cue]");
-        const movingClouds = [frontA, frontB, frontC, midA, midB].filter(Boolean);
+        const movingClouds = [frontA, midA, ...(compactCloudBudget ? [] : [frontB])].filter(
+          (cloud): cloud is HTMLElement => Boolean(cloud),
+        );
+        const setArrivalMotion = (active: boolean) => {
+          movingClouds.forEach((cloud) => cloud.classList.toggle("is-moving", active));
+          arrival.classList.toggle("is-complete", !active);
+        };
 
-        gsap.set(movingClouds, { animation: "none" });
+        setArrivalMotion(true);
 
         const arrivalTimeline = gsap.timeline({
           scrollTrigger: {
@@ -590,18 +626,22 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
             start: "top top",
             end: "bottom bottom",
             scrub: 1.1,
+            onEnter: () => setArrivalMotion(true),
+            onEnterBack: () => setArrivalMotion(true),
+            onLeave: () => setArrivalMotion(false),
           },
         });
 
         arrivalTimeline
           .to(frontA, { x: "-28vw", y: "8vh", scale: 1.08, ease: "sine.inOut" }, 0)
-          .to(frontB, { x: "29vw", y: "-3vh", scale: 1.05, ease: "sine.inOut" }, 0)
-          .to(frontC, { x: "9vw", y: "18vh", scale: 1.12, autoAlpha: 0.3 }, 0)
           .to(midA, { x: "-13vw", y: "3vh", scale: 1.03 }, 0.06)
-          .to(midB, { x: "14vw", y: "-1vh", scale: 1.02 }, 0.04)
-          .to(mist, { autoAlpha: 0.12, y: "5vh" }, 0)
+          .to(mist, { autoAlpha: 0.12 }, 0)
           .to(cue, { autoAlpha: 0, y: 18 }, 0)
           .to(opening, { autoAlpha: 0.12, y: "-10vh", scale: 0.97 }, 0.18);
+
+        if (!compactCloudBudget) {
+          arrivalTimeline.to(frontB, { x: "29vw", y: "-3vh", scale: 1.05, ease: "sine.inOut" }, 0);
+        }
       }
 
       select("[data-ascent-beat]").forEach((beat) => {
@@ -640,12 +680,28 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
       const finalAscentGlow = root.querySelector<HTMLElement>("[data-final-ascent-glow]");
       const crestHaze = root.querySelector<HTMLElement>("[data-crest-haze]");
       const couple = root.querySelector<HTMLElement>("[data-couple]");
+      const coupleLight = root.querySelector<HTMLElement>(".couple-light");
       const ringHand = root.querySelector<HTMLElement>("[data-ring-hand]");
       const glint = root.querySelector<HTMLElement>("[data-ring-glint]");
       const revealHaze = root.querySelector<HTMLElement>("[data-reveal-haze]");
       const finalCopy = root.querySelector<HTMLElement>("[data-final-copy]");
+      const compactEffects = window.matchMedia("(max-width: 47.9375rem)").matches;
       let glintTimer: number | undefined;
       let ringMomentActive = false;
+
+      const setMovingState = (
+        layers: Array<HTMLElement | null | undefined>,
+        active: boolean,
+      ) => {
+        layers.forEach((layer) => layer?.classList.toggle("is-moving", active));
+      };
+
+      const setPavilionAmbientState = (progress: number, active = true) => {
+        const curtainsActive = active && progress >= 0.46 && progress < 0.9;
+        const coupleLightActive = active && progress >= 0.58 && progress < 0.91;
+        pavilionCurtains?.classList.toggle("is-active", curtainsActive);
+        coupleLight?.classList.toggle("is-active", coupleLightActive);
+      };
 
       const clearGlintTimer = () => {
         if (glintTimer !== undefined) {
@@ -703,26 +759,24 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
           scale: 0.94,
           y: 0,
           transformOrigin: "50% 6.31%",
-          force3D: true,
         });
         gsap.set(pavilionAssembly, {
           autoAlpha: 0,
           scale: 0.14,
           y: () => pavilionDistantY(0.14),
           transformOrigin: "50% 72%",
-          force3D: true,
         });
         gsap.set(couple, {
           autoAlpha: 0,
-          clipPath: "inset(48% 0 0 0)",
-          force3D: true,
+          y: compactEffects ? 8 : 0,
+          clipPath: compactEffects ? "none" : "inset(48% 0 0 0)",
         });
         gsap.set(pavilionBanks, { autoAlpha: 0.18 });
         gsap.set(pavilionCurtains, { autoAlpha: 0 });
         gsap.set(pavilionClouds, { autoAlpha: 0.22, scale: 1 });
-        gsap.set(crestHaze, { autoAlpha: 0, scale: 0.82, yPercent: -8, force3D: true });
-        gsap.set(revealHaze, { autoAlpha: 0, y: "6vh", force3D: true });
-        gsap.set(finalAscentGlow, { autoAlpha: 0, scale: 0.9, force3D: true });
+        gsap.set(crestHaze, { autoAlpha: 0, scale: 0.82, yPercent: -8 });
+        gsap.set(revealHaze, { autoAlpha: 0, y: "6vh" });
+        gsap.set(finalAscentGlow, { autoAlpha: 0, scale: 0.9 });
         gsap.set(finalCopy, {
           autoAlpha: 0,
           xPercent: -50,
@@ -732,6 +786,13 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
         });
         gsap.set(glint, { autoAlpha: 0, scale: 0.4 });
 
+        const ascentMotionLayers = compactEffects
+          ? [staircase, pavilionClouds]
+          : [staircase, pavilionClouds, upperStairFog, lowerStairFog, finalAscentGlow];
+        const pavilionMotionLayers = compactEffects
+          ? [staircase, pavilionAssembly]
+          : [staircase, pavilionAssembly, pavilionClouds, crestHaze, revealHaze, finalCopy];
+
         const ascensionTimeline = gsap.timeline({
           scrollTrigger: {
             trigger: ascensionPhase,
@@ -739,6 +800,7 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
             end: "bottom bottom",
             scrub: 0.95,
             invalidateOnRefresh: true,
+            onToggle: (self) => setMovingState(ascentMotionLayers, self.isActive),
           },
         });
 
@@ -783,8 +845,13 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
             end: "bottom bottom",
             scrub: 0.85,
             invalidateOnRefresh: true,
+            onToggle: (self) => {
+              setMovingState(pavilionMotionLayers, self.isActive);
+              if (!self.isActive) setPavilionAmbientState(self.progress, false);
+            },
             onUpdate: (self) => {
-              const shouldGlint = self.progress >= 0.8 && self.progress < 0.9;
+              setPavilionAmbientState(self.progress, self.isActive);
+              const shouldGlint = self.isActive && self.progress >= 0.8 && self.progress < 0.9;
               if (shouldGlint !== ringMomentActive) {
                 ringMomentActive = shouldGlint;
                 if (ringMomentActive) scheduleGlint(true);
@@ -794,10 +861,12 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
             onLeave: () => {
               ringMomentActive = false;
               clearGlintTimer();
+              setPavilionAmbientState(1, false);
             },
             onLeaveBack: () => {
               ringMomentActive = false;
               clearGlintTimer();
+              setPavilionAmbientState(0, false);
             },
           },
         });
@@ -866,20 +935,42 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
           .to(pavilionCurtains, { autoAlpha: 0.2, duration: 0.12, ease: "sine.out" }, 0.5)
           .to(pavilionBanks, { autoAlpha: 0.9, duration: 0.14, ease: "sine.inOut" }, 0.48)
           .to(crestHaze, { autoAlpha: 0.08, scale: 1.34, yPercent: 58, duration: 0.2, ease: "sine.inOut" }, 0.44)
-          .to(revealHaze, { autoAlpha: 0.84, y: 0, duration: 0.1, ease: "sine.out" }, 0.54)
-          .fromTo(
-            couple,
-            { autoAlpha: 0, clipPath: "inset(48% 0 0 0)" },
-            {
-              autoAlpha: 0.42,
-              clipPath: "inset(20% 0 0 0)",
-              duration: 0.1,
-              ease: "sine.out",
-              immediateRender: false,
-            },
-            0.62,
-          )
-          .to(couple, { autoAlpha: 1, clipPath: "inset(0% 0 0 0)", duration: 0.08, ease: "sine.inOut" }, 0.72)
+          .to(revealHaze, { autoAlpha: 0.84, y: 0, duration: 0.1, ease: "sine.out" }, 0.54);
+
+        if (compactEffects) {
+          pavilionTimeline
+            .fromTo(
+              couple,
+              { autoAlpha: 0, y: 8, clipPath: "none" },
+              {
+                autoAlpha: 0.42,
+                y: 4,
+                clipPath: "none",
+                duration: 0.1,
+                ease: "sine.out",
+                immediateRender: false,
+              },
+              0.62,
+            )
+            .to(couple, { autoAlpha: 1, y: 0, duration: 0.08, ease: "sine.inOut" }, 0.72);
+        } else {
+          pavilionTimeline
+            .fromTo(
+              couple,
+              { autoAlpha: 0, clipPath: "inset(48% 0 0 0)" },
+              {
+                autoAlpha: 0.42,
+                clipPath: "inset(20% 0 0 0)",
+                duration: 0.1,
+                ease: "sine.out",
+                immediateRender: false,
+              },
+              0.62,
+            )
+            .to(couple, { autoAlpha: 1, clipPath: "inset(0% 0 0 0)", duration: 0.08, ease: "sine.inOut" }, 0.72);
+        }
+
+        pavilionTimeline
           .to(revealHaze, { autoAlpha: 0.06, y: "-9vh", duration: 0.14, ease: "sine.inOut" }, 0.7)
           .fromTo(ringHand, { autoAlpha: 0.35 }, { autoAlpha: 1, duration: 0.04 }, 0.78)
           .to(staircase, { autoAlpha: 0, duration: 0.08, ease: "sine.in" }, 0.72)
@@ -900,7 +991,10 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
         });
       });
 
-      return () => clearGlintTimer();
+      return () => {
+        clearGlintTimer();
+        setPavilionAmbientState(0, false);
+      };
     });
 
     motion.add("(prefers-reduced-motion: reduce)", () => {

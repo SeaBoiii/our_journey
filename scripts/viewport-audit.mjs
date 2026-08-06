@@ -119,7 +119,7 @@ function matrixDelta(first, second) {
 
 function assertCoverage(state, label) {
   if (Math.abs(state.cameraHeight - state.visualHeight) > 1 || Math.abs(state.arrivalCameraHeight - state.visualHeight) > 1) {
-    failures.push(`${label}: 100dvh camera does not match the dynamic visual viewport`);
+    failures.push(`${label}: 100lvh camera does not cover the visual viewport`);
   }
   if (state.cameraTop > 0.5 || state.cameraBottom < state.visualHeight - 0.5 || !state.bottomPointInCamera) {
     failures.push(`${label}: fullscreen camera exposes content at the bottom edge`);

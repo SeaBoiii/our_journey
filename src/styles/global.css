@@ -111,7 +111,6 @@ textarea {
   display: block;
   max-width: none;
   overflow: hidden;
-  will-change: transform;
 }
 
 .sky-picture img {
@@ -122,13 +121,13 @@ textarea {
   object-fit: cover;
   object-position: 51% center;
   filter: saturate(0.78) contrast(0.92) brightness(1.035);
-  animation: sky-drift 26s ease-in-out infinite alternate;
-  transform: scale(1.055) translateY(-0.5%);
+  animation: sky-drift 32s ease-in-out infinite alternate;
+  transform: scale(1.055) translateY(-0.4%);
 }
 
 @keyframes sky-drift {
   to {
-    transform: scale(1.055) translateY(0.5%);
+    transform: scale(1.055) translateY(0.4%);
   }
 }
 
@@ -218,7 +217,7 @@ textarea {
   top: 0;
   width: 100%;
   height: 100vh;
-  height: 100dvh;
+  height: 100lvh;
   min-height: 36rem;
   overflow: hidden;
 }
@@ -241,8 +240,8 @@ textarea {
   opacity: 0.82;
 }
 
-.arrival-clouds [data-cloud],
-.pavilion-clouds [data-cloud] {
+.arrival-clouds [data-layer="front"],
+.pavilion-clouds [data-layer="front"] {
   -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 52%, #000 0 34%, rgba(0, 0, 0, 0.88) 58%, transparent 100%);
   mask-image: radial-gradient(ellipse 50% 50% at 50% 52%, #000 0 34%, rgba(0, 0, 0, 0.88) 58%, transparent 100%);
 }
@@ -255,7 +254,6 @@ textarea {
   padding: 2.2rem 0;
   text-align: center;
   text-shadow: 0 2px 1.2rem rgba(255, 255, 255, 0.92);
-  will-change: transform, opacity;
 }
 
 .basmala {
@@ -350,7 +348,10 @@ textarea {
   letter-spacing: 0.18em;
   text-transform: uppercase;
   transform: translateX(-50%);
-  will-change: transform, opacity;
+}
+
+.arrival.is-complete .scroll-arrow {
+  animation-play-state: paused;
 }
 
 .scroll-arrow {
@@ -423,7 +424,6 @@ textarea {
   width: 100%;
   transform-origin: 50% 6.31%;
   backface-visibility: hidden;
-  will-change: transform, opacity;
 }
 
 .staircase-picture img {
@@ -496,6 +496,7 @@ textarea {
 }
 
 .ascent-beat {
+  position: relative;
   display: grid;
   min-height: 68svh;
   width: min(84vw, 32rem);
@@ -507,7 +508,6 @@ textarea {
   text-shadow:
     0 2px 0.8rem rgba(255, 255, 255, 0.96),
     0 0 2.5rem rgba(255, 255, 255, 0.86);
-  will-change: transform, opacity;
 }
 
 .eyebrow {
@@ -902,7 +902,10 @@ textarea {
 .pavilion-clouds {
   z-index: 0;
   opacity: 0.24;
-  will-change: opacity, transform;
+}
+
+.pavilion-clouds [data-layer="particles"] {
+  display: none;
 }
 
 .pavilion-clouds [data-layer="front"] {
@@ -916,7 +919,6 @@ textarea {
   opacity: 0;
   transform-origin: center 72%;
   backface-visibility: hidden;
-  will-change: transform, opacity;
 }
 
 .pavilion-picture {
@@ -957,7 +959,6 @@ textarea {
   aspect-ratio: 853 / 1844;
   transform: translateX(-50%);
   transform-origin: center 70%;
-  will-change: transform, opacity, filter, clip-path;
 }
 
 .couple-picture,
@@ -977,7 +978,6 @@ textarea {
 .ring-hand-layer {
   z-index: 3;
   pointer-events: none;
-  will-change: opacity, filter;
 }
 
 .couple-ground-shadow {
@@ -1027,6 +1027,12 @@ textarea {
   mix-blend-mode: screen;
   pointer-events: none;
   animation: couple-light 15s ease-in-out infinite alternate;
+  animation-play-state: paused;
+}
+
+.couple-light.is-active {
+  animation-play-state: running;
+  will-change: transform, opacity;
 }
 
 @keyframes couple-light {
@@ -1037,29 +1043,13 @@ textarea {
 .pavilion-cloud-bank {
   position: absolute;
   z-index: 5;
-  bottom: -3%;
-  width: 72%;
-  height: 30%;
-  filter: blur(1px);
+  bottom: -8%;
+  left: 50%;
+  width: min(112%, 68rem);
+  max-width: none;
+  height: auto;
   opacity: 0.86;
-  -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 58%, #000 0 38%, rgba(0, 0, 0, 0.86) 62%, transparent 100%);
-  mask-image: radial-gradient(ellipse 50% 50% at 50% 58%, #000 0 38%, rgba(0, 0, 0, 0.86) 62%, transparent 100%);
-}
-
-.pavilion-cloud-bank--left {
-  left: -28%;
-  background:
-    radial-gradient(ellipse 34% 54% at 15% 76%, rgba(212,224,235,.58) 0 62%, transparent 69%),
-    radial-gradient(ellipse 42% 76% at 47% 62%, rgba(255,255,252,.99) 0 60%, transparent 66%),
-    radial-gradient(ellipse 36% 50% at 82% 76%, rgba(247,245,238,.94) 0 64%, transparent 71%);
-}
-
-.pavilion-cloud-bank--right {
-  right: -27%;
-  background:
-    radial-gradient(ellipse 28% 45% at 12% 78%, rgba(250,247,240,.92) 0 65%, transparent 71%),
-    radial-gradient(ellipse 44% 78% at 54% 60%, rgba(255,255,252,.99) 0 59%, transparent 65%),
-    radial-gradient(ellipse 31% 51% at 88% 75%, rgba(209,221,233,.55) 0 63%, transparent 70%);
+  transform: translateX(-50%);
 }
 
 .crest-haze {
@@ -1077,7 +1067,6 @@ textarea {
   filter: blur(0.65rem);
   opacity: 0;
   pointer-events: none;
-  will-change: transform, opacity;
 }
 
 .reveal-haze {
@@ -1089,7 +1078,6 @@ textarea {
   filter: blur(1.4rem);
   opacity: 0;
   pointer-events: none;
-  will-change: transform, opacity;
 }
 
 .final-copy {
@@ -1105,7 +1093,6 @@ textarea {
   text-shadow: 0 1px 1.2rem rgba(255, 255, 255, 0.96);
   transform: none;
   visibility: hidden;
-  will-change: transform, opacity;
 }
 
 .final-message {
@@ -1281,6 +1268,87 @@ textarea {
   outline-offset: 4px;
 }
 
+.is-moving {
+  will-change: transform, opacity;
+}
+
+@media (max-width: 47.9375rem) {
+  .sky-picture img {
+    filter: none;
+  }
+
+  .sun-wash {
+    opacity: 0.78;
+    mix-blend-mode: normal;
+    animation: none;
+    transform: none;
+  }
+
+  .sky-grain {
+    display: none;
+  }
+
+  .mini-monogram {
+    background: rgba(247, 250, 251, 0.34);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .arrival-clouds [data-layer="front"],
+  .pavilion-clouds [data-layer="front"] {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .pavilion-clouds [data-layer="front"],
+  .pavilion-clouds [data-layer="mist"] {
+    display: none;
+  }
+
+  .stair-light,
+  .stair-fog,
+  .crest-haze,
+  .reveal-haze {
+    filter: none;
+  }
+
+  .final-ascent-glow,
+  .pavilion-curtains,
+  .couple-light {
+    mix-blend-mode: normal;
+  }
+
+  .staircase-picture img,
+  .pavilion-picture {
+    filter: none;
+  }
+
+  .edge-cloud {
+    display: none;
+  }
+
+  .couple-anchor {
+    clip-path: none !important;
+  }
+
+  .pavilion-cloud-bank {
+    bottom: -4%;
+    width: 110%;
+  }
+
+  .crest-haze {
+    top: 7svh;
+    right: -8%;
+    left: -8%;
+    height: 22svh;
+  }
+
+  .reveal-haze {
+    inset: 24% -8% 7%;
+    background: radial-gradient(ellipse at center 64%, rgba(255, 255, 252, 0.82) 0 13%, rgba(246, 246, 242, 0.46) 38%, transparent 70%);
+  }
+}
+
 @media (min-width: 48rem) {
   .journey-nav {
     top: 1.25rem;
@@ -1335,7 +1403,7 @@ textarea {
   }
 
   .pavilion-cloud-bank {
-    width: 58%;
+    width: min(94vw, 68rem);
   }
 
   .final-copy {

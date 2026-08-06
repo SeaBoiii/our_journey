@@ -144,10 +144,6 @@ const rightDawnId = `${safeIdPrefix}-right-dawn`;
     transform-box: fill-box;
   }
 
-  .breeze {
-    will-change: transform;
-  }
-
   .breezeLeft {
     transform-origin: 8% 0%;
     animation: left-curtain-breeze 10.8s ease-in-out infinite;
@@ -156,6 +152,16 @@ const rightDawnId = `${safeIdPrefix}-right-dawn`;
   .breezeRight {
     transform-origin: 92% 0%;
     animation: right-curtain-breeze 12.4s ease-in-out -2.7s infinite;
+  }
+
+  .breezeLeft,
+  .breezeRight {
+    animation-play-state: paused;
+  }
+
+  .curtainLayer.is-active .breeze {
+    animation-play-state: running;
+    will-change: transform;
   }
 
   .curtainBody {
@@ -226,6 +232,20 @@ const rightDawnId = `${safeIdPrefix}-right-dawn`;
 
     73% {
       transform: translate3d(1px, 1px, 0) rotate(0.2deg);
+    }
+  }
+
+  @media (max-width: 47.9375rem) {
+    .breezeLeft,
+    .breezeRight {
+      animation: none;
+      transform: none;
+      will-change: auto !important;
+    }
+
+    .dawnShade {
+      opacity: 0.56;
+      mix-blend-mode: normal;
     }
   }
 

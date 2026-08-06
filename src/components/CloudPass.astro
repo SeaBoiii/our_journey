@@ -1,0 +1,182 @@
+---
+interface Props {
+  event: "story" | "doa" | "final";
+  src: string;
+  width: number;
+  height: number;
+  class?: string;
+}
+
+const {
+  event: cloudEvent,
+  src,
+  width,
+  height,
+  class: className,
+} = Astro.props;
+
+const baseUrl = import.meta.env.BASE_URL.endsWith("/")
+  ? import.meta.env.BASE_URL
+  : `${import.meta.env.BASE_URL}/`;
+const isAbsoluteSource = /^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(src);
+const resolvedSource = isAbsoluteSource
+  ? src
+  : `${baseUrl}${src.replace(/^\/+/, "")}`;
+---
+
+<div
+  class:list={["cloud-pass", `cloud-pass--${cloudEvent}`, className]}
+  data-cloud-pass
+  data-cloud-event={cloudEvent}
+  aria-hidden="true"
+>
+  <img
+    src={resolvedSource}
+    alt=""
+    width={width}
+    height={height}
+    loading="lazy"
+    decoding="async"
+    fetchpriority="low"
+  />
+</div>
+
+<style>
+  .cloud-pass {
+    position: absolute;
+    inset: 0;
+    overflow: visible;
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+  }
+
+  .cloud-pass img {
+    position: absolute;
+    display: block;
+    max-width: none;
+    height: auto;
+    opacity: 0;
+  }
+
+  .cloud-pass.is-active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .cloud-pass.is-active img {
+    will-change: transform, opacity;
+  }
+
+  .cloud-pass--story img {
+    top: 28%;
+    left: 0;
+    width: min(74vw, 48rem);
+  }
+
+  .cloud-pass--story.is-active img {
+    animation: cloud-pass-story 26s linear both 1;
+  }
+
+  .cloud-pass--doa img {
+    top: 8%;
+    right: 0;
+    width: min(58vw, 38rem);
+  }
+
+  .cloud-pass--doa.is-active img {
+    animation: cloud-pass-doa 36s linear both 1;
+  }
+
+  .cloud-pass--final img {
+    right: 0;
+    bottom: -5%;
+    width: min(108vw, 68rem);
+  }
+
+  .cloud-pass--final.is-active img {
+    animation: cloud-pass-final 17s linear both 1;
+  }
+
+  @keyframes cloud-pass-story {
+    0% {
+      opacity: 0;
+      transform: translate3d(-115%, 8vh, 0);
+    }
+
+    12% {
+      opacity: 0.3;
+    }
+
+    48% {
+      opacity: 0.45;
+      transform: translate3d(34vw, 5.3vh, 0);
+    }
+
+    82% {
+      opacity: 0.3;
+    }
+
+    100% {
+      opacity: 0;
+      transform: translate3d(calc(100vw + 15%), 3vh, 0);
+    }
+  }
+
+  @keyframes cloud-pass-doa {
+    0% {
+      opacity: 0;
+      transform: translate3d(115%, -1vh, 0);
+    }
+
+    14% {
+      opacity: 0.18;
+    }
+
+    50% {
+      opacity: 0.3;
+      transform: translate3d(-38vw, 1vh, 0);
+    }
+
+    84% {
+      opacity: 0.18;
+    }
+
+    100% {
+      opacity: 0;
+      transform: translate3d(calc(-100vw - 15%), 3vh, 0);
+    }
+  }
+
+  @keyframes cloud-pass-final {
+    0% {
+      opacity: 0;
+      transform: translate3d(calc(-100vw - 20%), 5vh, 0);
+    }
+
+    10% {
+      opacity: 0.52;
+    }
+
+    48% {
+      opacity: 0.76;
+      transform: translate3d(-34vw, 1.5vh, 0);
+    }
+
+    84% {
+      opacity: 0.52;
+    }
+
+    100% {
+      opacity: 0;
+      transform: translate3d(120%, -2vh, 0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cloud-pass,
+    .cloud-pass.is-active {
+      display: none;
+    }
+  }
+</style>

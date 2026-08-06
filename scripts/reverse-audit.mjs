@@ -10,10 +10,23 @@ const executablePath = [
 
 if (!executablePath) throw new Error("Chrome or Edge is required for the reverse journey audit.");
 
-const viewports = [
+const allViewports = [
   { width: 390, height: 844 },
   { width: 1440, height: 900 },
 ];
+const widthFilterValue = process.env.REVERSE_AUDIT_WIDTH;
+const widthFilter = widthFilterValue === undefined ? null : Number(widthFilterValue);
+if (widthFilter !== null && !Number.isFinite(widthFilter)) {
+  throw new Error("REVERSE_AUDIT_WIDTH must be a numeric viewport width.");
+}
+const viewports = widthFilter === null
+  ? allViewports
+  : allViewports.filter((viewport) => viewport.width === widthFilter);
+if (!viewports.length) {
+  throw new Error(
+    `REVERSE_AUDIT_WIDTH=${widthFilter} does not match a configured viewport (${allViewports.map(({ width }) => width).join(", ")}).`,
+  );
+}
 const beats = [
   ["date", '[data-story-beat="date"]'],
   ["invitation", '[data-story-beat="invitation"]'],
@@ -119,6 +132,8 @@ async function readWorld(page) {
     const finalCopy = document.querySelector("[data-final-copy]");
     const finalStyle = finalCopy ? getComputedStyle(finalCopy) : null;
     const finalRect = finalCopy?.getBoundingClientRect() ?? null;
+    const skyWorld = document.querySelector(".sky-world");
+    const skyWorldRect = skyWorld?.getBoundingClientRect() ?? null;
     const skyPicture = document.querySelector(".sky-picture");
     const skyRect = skyPicture?.getBoundingClientRect() ?? null;
     return {
@@ -130,10 +145,16 @@ async function readWorld(page) {
       finalPointerEvents: finalStyle?.pointerEvents ?? "missing",
       finalCenterX: finalRect ? finalRect.left + finalRect.width / 2 - window.innerWidth / 2 : null,
       finalCenterY: finalRect ? finalRect.top + finalRect.height / 2 - window.innerHeight / 2 : null,
-      skyPosition: getComputedStyle(document.querySelector(".sky-world")).position,
+      skyPosition: skyWorld ? getComputedStyle(skyWorld).position : "missing",
       skyY: translateY(".sky-picture"),
       farCloudY: translateY(".pavilion-clouds [data-layer='back']"),
       skyAnimation: getComputedStyle(document.querySelector(".sky-picture img")).animationName,
+      skyWorldOverscansViewport: skyWorldRect
+        ? skyWorldRect.left <= -1
+          && skyWorldRect.top <= -1
+          && skyWorldRect.right >= window.innerWidth + 1
+          && skyWorldRect.bottom >= window.innerHeight + 1
+        : false,
       skyCoversViewport: skyRect
         ? skyRect.left <= 0 && skyRect.top <= 0 && skyRect.right >= window.innerWidth && skyRect.bottom >= window.innerHeight
         : false,
@@ -253,20 +274,24 @@ try {
     const worldReturned = await readWorld(page);
     const skyTravel = Math.abs((worldBottom.skyY ?? 0) - (worldTop.skyY ?? 0));
     const farCloudTravel = Math.abs((worldBottom.farCloudY ?? 0) - (worldTop.farCloudY ?? 0));
-    const minimumSkyTravel = viewport.height * 0.015;
-    const maximumSkyTravel = viewport.height * 0.03;
-    const minimumFarTravel = viewport.height * 0.024;
-    const maximumFarTravel = viewport.height * 0.04;
+    const maximumPlaneTravel = 0.75;
 
     if (worldTop.skyPosition !== "fixed") failures.push(`${label}: sky-world is no longer fixed`);
-    if (skyTravel < minimumSkyTravel || skyTravel > maximumSkyTravel) {
-      failures.push(`${label}: sky parallax travel ${skyTravel.toFixed(1)}px is outside the subtle range`);
+    if (skyTravel > maximumPlaneTravel) {
+      failures.push(`${label}: sky wrapper accumulated ${skyTravel.toFixed(2)}px of document-scroll transform travel`);
     }
-    if (farCloudTravel < minimumFarTravel || farCloudTravel > maximumFarTravel || farCloudTravel <= skyTravel) {
-      failures.push(`${label}: far-cloud parallax does not form a distinct depth plane`);
+    if (farCloudTravel > maximumPlaneTravel) {
+      failures.push(`${label}: far-cloud wrapper accumulated ${farCloudTravel.toFixed(2)}px of document-scroll transform travel`);
     }
-    if (!worldTop.skyCoversViewport || !worldBottom.skyCoversViewport || !worldReturned.skyCoversViewport) {
-      failures.push(`${label}: sky parallax exposed a viewport edge`);
+    if (
+      !worldTop.skyWorldOverscansViewport
+      || !worldBottom.skyWorldOverscansViewport
+      || !worldReturned.skyWorldOverscansViewport
+      || !worldTop.skyCoversViewport
+      || !worldBottom.skyCoversViewport
+      || !worldReturned.skyCoversViewport
+    ) {
+      failures.push(`${label}: fixed sky world or picture plane exposed a viewport edge`);
     }
     if (
       Math.abs((worldReturned.skyY ?? 0) - (worldTop.skyY ?? 0)) > 0.75
