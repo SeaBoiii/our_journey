@@ -12,7 +12,7 @@ const executablePath = [
 if (!executablePath) throw new Error("Chrome or Edge is required for the feature audit.");
 
 const wait = (duration) => new Promise((resolve) => setTimeout(resolve, duration));
-const silentWav = (seconds = 5) => {
+const silentWav = (seconds = 12) => {
   const sampleRate = 8_000;
   const bytesPerSample = 2;
   const dataSize = sampleRate * seconds * bytesPerSample;
@@ -69,11 +69,14 @@ try {
   const initialMusic = await page.evaluate(() => {
     const audio = document.querySelector("[data-music-audio]");
     const toggle = document.querySelector("[data-music-toggle]");
+    const control = document.querySelector("[data-music-control]");
     return {
       exists: audio instanceof HTMLAudioElement && toggle instanceof HTMLButtonElement,
       paused: audio instanceof HTMLAudioElement ? audio.paused : false,
       currentTime: audio instanceof HTMLAudioElement ? audio.currentTime : -1,
       autoplayAttribute: audio?.hasAttribute("autoplay") ?? true,
+      expanded: control?.getAttribute("data-music-expanded"),
+      ariaExpanded: toggle?.getAttribute("aria-expanded"),
       label: toggle?.textContent?.replace(/\s+/g, " ").trim() ?? "",
     };
   });
@@ -83,6 +86,9 @@ try {
   }
   if (!initialMusic.label.toLowerCase().includes("click to play our song")) {
     fail("music", "initial control does not invite an explicit click to play");
+  }
+  if (initialMusic.expanded !== "false" || initialMusic.ariaExpanded !== "false") {
+    fail("music", "control was not collapsed on initial load");
   }
 
   const countdownBefore = await page.evaluate(() => {
@@ -128,6 +134,11 @@ try {
     () => document.querySelector("[data-music-control]")?.getAttribute("data-music-state") === "playing",
     { timeout: 5_000 },
   );
+  const expandedAfterPlay = await page.$eval(
+    "[data-music-control]",
+    (control) => control.getAttribute("data-music-expanded"),
+  );
+  if (expandedAfterPlay !== "true") fail("music", "first tap did not expand the control");
   await page.$eval("[data-music-audio]", (audio) => {
     if (Number.isFinite(audio.duration) && audio.duration > 2) audio.currentTime = 1;
   });
@@ -139,9 +150,11 @@ try {
   const pausedState = await page.$eval("[data-music-audio]", (audio) => ({
     paused: audio.paused,
     currentTime: audio.currentTime,
+    expanded: document.querySelector("[data-music-control]")?.getAttribute("data-music-expanded"),
   }));
   const pausedPosition = pausedState.currentTime;
   if (!pausedState.paused || pausedPosition < 0.9) fail("music", "explicit pause did not retain playback position");
+  if (pausedState.expanded !== "false") fail("music", "second tap did not collapse the control");
 
   await page.click("[data-music-toggle]");
   await page.waitForFunction(
@@ -151,7 +164,33 @@ try {
   await wait(200);
   const resumedPosition = await page.$eval("[data-music-audio]", (audio) => audio.currentTime);
   if (resumedPosition + 0.05 < pausedPosition) fail("music", "resume restarted the track from the beginning");
+  await wait(4_100);
+  const timedCollapse = await page.$eval("[data-music-audio]", (audio) => ({
+    paused: audio.paused,
+    currentTime: audio.currentTime,
+    expanded: document.querySelector("[data-music-control]")?.getAttribute("data-music-expanded"),
+  }));
+  if (timedCollapse.expanded !== "false" || timedCollapse.paused) {
+    fail("music", "idle timeout did not collapse the control while preserving playback");
+  }
   await page.click("[data-music-toggle]");
+  await wait(150);
+  const reopenedPlaying = await page.$eval("[data-music-audio]", (audio) => ({
+    paused: audio.paused,
+    currentTime: audio.currentTime,
+    expanded: document.querySelector("[data-music-control]")?.getAttribute("data-music-expanded"),
+  }));
+  if (
+    reopenedPlaying.expanded !== "true"
+    || reopenedPlaying.paused
+    || reopenedPlaying.currentTime + 0.05 < timedCollapse.currentTime
+  ) {
+    fail("music", "reopening the timed-out control interrupted active playback");
+  }
+  await page.click("[data-music-toggle]");
+  await page.waitForFunction(
+    () => document.querySelector("[data-music-control]")?.getAttribute("data-music-state") === "paused",
+  );
 
   await page.reload({ waitUntil: "networkidle0" });
   await page.$eval("[data-music-audio]", (audio, source) => {
@@ -234,6 +273,9 @@ try {
 
   results.music = {
     noAutoplay: initialMusic.paused && !initialMusic.autoplayAttribute,
+    collapsedByDefault: initialMusic.expanded === "false",
+    secondTapCollapsed: pausedState.expanded === "false",
+    timeoutCollapsedDuringPlayback: timedCollapse.expanded === "false" && !timedCollapse.paused,
     explicitPlayAndPause: pausedState.paused && pausedPosition >= 0.9,
     resumePosition: Number(resumedPosition.toFixed(2)),
     sessionResumePosition: Number(sessionResumePosition.toFixed(2)),

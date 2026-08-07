@@ -860,7 +860,7 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
         const finalSceneLift = () => {
           if (window.innerWidth >= 1120) return "-30vh";
           if (window.innerWidth >= 768) return "-34vh";
-          return usesPortraitFinalComposition() ? "-15vh" : "-31vh";
+          return usesPortraitFinalComposition() ? "-11vh" : "-31vh";
         };
 
         gsap.set(staircase, {

@@ -1195,6 +1195,11 @@ textarea {
   font-weight: 400;
 }
 
+.final-message span,
+.final-message em {
+  white-space: nowrap;
+}
+
 .final-names {
   margin: 1.25rem 0 0.25rem;
   color: #3e5159;
@@ -1226,7 +1231,10 @@ textarea {
   min-width: 10.75rem;
   min-height: 3.35rem;
   align-items: center;
+  justify-content: center;
+  justify-self: center;
   gap: 0.8rem;
+  margin-inline: auto;
   margin-top: 1rem;
   padding: 0.78rem 1.8rem;
   color: #fffdf7;
@@ -1623,7 +1631,7 @@ html.is-rsvp-transitioning [data-final-copy-shift] {
     grid-template-rows: auto minmax(0, 1fr) auto auto auto auto auto;
     justify-items: center;
     width: min(88vw, 34rem);
-    padding: max(5rem, 11svh) 0 max(5.25rem, 13svh);
+    padding: max(5rem, 12svh) 0 max(5.25rem, 13svh);
     text-shadow: 0 1px 0.4rem rgba(255, 255, 255, 0.82);
   }
 
@@ -1919,7 +1927,7 @@ html.is-rsvp-transitioning [data-final-copy-shift] {
 @media (max-width: 47.9375rem) and (orientation: portrait) and (prefers-reduced-motion: reduce) {
   [data-journey-root].is-reduced-final .pavilion-assembly {
     opacity: 1 !important;
-    transform: translateY(-15vh) scale(0.96) !important;
+    transform: translateY(-11vh) scale(0.96) !important;
   }
 
   [data-journey-root].is-reduced-final .pavilion-picture {
