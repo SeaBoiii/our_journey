@@ -15,6 +15,7 @@
     "audit:reverse": "node scripts/reverse-audit.mjs",
     "audit:rsvp": "node scripts/rsvp-gating-audit.mjs",
     "audit:features": "node scripts/feature-audit.mjs",
+    "audit:network-decode": "node scripts/network-decode-audit.mjs",
     "audit:viewport": "node scripts/viewport-audit.mjs",
     "smoke": "node scripts/smoke.mjs",
     "preview": "astro preview",

@@ -1528,8 +1528,13 @@ html.is-rsvp-transitioning [data-final-copy-shift] {
 }
 
 @media (max-width: 47.9375rem) {
+  .sky-picture img {
+    animation: none;
+    transform: scale(1.055);
+  }
+
   .ascent-beat {
-    text-shadow: 0 1px 0.4rem rgba(255, 255, 255, 0.68);
+    text-shadow: 0 1px 3px rgba(255, 255, 255, 0.55);
   }
 
   .schedule-level {
@@ -1631,7 +1636,7 @@ html.is-rsvp-transitioning [data-final-copy-shift] {
     grid-template-rows: auto minmax(0, 1fr) auto auto auto auto auto;
     justify-items: center;
     width: min(88vw, 34rem);
-    padding: max(5rem, 12svh) 0 max(5.25rem, 13svh);
+    padding: max(5rem, 12svh) 0 max(5.25rem, 12svh);
     text-shadow: 0 1px 0.4rem rgba(255, 255, 255, 0.82);
   }
 

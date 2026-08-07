@@ -70,3 +70,49 @@ The 4× pavilion sample contains isolated, non-consecutive long frames; it remai
 - Reverse audit at 390 × 844 and 1440 × 900, plus reduced motion: pass; all beats return to opacity 1 / Y 0 and document-long sky/far-cloud travel is 0 px.
 - Android toolbar-cycle audit at widths 390, 393, and 430 in visible/collapsed states, repeated three times each: pass; no exposed bottom strip, background seam/flash, timeline reset, or restored pavilion/final drift.
 - DPR 3 normal and 4× CPU motion audits: pass; expected story/final cloud selectors activate, with a maximum of one narrative cloud event at a time.
+
+## Real-device FPS pass — 2026-08-07
+
+### Mobile render and loading policy
+
+- Below 768px, the full-screen sky is static. The information ascent continuously transforms only the staircase; fog, edge clouds, glow, and the pavilion cloud field remain fixed. Story, doa, and final CloudPass events remain mutually exclusive.
+- Mobile scrub settling is 0.45s for arrival, 0.4s for ascent, 0.35s for the distant pavilion preview, and 0.45s for pavilion. Desktop retains the longer cinematic values.
+- Mobile ascent text activation is opacity-only with a 3px shadow. No runtime layout reads occur inside scroll callbacks, ScrollTrigger `onUpdate`, or the diagnostics rAF loop; remaining geometry reads run during setup or ScrollTrigger refresh.
+- The staircase loads eagerly at low fetch priority. After a 700ms opening delay, one idle task at a time prepares the staircase, pavilion, couple, ring hand, and four narrative cloud assets in story order. Each task waits for load and `Image.decode()` before scheduling the next.
+- Mobile sources are capped at 640px for sky, staircase, couple, and ring hand, and 1024px for pavilion. The 1536px pavilion and 853/903px portrait/stair masters remain available only above the mobile breakpoint.
+- `?perf=1` enables a local-only overlay with rolling rAF FPS, latest frame time, long-frame count, and observer-based scene name. It uses Long Animation Frames entries where supported and a 50ms rAF fallback; it performs no analytics or per-frame layout reads.
+
+### Decoded mobile texture estimates
+
+Estimates use source width × source height × 4 bytes and report MiB. They exclude CSS gradients, compositor buffers, mipmaps, and browser overhead, so they are comparative rather than a device-memory ceiling.
+
+| Mobile scene / source | Major raster textures | Estimated decoded RGBA |
+| --- | --- | ---: |
+| Information ascent | 640×1349 sky + 640×1235 staircase | 6.31 MiB |
+| Story CloudPass | Ascent + 720×248 story cloud | 6.99 MiB |
+| Final ascent | Ascent + 960×391 foreground cloud + 640×427 distant pavilion | 8.78 MiB |
+| Pavilion transition upper bound | Sky + staircase + distant preview + 1024×683 pavilion + 640×1384 couple + 640×1384 ring hand + 1040×453 cloud bank | 18.57 MiB |
+| Stable final composition | Sky + pavilion + couple + ring hand + cloud bank | 14.52 MiB |
+
+The information ascent falls from about 9.29 MiB to 6.31 MiB (32% lower). The pavilion transition falls from about 27.51 MiB to 18.57 MiB (32% lower), and the stable final composition falls from 20.47 MiB to 14.52 MiB (29% lower).
+
+### Network/decode A/B audit
+
+`npm run audit:network-decode -- http://127.0.0.1:4321` runs an unthrottled-CPU, 390×844, DPR 3 Android profile. Each network profile measures an immediate fresh-cache pass, an in-page repeat, and a fresh page held at the opening until the sequential visual warmup completes.
+
+| Network | Pass | p50 / p95 / max | Frames >34 / >50 | Image completions during scroll |
+| --- | --- | --- | ---: | ---: |
+| Fast 4G, 20ms / 4Mbps | Immediate first | 16.7 / 16.9 / 83.5 ms | 4 / 3 | 2 |
+| Fast 4G, 20ms / 4Mbps | In-page repeat | 16.7 / 16.8 / 16.9 ms | 0 / 0 | 0 |
+| Fast 4G, 20ms / 4Mbps | Prewarmed first | 16.7 / 16.8 / 17.4 ms | 0 / 0 | 0 |
+| Slow 4G, 150ms / 1.6Mbps | Immediate first | 16.7 / 16.8 / 16.9 ms | 0 / 0 | 3 |
+| Slow 4G, 150ms / 1.6Mbps | In-page repeat | 16.7 / 16.8 / 16.9 ms | 0 / 0 | 0 |
+| Slow 4G, 150ms / 1.6Mbps | Prewarmed first | 16.7 / 16.8 / 17.0 ms | 0 / 0 | 0 |
+
+The Fast 4G cold pass is flagged as a probable network/image decode hitch: one long frame landed within 180ms of an image response completing. The fresh prewarmed pass matched the repeat at 16.8ms p95 and eliminated all frames above 34ms. Every pass remained scrollable, selected the capped mobile assets, and made zero audio requests.
+
+### Final motion verification
+
+- Mobile DPR 3 itinerary, story, final ascent, pavilion, and final calm: 16.8ms p95. Pavilion max: 16.9ms; no frames over 24ms.
+- Mobile and desktop forward/reverse staircase scale continuity: pass. Maximum mobile moving stair-to-pavilion landing gap: 0.47px.
+- Mobile pavilion atmosphere now changes opacity only. Its large transform budget is staircase + pavilion during approach, then pavilion + couple during reveal.

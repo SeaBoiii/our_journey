@@ -2,6 +2,7 @@
 import CloudField from "./CloudField.astro";
 import CloudPass from "./CloudPass.astro";
 import MusicControl from "./MusicControl.astro";
+import PerformanceOverlay from "./PerformanceOverlay.astro";
 import PavilionCurtains from "./PavilionCurtains.astro";
 import RSVPForm from "./RSVPForm";
 import WeddingCountdown from "./WeddingCountdown.astro";
@@ -37,7 +38,7 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
   <div class="sky-world" aria-hidden="true">
     <picture class="sky-picture">
       <source
-        media="(max-width: 520px)"
+        media="(max-width: 767px)"
         srcset={assetSrcset([
           ["assets/sky/sky-gradient-480.webp", 480],
           ["assets/sky/sky-gradient-640.webp", 640],
@@ -78,6 +79,7 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
     title={wedding.audio.title}
     src={wedding.audio.src}
   />
+  <PerformanceOverlay />
 
   <main id="main-content">
     <section class="scene arrival" id="arrival" data-scene="arrival">
@@ -133,11 +135,10 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
         <div class="staircase-anchor">
           <picture class="staircase-picture" data-staircase>
             <source
-              media="(max-width: 520px)"
+              media="(max-width: 767px)"
               srcset={assetSrcset([
                 ["assets/stairs/staircase-painterly-480.webp", 480],
                 ["assets/stairs/staircase-painterly-640.webp", 640],
-                ["assets/stairs/staircase-painterly.webp", 903],
               ])}
               sizes="116vw"
             />
@@ -146,7 +147,7 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
               alt="An ivory staircase rising through the clouds toward the pavilion"
               width="903"
               height="1742"
-              loading="lazy"
+              loading="eager"
               fetchpriority="low"
               decoding="async"
             />
@@ -173,11 +174,11 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
         <div class="pavilion-assembly" data-pavilion-assembly>
           <picture class="pavilion-picture">
             <source
-              media="(max-width: 700px)"
+              media="(max-width: 767px)"
               srcset={assetSrcset([
                 ["assets/pavilion/pavilion-painterly-640.webp", 640],
                 ["assets/pavilion/pavilion-painterly-768.webp", 768],
-                ["assets/pavilion/pavilion-painterly.webp", 1536],
+                ["assets/pavilion/pavilion-painterly-1024.webp", 1024],
               ])}
               sizes="180vw"
             />
@@ -203,7 +204,7 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
             <span class="couple-ground-shadow" aria-hidden="true"></span>
             <picture class="couple-picture">
               <source
-                media="(max-width: 520px)"
+                media="(max-width: 767px)"
                 srcset={assetSrcset([
                   ["assets/couple/couple-main-480.webp", 480],
                   ["assets/couple/couple-main-640.webp", 640],
@@ -226,23 +227,32 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
                 decoding="async"
               />
             </picture>
-            <img
-              class="ring-hand-layer"
-              src={withBase("assets/couple/bride-ring-hand-optimized.webp")}
-              srcset={assetSrcset([
-                ["assets/couple/bride-ring-hand-480.webp", 480],
-                ["assets/couple/bride-ring-hand-640.webp", 640],
-                ["assets/couple/bride-ring-hand-optimized.webp", 853],
-              ])}
-              sizes="(max-width: 520px) 62vw, min(38vw, 440px)"
-              alt=""
-              width="853"
-              height="1844"
-              loading="lazy"
-              decoding="async"
-              data-ring-hand
-              aria-hidden="true"
-            />
+            <picture>
+              <source
+                media="(max-width: 767px)"
+                srcset={assetSrcset([
+                  ["assets/couple/bride-ring-hand-480.webp", 480],
+                  ["assets/couple/bride-ring-hand-640.webp", 640],
+                ])}
+                sizes="62vw"
+              />
+              <img
+                class="ring-hand-layer"
+                src={withBase("assets/couple/bride-ring-hand-optimized.webp")}
+                srcset={assetSrcset([
+                  ["assets/couple/bride-ring-hand-640.webp", 640],
+                  ["assets/couple/bride-ring-hand-optimized.webp", 853],
+                ])}
+                sizes="min(38vw, 440px)"
+                alt=""
+                width="853"
+                height="1844"
+                loading="lazy"
+                decoding="async"
+                data-ring-hand
+                aria-hidden="true"
+              />
+            </picture>
             <span class="ring-contact" aria-hidden="true"></span>
             <img
               class="ring-glint"
@@ -625,6 +635,68 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
     const ascentBeats = select<HTMLElement>("[data-ascent-beat]");
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+    const warmupImages = [
+      root.querySelector<HTMLImageElement>("[data-staircase] img"),
+      root.querySelector<HTMLImageElement>(".pavilion-picture img"),
+      root.querySelector<HTMLImageElement>(".couple-picture img"),
+      root.querySelector<HTMLImageElement>("[data-ring-hand]"),
+      root.querySelector<HTMLImageElement>("[data-cloud-event='story'] img"),
+      root.querySelector<HTMLImageElement>("[data-cloud-event='doa'] img"),
+      root.querySelector<HTMLImageElement>("[data-cloud-event='final'] img"),
+      root.querySelector<HTMLImageElement>(".pavilion-cloud-bank"),
+    ].filter((image): image is HTMLImageElement => Boolean(image));
+    let warmupStartTimer: number | undefined;
+    let warmupIdleHandle: number | undefined;
+    let warmupCancelled = false;
+    root.dataset.assetWarmup = "pending";
+    const requestIdle = Reflect.get(window, "requestIdleCallback") as
+      | ((callback: () => void, options?: { timeout: number }) => number)
+      | undefined;
+    const cancelIdle = Reflect.get(window, "cancelIdleCallback") as
+      | ((handle: number) => void)
+      | undefined;
+
+    const scheduleWarmupIdle = (callback: () => void) => {
+      if (requestIdle) {
+        warmupIdleHandle = requestIdle.call(window, callback, { timeout: 1200 });
+      } else {
+        warmupIdleHandle = window.setTimeout(callback, 80);
+      }
+    };
+    const warmNextImage = () => {
+      if (warmupCancelled) return;
+      const image = warmupImages.shift();
+      if (!image) {
+        root.dataset.assetWarmup = "complete";
+        return;
+      }
+
+      scheduleWarmupIdle(() => {
+        if (warmupCancelled) return;
+        image.loading = "eager";
+        image.decoding = "async";
+        const loadComplete = image.complete
+          ? Promise.resolve()
+          : new Promise<void>((resolve) => {
+              image.addEventListener("load", () => resolve(), { once: true });
+              image.addEventListener("error", () => resolve(), { once: true });
+            });
+        void loadComplete
+          .then(() => image.decode().catch(() => {}))
+          .finally(warmNextImage);
+      });
+    };
+    const cancelImageWarmup = () => {
+      warmupCancelled = true;
+      if (warmupStartTimer !== undefined) window.clearTimeout(warmupStartTimer);
+      if (warmupIdleHandle === undefined) return;
+      if (cancelIdle) cancelIdle.call(window, warmupIdleHandle);
+      else window.clearTimeout(warmupIdleHandle);
+    };
+
+    warmupStartTimer = window.setTimeout(warmNextImage, 700);
+    window.addEventListener("pagehide", cancelImageWarmup, { once: true });
+
     if ("IntersectionObserver" in window) {
       const cloudObserver = new IntersectionObserver(
         (entries) => {
@@ -752,7 +824,7 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
             trigger: arrival,
             start: "top top",
             end: "bottom bottom",
-            scrub: 1.1,
+            scrub: compactCloudBudget ? 0.45 : 1.1,
             onEnter: () => setArrivalMotion(true),
             onEnterBack: () => setArrivalMotion(true),
             onLeave: () => setArrivalMotion(false),
@@ -890,8 +962,12 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
         gsap.set(pavilionBanks, { autoAlpha: 0.18 });
         gsap.set(pavilionCurtains, { autoAlpha: 0 });
         gsap.set(pavilionClouds, { autoAlpha: 0.22, scale: 1 });
-        gsap.set(crestHaze, { autoAlpha: 0, scale: 0.82, yPercent: -8 });
-        gsap.set(revealHaze, { autoAlpha: 0, y: "6vh" });
+        gsap.set(crestHaze, {
+          autoAlpha: 0,
+          scale: compactEffects ? 1 : 0.82,
+          yPercent: compactEffects ? 0 : -8,
+        });
+        gsap.set(revealHaze, { autoAlpha: 0, y: compactEffects ? 0 : "6vh" });
         gsap.set(finalAscentGlow, { autoAlpha: 0, scale: 0.9 });
         gsap.set(finalCopy, {
           autoAlpha: 0,
@@ -903,7 +979,7 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
         gsap.set(glint, { autoAlpha: 0, scale: 0.4 });
 
         const ascentMotionLayers = compactEffects
-          ? [staircase, pavilionClouds]
+          ? [staircase]
           : [staircase, pavilionClouds, upperStairFog, lowerStairFog, finalAscentGlow];
         const pavilionMotionLayers = compactEffects
           ? [staircase, pavilionPreview, pavilionAssembly]
@@ -914,20 +990,22 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
             trigger: ascensionPhase,
             start: "top top",
             end: "bottom bottom",
-            scrub: 0.95,
+            scrub: compactEffects ? 0.4 : 0.95,
             invalidateOnRefresh: true,
             onToggle: (self) => setMovingState(ascentMotionLayers, self.isActive),
           },
         });
 
-        ascensionTimeline
-          .fromTo(
-            staircase,
-            { autoAlpha: 0.18, scale: 0.94 },
-            { autoAlpha: 1, scale: stairAscentScale, duration: 1, ease: "none" },
-            0,
-          )
-          .fromTo(
+        ascensionTimeline.fromTo(
+          staircase,
+          { autoAlpha: 0.18, scale: 0.94 },
+          { autoAlpha: 1, scale: stairAscentScale, duration: 1, ease: "none" },
+          0,
+        );
+
+        if (!compactEffects) {
+          ascensionTimeline
+            .fromTo(
             pavilionClouds,
             { autoAlpha: 0.22, scale: 1 },
             { autoAlpha: 0.54, scale: 1.025, duration: 1, ease: "none" },
@@ -951,15 +1029,16 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
             { autoAlpha: 0.22, yPercent: 52, scale: 1.34, duration: 1, ease: "none", stagger: 0.02 },
             0,
           )
-          .to(stairLight, { autoAlpha: 0.92, scale: 1.12, duration: 0.14, ease: "sine.inOut" }, 0.86)
-          .to(finalAscentGlow, { autoAlpha: 0.82, scale: 1.08, duration: 0.14, ease: "sine.out" }, 0.86);
+            .to(stairLight, { autoAlpha: 0.92, scale: 1.12, duration: 0.14, ease: "sine.inOut" }, 0.86)
+            .to(finalAscentGlow, { autoAlpha: 0.82, scale: 1.08, duration: 0.14, ease: "sine.out" }, 0.86);
+        }
 
         gsap.timeline({
           scrollTrigger: {
             trigger: finalAscentPhase,
             start: "top top",
             end: "bottom top",
-            scrub: 0.5,
+            scrub: compactEffects ? 0.35 : 0.5,
             invalidateOnRefresh: true,
             onToggle: (self) => pavilionPreview.classList.toggle("is-moving", self.isActive),
           },
@@ -989,7 +1068,7 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
             trigger: pavilionPhase,
             start: "top top",
             end: "bottom bottom",
-            scrub: 0.85,
+            scrub: compactEffects ? 0.45 : 0.85,
             invalidateOnRefresh: true,
             onToggle: (self) => {
               setMovingState(pavilionMotionLayers, self.isActive);
@@ -1045,8 +1124,20 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
             0.02,
           )
           .to(pavilionPreview, { autoAlpha: 0, duration: 0.12, ease: "sine.in" }, 0)
-          .to(crestHaze, { autoAlpha: 0.9, scale: 1.12, yPercent: 12, duration: 0.18, ease: "sine.inOut" }, 0.02)
-          .to(pavilionClouds, { autoAlpha: 0.8, scale: 1.07, duration: 0.5, ease: "none" }, 0)
+          .to(
+            crestHaze,
+            compactEffects
+              ? { autoAlpha: 0.9, duration: 0.18, ease: "sine.inOut" }
+              : { autoAlpha: 0.9, scale: 1.12, yPercent: 12, duration: 0.18, ease: "sine.inOut" },
+            0.02,
+          )
+          .to(
+            pavilionClouds,
+            compactEffects
+              ? { autoAlpha: 0.8, duration: 0.5, ease: "none" }
+              : { autoAlpha: 0.8, scale: 1.07, duration: 0.5, ease: "none" },
+            0,
+          )
           .to(
             pavilionAssembly,
             {
@@ -1081,8 +1172,20 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
           )
           .to(pavilionCurtains, { autoAlpha: 0.2, duration: 0.12, ease: "sine.out" }, 0.5)
           .to(pavilionBanks, { autoAlpha: 0.9, duration: 0.14, ease: "sine.inOut" }, 0.48)
-          .to(crestHaze, { autoAlpha: 0.08, scale: 1.34, yPercent: 58, duration: 0.2, ease: "sine.inOut" }, 0.44)
-          .to(revealHaze, { autoAlpha: 0.84, y: 0, duration: 0.1, ease: "sine.out" }, 0.54);
+          .to(
+            crestHaze,
+            compactEffects
+              ? { autoAlpha: 0.08, duration: 0.2, ease: "sine.inOut" }
+              : { autoAlpha: 0.08, scale: 1.34, yPercent: 58, duration: 0.2, ease: "sine.inOut" },
+            0.44,
+          )
+          .to(
+            revealHaze,
+            compactEffects
+              ? { autoAlpha: 0.84, duration: 0.1, ease: "sine.out" }
+              : { autoAlpha: 0.84, y: 0, duration: 0.1, ease: "sine.out" },
+            0.54,
+          );
 
         if (compactEffects) {
           pavilionTimeline
@@ -1118,7 +1221,13 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
         }
 
         pavilionTimeline
-          .to(revealHaze, { autoAlpha: 0.06, y: "-9vh", duration: 0.14, ease: "sine.inOut" }, 0.7)
+          .to(
+            revealHaze,
+            compactEffects
+              ? { autoAlpha: 0.06, duration: 0.14, ease: "sine.inOut" }
+              : { autoAlpha: 0.06, y: "-9vh", duration: 0.14, ease: "sine.inOut" },
+            0.7,
+          )
           .fromTo(ringHand, { autoAlpha: 0.35 }, { autoAlpha: 1, duration: 0.04 }, 0.78)
           .to(staircase, { autoAlpha: 0, duration: 0.08, ease: "sine.in" }, 0.72)
           .to(pavilionAssembly, { scale: 1.025, duration: 0.08, ease: "sine.inOut" }, 0.78)

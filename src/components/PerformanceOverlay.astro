@@ -1,0 +1,122 @@
+<output
+  class="performance-overlay"
+  data-performance-overlay
+  hidden
+  aria-hidden="true"
+></output>
+
+<script>
+  const overlay = document.querySelector<HTMLOutputElement>("[data-performance-overlay]");
+
+  if (overlay && new URLSearchParams(window.location.search).get("perf") === "1") {
+    overlay.hidden = false;
+
+    const sceneNames: Record<string, string> = {
+      arrival: "arrival",
+      date: "date",
+      invitation: "invitation",
+      celebration: "invitation",
+      story: "story",
+      itinerary: "itinerary",
+      doa: "doa",
+      location: "location",
+      contact: "location",
+      pavilion: "pavilion",
+    };
+    const sceneTargets = [
+      document.querySelector<HTMLElement>("[data-scene='arrival']"),
+      ...document.querySelectorAll<HTMLElement>("[data-story-beat]"),
+      document.querySelector<HTMLElement>("[data-phase='pavilion']"),
+    ].filter((target): target is HTMLElement => Boolean(target));
+    const getSceneName = (target: HTMLElement) => {
+      if (target.dataset.phase === "pavilion") return "pavilion";
+      if (target.dataset.scene === "arrival") return "arrival";
+      return sceneNames[target.dataset.storyBeat ?? ""] ?? "arrival";
+    };
+    let currentScene = "arrival";
+    const sceneObserver = new IntersectionObserver(
+      (entries) => {
+        const activeEntry = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((first, second) => second.intersectionRatio - first.intersectionRatio)[0];
+        if (activeEntry?.target instanceof HTMLElement) {
+          currentScene = getSceneName(activeEntry.target);
+        }
+      },
+      { rootMargin: "-42% 0px -42% 0px", threshold: [0, 0.5, 1] },
+    );
+    sceneTargets.forEach((target) => sceneObserver.observe(target));
+
+    const frameDeltas: number[] = [];
+    let previousFrameTime: number | undefined;
+    let lastDisplayTime = 0;
+    let latestFrameTime = 0;
+    let longFrameCount = 0;
+    let animationFrame = 0;
+    const supportsLongAnimationFrames =
+      "PerformanceObserver" in window
+      && PerformanceObserver.supportedEntryTypes?.includes("long-animation-frame");
+    let longFrameObserver: PerformanceObserver | undefined;
+
+    if (supportsLongAnimationFrames) {
+      longFrameObserver = new PerformanceObserver((list) => {
+        longFrameCount += list.getEntries().length;
+      });
+      longFrameObserver.observe({ type: "long-animation-frame", buffered: true });
+    }
+
+    const sampleFrame = (time: number) => {
+      if (previousFrameTime !== undefined) {
+        latestFrameTime = time - previousFrameTime;
+        frameDeltas.push(latestFrameTime);
+        if (frameDeltas.length > 60) frameDeltas.shift();
+        if (!supportsLongAnimationFrames && latestFrameTime >= 50) longFrameCount += 1;
+      }
+      previousFrameTime = time;
+
+      if (time - lastDisplayTime >= 250 && frameDeltas.length > 0) {
+        const averageFrameTime = frameDeltas.reduce((sum, delta) => sum + delta, 0) / frameDeltas.length;
+        overlay.textContent = [
+          `FPS: ${Math.round(1000 / averageFrameTime)}`,
+          `Frame: ${latestFrameTime.toFixed(1)} ms`,
+          `Long frames: ${longFrameCount}`,
+          `Scene: ${currentScene}`,
+        ].join("\n");
+        lastDisplayTime = time;
+      }
+
+      animationFrame = window.requestAnimationFrame(sampleFrame);
+    };
+
+    animationFrame = window.requestAnimationFrame(sampleFrame);
+    window.addEventListener(
+      "pagehide",
+      () => {
+        window.cancelAnimationFrame(animationFrame);
+        sceneObserver.disconnect();
+        longFrameObserver?.disconnect();
+      },
+      { once: true },
+    );
+  }
+</script>
+
+<style>
+  .performance-overlay {
+    position: fixed;
+    z-index: 10000;
+    top: max(0.75rem, env(safe-area-inset-top));
+    right: max(0.75rem, env(safe-area-inset-right));
+    width: 9.5rem;
+    padding: 0.55rem 0.65rem;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 0.35rem;
+    color: #fff;
+    background: rgba(20, 25, 29, 0.88);
+    contain: layout paint style;
+    font: 500 0.68rem/1.45 ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    pointer-events: none;
+    white-space: pre;
+  }
+</style>
