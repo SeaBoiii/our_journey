@@ -360,6 +360,9 @@ try {
   const contract = await page.evaluate((selectors) => ({
     open: Boolean(document.querySelector(selectors.open)),
     close: Boolean(document.querySelector(selectors.close)),
+    closeCount: document.querySelectorAll(selectors.close).length,
+    closeInFooter: Boolean(document.querySelector(`.site-footer ${selectors.close}`)),
+    topClose: Boolean(document.querySelector(".rsvp-back")),
     scene: Boolean(document.querySelector(selectors.scene)),
     journey: Boolean(document.querySelector(selectors.journey)),
   }), selectors);
@@ -367,6 +370,9 @@ try {
 
   for (const key of ["open", "close", "scene"]) {
     if (!contract[key]) fail("contract", `missing required selector ${selectors[key]}`);
+  }
+  if (contract.closeCount !== 1 || !contract.closeInFooter || contract.topClose) {
+    fail("contract", "RSVP must expose exactly one return action at the end of the scene");
   }
 
   if (contract.open && contract.close && contract.scene) {
@@ -413,8 +419,8 @@ try {
     if (opened.scene.ariaHidden === "true" || opened.scene.inert) {
       fail("B", "open RSVP scene remains hidden or inert to assistive technology");
     }
-    if (!opened.close.visible || opened.close.pointerEvents === "none") {
-      fail("B", "RSVP close control is not visible and interactive");
+    if (!opened.close.exists || opened.close.pointerEvents === "none") {
+      fail("B", "RSVP end return control is missing or non-interactive");
     }
     if (!opened.backgroundLocked) fail("B", "invitation background has no active scroll lock");
     if (opened.body.position === "fixed") {

@@ -1142,34 +1142,68 @@ textarea {
   bottom: auto;
   left: 50%;
   width: min(86vw, 34rem);
-  color: #425764;
+  color: #3f5058;
   opacity: 0;
   pointer-events: none;
   text-align: center;
-  text-shadow: 0 1px 1.2rem rgba(255, 255, 255, 0.96);
+  text-shadow: 0 1px 0.65rem rgba(255, 255, 255, 0.88);
   transform: none;
   visibility: hidden;
 }
 
 .final-message {
-  margin: 0;
-  font: 400 clamp(1.5rem, 6.7vw, 2.5rem)/1.12 var(--font-display);
+  position: relative;
+  width: min(100%, 31rem);
+  margin: 0 auto;
+  padding: clamp(0.8rem, 2.8vw, 1.05rem) clamp(1rem, 5vw, 2rem);
+  color: #354950;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 252, 0.84), rgba(248, 243, 232, 0.74)),
+    rgba(252, 250, 245, 0.78);
+  border: 1px solid rgba(166, 137, 84, 0.34);
+  border-radius: 0.35rem;
+  box-shadow:
+    inset 0 0 0 3px rgba(255, 255, 252, 0.38),
+    0 0.45rem 1.4rem rgba(82, 91, 94, 0.08);
+  font: 400 clamp(1.55rem, 6.55vw, 2.5rem)/1.1 var(--font-display);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.final-message::before,
+.final-message::after {
+  position: absolute;
+  top: 50%;
+  width: 0.34rem;
+  height: 0.34rem;
+  background: #f8f2e6;
+  border: 1px solid rgba(157, 126, 72, 0.5);
+  content: "";
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.final-message::before {
+  left: -0.2rem;
+}
+
+.final-message::after {
+  right: -0.2rem;
 }
 
 .final-message em {
-  color: #96794a;
+  color: #80643b;
   font-size: 1.16em;
   font-weight: 400;
 }
 
 .final-names {
   margin: 1.25rem 0 0.25rem;
+  color: #3e5159;
   font: 500 clamp(0.78rem, 3vw, 0.95rem)/1.4 var(--font-sans);
   letter-spacing: 0.2em;
 }
 
 .final-copy time {
-  color: #71818b;
+  color: #586a73;
   font-size: 0.64rem;
   letter-spacing: 0.18em;
 }
@@ -1182,24 +1216,26 @@ textarea {
 
 .attendance-request {
   margin: 0;
-  color: #647681;
+  color: #4b5f68;
   font: 400 1.07rem/1.35 var(--font-display);
+  text-shadow: 0 1px 0.45rem rgba(255, 255, 255, 0.94);
 }
 
 .rsvp-link {
   display: inline-flex;
-  min-height: 2.9rem;
+  min-width: 10.75rem;
+  min-height: 3.35rem;
   align-items: center;
   gap: 0.8rem;
   margin-top: 1rem;
-  padding: 0.65rem 1.45rem;
+  padding: 0.78rem 1.8rem;
   color: #fffdf7;
-  background: linear-gradient(135deg, #918064, #b2996b);
-  border: 1px solid rgba(123, 101, 63, 0.34);
+  background: linear-gradient(135deg, #887554, #b29969);
+  border: 1px solid rgba(105, 85, 51, 0.42);
   border-radius: 999px;
   box-shadow: 0 0.8rem 2.2rem rgba(100, 87, 65, 0.16);
-  font-size: 0.62rem;
-  font-weight: 600;
+  font-size: 0.68rem;
+  font-weight: 650;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   transition: transform 180ms ease, box-shadow 180ms ease;
@@ -1277,37 +1313,10 @@ textarea {
   min-height: 100%;
   overflow: hidden;
   padding:
-    max(6rem, calc(env(safe-area-inset-top) + 4.5rem))
+    max(3.75rem, calc(env(safe-area-inset-top) + 2.75rem))
     max(1rem, env(safe-area-inset-right))
     0
     max(1rem, env(safe-area-inset-left));
-}
-
-.rsvp-back {
-  position: absolute;
-  z-index: 6;
-  top: max(1rem, env(safe-area-inset-top));
-  left: max(1rem, env(safe-area-inset-left));
-  display: inline-flex;
-  min-height: 2.75rem;
-  align-items: center;
-  gap: 0.55rem;
-  padding: 0.55rem 0.8rem;
-  color: #6c777b;
-  background: rgba(255, 253, 247, 0.56);
-  border: 1px solid rgba(160, 139, 99, 0.24);
-  border-radius: 999px;
-  cursor: pointer;
-  font-size: 0.58rem;
-  font-weight: 600;
-  letter-spacing: 0.11em;
-  text-transform: uppercase;
-}
-
-.rsvp-back:hover,
-.rsvp-back:focus-visible {
-  color: #665638;
-  border-color: rgba(160, 130, 77, 0.48);
 }
 
 html.is-rsvp-open {
@@ -1447,7 +1456,7 @@ html.is-rsvp-transitioning [data-final-copy-shift] {
 }
 
 .floral--left {
-  top: 6rem;
+  top: 3.75rem;
   left: -4rem;
 }
 
@@ -1614,8 +1623,8 @@ html.is-rsvp-transitioning [data-final-copy-shift] {
     grid-template-rows: auto minmax(0, 1fr) auto auto auto auto auto;
     justify-items: center;
     width: min(88vw, 34rem);
-    padding: max(5.75rem, 13svh) 0 max(3.5rem, 10svh);
-    text-shadow: 0 1px 0.4rem rgba(255, 255, 255, 0.72);
+    padding: max(5rem, 11svh) 0 max(5.25rem, 13svh);
+    text-shadow: 0 1px 0.4rem rgba(255, 255, 255, 0.82);
   }
 
   .final-message {
@@ -1642,7 +1651,7 @@ html.is-rsvp-transitioning [data-final-copy-shift] {
 
   .rsvp-link {
     grid-row: 7;
-    margin-top: 0.8rem;
+    margin-top: 0.9rem;
   }
 }
 

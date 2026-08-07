@@ -30,6 +30,7 @@ const hasSource = resolvedSource.length > 0;
       data-music-control
       data-music-title={title}
       data-music-source={resolvedSource}
+      data-music-expanded="false"
     >
       <audio
         data-music-audio
@@ -42,6 +43,7 @@ const hasSource = resolvedSource.length > 0;
         data-music-toggle
         aria-label={hasSource ? `Play ${title}` : `${title} is coming soon`}
         aria-pressed="false"
+        aria-expanded="false"
         disabled={!hasSource}
       >
         <span class="music-note" aria-hidden="true">♪</span>
@@ -86,6 +88,11 @@ const hasSource = resolvedSource.length > 0;
     const storageKey = `our-journey:music-position:${source}`;
     let uiState: MusicUiState = "idle";
     let pendingPosition = 0;
+
+    const setExpanded = (expanded: boolean) => {
+      control.dataset.musicExpanded = String(expanded);
+      toggle.setAttribute("aria-expanded", String(expanded));
+    };
 
     const readPosition = () => {
       try {
@@ -154,6 +161,8 @@ const hasSource = resolvedSource.length > 0;
     };
 
     toggle.addEventListener("click", async () => {
+      setExpanded(true);
+
       if (!audio.paused && !audio.ended) {
         audio.pause();
         return;
@@ -197,8 +206,16 @@ const hasSource = resolvedSource.length > 0;
     z-index: 95;
     right: max(0.85rem, env(safe-area-inset-right));
     bottom: max(0.85rem, env(safe-area-inset-bottom));
-    width: min(14rem, calc(100vw - 1.7rem));
+    width: 3.25rem;
     color: var(--ink, #4c514f);
+    transform-origin: right center;
+    transition:
+      width 260ms cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 180ms ease;
+  }
+
+  .music-control[data-music-expanded="true"] {
+    width: min(14rem, calc(100vw - 1.7rem));
   }
 
   :global(html.is-rsvp-open) .music-control {
@@ -210,10 +227,11 @@ const hasSource = resolvedSource.length > 0;
   .music-button {
     display: flex;
     align-items: center;
-    gap: 0.65rem;
+    gap: 0;
     width: 100%;
-    min-height: 2.9rem;
-    padding: 0.48rem 0.65rem 0.48rem 0.55rem;
+    min-height: 3.25rem;
+    padding: 0.45rem;
+    overflow: hidden;
     color: inherit;
     background: rgba(252, 250, 245, 0.94);
     border: 1px solid rgba(173, 142, 88, 0.34);
@@ -223,7 +241,14 @@ const hasSource = resolvedSource.length > 0;
     transition:
       border-color 180ms ease,
       box-shadow 180ms ease,
-      transform 180ms ease;
+      transform 180ms ease,
+      gap 220ms ease,
+      padding 220ms ease;
+  }
+
+  .music-control[data-music-expanded="true"] .music-button {
+    gap: 0.65rem;
+    padding: 0.48rem 0.65rem 0.48rem 0.55rem;
   }
 
   .music-button:hover {
@@ -247,9 +272,9 @@ const hasSource = resolvedSource.length > 0;
 
   .music-note {
     display: grid;
-    flex: 0 0 2rem;
-    width: 2rem;
-    height: 2rem;
+    flex: 0 0 2.25rem;
+    width: 2.25rem;
+    height: 2.25rem;
     place-items: center;
     color: #fffdf8;
     background: linear-gradient(145deg, var(--gold-light, #d8c294), var(--gold, #ad8e58));
@@ -262,8 +287,26 @@ const hasSource = resolvedSource.length > 0;
   .music-copy {
     display: grid;
     flex: 1 1 auto;
+    max-width: 0;
     min-width: 0;
+    overflow: hidden;
+    opacity: 0;
     text-align: left;
+    transform: translateX(0.35rem);
+    visibility: hidden;
+    transition:
+      max-width 240ms cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 150ms ease,
+      transform 220ms ease,
+      visibility 0s linear 240ms;
+  }
+
+  .music-control[data-music-expanded="true"] .music-copy {
+    max-width: 9.5rem;
+    opacity: 1;
+    transform: translateX(0);
+    visibility: visible;
+    transition-delay: 0ms, 70ms, 40ms, 0ms;
   }
 
   .music-title,
@@ -294,12 +337,27 @@ const hasSource = resolvedSource.length > 0;
 
   .music-levels {
     display: flex;
-    flex: 0 0 1rem;
+    flex: 0 0 0;
+    width: 0;
     height: 1rem;
     align-items: flex-end;
     justify-content: center;
     gap: 2px;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateX(0.25rem);
+    transition:
+      flex-basis 220ms ease,
+      width 220ms ease,
+      opacity 150ms ease,
+      transform 220ms ease;
+  }
+
+  .music-control[data-music-expanded="true"] .music-levels {
+    flex-basis: 1rem;
+    width: 1rem;
     opacity: 0.42;
+    transform: translateX(0);
   }
 
   .music-levels span {
@@ -317,7 +375,7 @@ const hasSource = resolvedSource.length > 0;
     height: 52%;
   }
 
-  .music-control[data-music-state="playing"] .music-levels {
+  .music-control[data-music-expanded="true"][data-music-state="playing"] .music-levels {
     opacity: 0.86;
   }
 
@@ -334,17 +392,16 @@ const hasSource = resolvedSource.length > 0;
   }
 
   @media (max-width: 30rem) {
-    .music-control {
+    .music-control[data-music-expanded="true"] {
       width: min(14rem, calc(100vw - 1.7rem));
-    }
-
-    .music-button {
-      min-height: 2.75rem;
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .music-button {
+    .music-control,
+    .music-button,
+    .music-copy,
+    .music-levels {
       transition: none;
     }
   }
