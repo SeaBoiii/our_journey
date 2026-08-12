@@ -116,3 +116,47 @@ The Fast 4G cold pass is flagged as a probable network/image decode hitch: one l
 - Mobile DPR 3 itinerary, story, final ascent, pavilion, and final calm: 16.8ms p95. Pavilion max: 16.9ms; no frames over 24ms.
 - Mobile and desktop forward/reverse staircase scale continuity: pass. Maximum mobile moving stair-to-pavilion landing gap: 0.47px.
 - Mobile pavilion atmosphere now changes opacity only. Its large transform budget is staircase + pavilion during approach, then pavilion + couple during reveal.
+
+## Consolidated experience revision — 2026-08-12
+
+### Architecture and pacing
+
+- Mobile retains the rich procedural opening, but the second pavilion `CloudField` is replaced at the mobile breakpoint by a static two-mass atmosphere. The mobile sky, sunlight, grain, curtains, crest haze, couple light, and final parked frame no longer run continuous full-screen animation.
+- Image preparation is now four staged groups (opening, early ascent, mid journey, finale). Scroll, touchmove, and wheel handlers only record activity; no new `Image.decode()` starts until at least 420 ms of quiet. Intersection observers unlock the journey stages, with idle fallbacks for guests who pause.
+- The React RSVP island uses `client:idle`. Its countdown remains at placeholders with no interval while the gate is closed, starts immediately on deliberate open, and stops on close, visibility changes, page hide, and BFCache restoration.
+- Mobile information pacing is now 62svh save-the-date, 72svh formal invitation, 62svh celebration, 72svh story, 80svh itinerary, 70svh doa, 62svh location, and 36svh final ascent. Pavilion travel is 260svh (previously 320svh).
+
+### Pavilion and gate
+
+- The pavilion timeline follows the 0–18 / 18–40 / 40–55 / 55–67 / 67–82 / 86–96 / 96–100 staging. The entire portrait pavilion/couple assembly settles at approximately -6.5% of the initial small viewport height; the couple remains attached to its floor.
+- Title, identity, attendance copy, and CTA are separate reveal beats. Two asymmetric foreground cloud pieces clear the CTA; until the endpoint the link has `tabindex=-1`, `aria-hidden=true`, `aria-disabled=true`, and no pointer events. Reverse scrolling restores that state.
+- Mobile promotion never exceeds two meaningful scene layers during pavilion/couple motion and three during the CTA split. At the final endpoint the pavilion, couple, cloud bank, and background are still; only the occasional small ring glint and direct music interaction can animate.
+- The final mobile composition is stabilized against Android toolbar height changes with small-viewport-relative artwork sizing. Repeated expanded/collapsed toolbar cycles at 390, 393, and 430 px widths restored pavilion and final transforms with a measured delta of 0.
+- Generic routes no longer select a family side. Contact sections render only for invite metadata with a valid bride/groom side, and incomplete entries remain hidden.
+
+### Production measurements
+
+Headless Chrome emulation is a repeatable regression check, not a substitute for a physical Android pass.
+
+| Mobile DPR 3 scenario | p50 | p95 | max | Frames >34 ms |
+| --- | ---: | ---: | ---: | ---: |
+| Itinerary | 16.7 ms | 17.0 ms | 17.3 ms | 0 |
+| Story cloud | 16.7 ms | 16.9 ms | 17.3 ms | 0 |
+| Doa cloud | 16.7 ms | 17.0 ms | 17.4 ms | 0 |
+| Final ascent | 16.7 ms | 17.0 ms | 17.4 ms | 0 |
+| Pavilion reveal | 16.7 ms | 17.1 ms | 17.7 ms | 0 |
+| Final calm | 16.7 ms | 16.8 ms | 17.0 ms | 0 |
+
+The final cloud/CTA split held 17.1 ms p95 in the final run; one isolated synthetic 100.6 ms scheduling frame occurred, with no cluster or long task. The stable final frame reported zero running CSS/Web Animations and zero large visible running animations on both mobile and desktop.
+
+The network/decode audit passed Fast 4G and Slow 4G at 390×844, DPR 3. Both profiles recorded zero decode-start violations inside the 400 ms interaction window, selected the 640 px sky/stair/couple/ring sources and 1024 px pavilion source, and made zero audio requests. Cold versus prewarmed p95 differed by at most 0.1 ms in this run; neither cold profile produced a frame over 34 ms.
+
+The deployed audio file is still about 9.3 MB because `ffmpeg` was unavailable in this environment. `public/assets/audio/README.md` documents the licensed 144 kbps conversion command, 2–4 MB target, attribution preservation, and `preload="none"` requirement. Compress and listening-check that licensed source before launch.
+
+### Final verification
+
+- Astro diagnostics and production build: pass (0 errors, warnings, or hints).
+- Journey audit: pass at 390×844, 393×852, 430×932, 768×1024, 1440×900, and 1920×1080.
+- Reverse audit: pass at 390×844, 393×852, 430×932, and 1440×900, including reduced motion and final-only CTA accessibility.
+- RSVP gate, React form validation/persistence smoke test, countdown lifecycle, contact variants, music behavior, dynamic viewport cycles, staged decode, and mobile source caps: pass.
+- A GitHub Pages build with `PAGES_BASE=/our_journey/` succeeds and emits repository-prefixed asset URLs.

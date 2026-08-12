@@ -12,6 +12,8 @@ if (!executablePath) throw new Error("Chrome or Edge is required for the reverse
 
 const allViewports = [
   { width: 390, height: 844 },
+  { width: 393, height: 852 },
+  { width: 430, height: 932 },
   { width: 1440, height: 900 },
 ];
 const widthFilterValue = process.env.REVERSE_AUDIT_WIDTH;
@@ -165,9 +167,43 @@ async function readWorld(page) {
       const transform = getComputedStyle(element).transform;
       return transform === "none" ? 0 : new DOMMatrix(transform).m42;
     };
+    const transformState = (selector) => {
+      const element = document.querySelector(selector);
+      if (!element) return null;
+      const transform = getComputedStyle(element).transform;
+      const matrix = transform === "none" ? new DOMMatrix() : new DOMMatrix(transform);
+      return {
+        a: matrix.a,
+        b: matrix.b,
+        c: matrix.c,
+        d: matrix.d,
+        e: matrix.e,
+        f: matrix.f,
+      };
+    };
+    const cloudState = (side) => {
+      const element = document.querySelector(`[data-rsvp-reveal-cloud="${side}"]`);
+      if (!element) return null;
+      const bounds = element.getBoundingClientRect();
+      const transform = getComputedStyle(element).transform;
+      const matrix = transform === "none" ? new DOMMatrix() : new DOMMatrix(transform);
+      return {
+        x: matrix.e,
+        y: matrix.f,
+        xRatio: bounds.width > 0 ? matrix.e / bounds.width : null,
+        yRatio: bounds.height > 0 ? matrix.f / bounds.height : null,
+      };
+    };
     const finalCopy = document.querySelector("[data-final-copy]");
     const finalStyle = finalCopy ? getComputedStyle(finalCopy) : null;
     const finalRect = finalCopy?.getBoundingClientRect() ?? null;
+    const rsvpOpener = document.querySelector("[data-rsvp-open]");
+    const rsvpStyle = rsvpOpener ? getComputedStyle(rsvpOpener) : null;
+    const identityOpacities = [
+      styleNumber(".final-names", "opacity"),
+      styleNumber(".final-copy time", "opacity"),
+      styleNumber(".final-copy > img", "opacity"),
+    ];
     const skyWorld = document.querySelector(".sky-world");
     const skyWorldRect = skyWorld?.getBoundingClientRect() ?? null;
     const skyPicture = document.querySelector(".sky-picture");
@@ -177,9 +213,30 @@ async function readWorld(page) {
       pavilionPreviewOpacity: styleNumber("[data-pavilion-preview] img", "opacity"),
       coupleOpacity: styleNumber("[data-couple]", "opacity"),
       finalOpacity: styleNumber("[data-final-copy]", "opacity"),
+      titleOpacity: styleNumber(".final-message", "opacity"),
+      identityOpacities,
+      minimumIdentityOpacity: Math.min(...identityOpacities),
+      attendanceOpacity: styleNumber(".attendance-request", "opacity"),
+      ctaOpacity: styleNumber("[data-rsvp-open]", "opacity"),
       glintOpacity: styleNumber("[data-ring-glint]", "opacity"),
       finalVisibility: finalStyle?.visibility ?? "missing",
-      finalPointerEvents: finalStyle?.pointerEvents ?? "missing",
+      ctaState: rsvpOpener
+        ? {
+            tabIndex: rsvpOpener.tabIndex,
+            tabIndexAttribute: rsvpOpener.getAttribute("tabindex"),
+            ariaHidden: rsvpOpener.getAttribute("aria-hidden"),
+            ariaDisabled: rsvpOpener.getAttribute("aria-disabled"),
+            pointerEvents: rsvpStyle.pointerEvents,
+            visibility: rsvpStyle.visibility,
+          }
+        : null,
+      rsvpCloudCount: document.querySelectorAll("[data-rsvp-reveal-cloud]").length,
+      rsvpClouds: {
+        left: cloudState("left"),
+        right: cloudState("right"),
+      },
+      pavilionTransform: transformState("[data-pavilion-assembly]"),
+      coupleTransform: transformState("[data-couple]"),
       finalCenterX: finalRect ? finalRect.left + finalRect.width / 2 - window.innerWidth / 2 : null,
       finalCenterY: finalRect ? finalRect.top + finalRect.height / 2 - window.innerHeight / 2 : null,
       skyPosition: skyWorld ? getComputedStyle(skyWorld).position : "missing",
@@ -199,6 +256,36 @@ async function readWorld(page) {
       cueOpacity: styleNumber("[data-scroll-cue]", "opacity"),
     };
   });
+}
+
+function maximumTransformDelta(first, second) {
+  if (!first || !second) return Number.POSITIVE_INFINITY;
+  return Math.max(
+    ...["a", "b", "c", "d", "e", "f"].map((property) => Math.abs(first[property] - second[property])),
+  );
+}
+
+function ctaIsAvailable(state) {
+  return Boolean(
+    state
+    && state.tabIndex === 0
+    && state.tabIndexAttribute === "0"
+    && state.ariaHidden === "false"
+    && state.ariaDisabled === "false"
+    && state.pointerEvents === "auto"
+    && state.visibility === "visible",
+  );
+}
+
+function ctaIsUnavailable(state) {
+  return Boolean(
+    state
+    && state.tabIndex === -1
+    && state.tabIndexAttribute === "-1"
+    && state.ariaHidden === "true"
+    && state.ariaDisabled === "true"
+    && state.pointerEvents === "none",
+  );
 }
 
 async function pollGlint(page, duration = 1800) {
@@ -240,14 +327,20 @@ try {
     const pavilionStart = await readWorld(page);
     await phaseProgress(page, "#pavilion", 0.1);
     const pavilionDistant = await readWorld(page);
-    await phaseProgress(page, "#pavilion", 0.68);
+    await phaseProgress(page, "#pavilion", 0.72);
     const coupleSilhouette = await readWorld(page);
-    await phaseProgress(page, "#pavilion", 0.76);
+    await phaseProgress(page, "#pavilion", 0.82);
     const coupleReveal = await readWorld(page);
+    await phaseProgress(page, "#pavilion", 0.83);
+    const settledCouple = await readWorld(page);
     await phaseProgress(page, "#pavilion", 0.84, 60);
     const glintMaximum = await pollGlint(page);
     const coupleHold = await readWorld(page);
-    await phaseProgress(page, "#pavilion", 0.96);
+    await phaseProgress(page, "#pavilion", 0.91);
+    const titleStage = await readWorld(page);
+    await phaseProgress(page, "#pavilion", 0.95);
+    const attendanceStage = await readWorld(page);
+    await phaseProgress(page, "#pavilion", 1);
     const final = await readWorld(page);
 
     if (
@@ -260,27 +353,113 @@ try {
     if (pavilionDistant.pavilionOpacity < 0.12 || pavilionDistant.pavilionOpacity > 0.8) {
       failures.push(`${label}: distant pavilion is not atmospheric`);
     }
-    if (coupleSilhouette.coupleOpacity < 0.12 || coupleSilhouette.coupleOpacity > 0.82) {
+    if (coupleSilhouette.coupleOpacity < 0.08 || coupleSilhouette.coupleOpacity > 0.82) {
       failures.push(`${label}: couple silhouette pacing is outside the intended window`);
     }
-    if (coupleReveal.coupleOpacity < 0.55) failures.push(`${label}: couple is not decisively revealed by 76%`);
-    if (coupleHold.coupleOpacity < 0.95 || coupleHold.finalOpacity > 0.08) {
+    if (coupleReveal.coupleOpacity < 0.68) failures.push(`${label}: couple is not fully revealed by 82%`);
+    if (
+      coupleHold.coupleOpacity < 0.68
+      || coupleHold.titleOpacity > 0.08
+      || coupleHold.attendanceOpacity > 0.08
+      || coupleHold.ctaOpacity > 0.08
+    ) {
       failures.push(`${label}: couple stillness/final-title ordering regressed`);
     }
     if (glintMaximum < 0.25) failures.push(`${label}: first ring glint was not observable in its hold window`);
     if (
-      final.finalOpacity < 0.9
+      titleStage.titleOpacity < 0.8
+      || titleStage.attendanceOpacity > 0.08
+      || titleStage.ctaOpacity > 0.08
+    ) {
+      failures.push(`${label}: title is not staged ahead of attendance and RSVP`);
+    }
+    if (
+      attendanceStage.titleOpacity < 0.9
+      || attendanceStage.minimumIdentityOpacity < 0.9
+      || attendanceStage.attendanceOpacity < 0.8
+      || attendanceStage.ctaOpacity > 0.08
+      || !ctaIsUnavailable(attendanceStage.ctaState)
+    ) {
+      failures.push(`${label}: attendance is not staged ahead of the RSVP reveal`);
+    }
+    const pavilionStillnessDelta = Math.max(
+      maximumTransformDelta(settledCouple.pavilionTransform, coupleHold.pavilionTransform),
+      maximumTransformDelta(settledCouple.pavilionTransform, titleStage.pavilionTransform),
+      maximumTransformDelta(settledCouple.pavilionTransform, attendanceStage.pavilionTransform),
+      maximumTransformDelta(settledCouple.pavilionTransform, final.pavilionTransform),
+    );
+    const coupleStillnessDelta = Math.max(
+      maximumTransformDelta(settledCouple.coupleTransform, coupleHold.coupleTransform),
+      maximumTransformDelta(settledCouple.coupleTransform, titleStage.coupleTransform),
+      maximumTransformDelta(settledCouple.coupleTransform, attendanceStage.coupleTransform),
+      maximumTransformDelta(settledCouple.coupleTransform, final.coupleTransform),
+    );
+    if (pavilionStillnessDelta > 0.75 || coupleStillnessDelta > 0.75) {
+      failures.push(
+        `${label}: pavilion/couple transform continued after the 82% settling point `
+        + `(pavilion ${pavilionStillnessDelta.toFixed(2)}, couple ${coupleStillnessDelta.toFixed(2)})`,
+      );
+    }
+    const coveredClouds = attendanceStage.rsvpClouds;
+    const clearedClouds = final.rsvpClouds;
+    const cloudsBeginCovered = Boolean(
+      coveredClouds.left
+      && coveredClouds.right
+      && Math.abs(coveredClouds.left.x) < 1.5
+      && Math.abs(coveredClouds.left.y) < 1.5
+      && Math.abs(coveredClouds.right.x) < 1.5
+      && Math.abs(coveredClouds.right.y) < 1.5,
+    );
+    const cloudsClearAsymmetrically = Boolean(
+      clearedClouds.left
+      && clearedClouds.right
+      && clearedClouds.left.xRatio < -0.35
+      && clearedClouds.right.xRatio > 0.35
+      && clearedClouds.left.yRatio > 0.15
+      && clearedClouds.right.yRatio > 0.15
+      && (
+        Math.abs(Math.abs(clearedClouds.left.xRatio) - Math.abs(clearedClouds.right.xRatio)) > 0.025
+        || Math.abs(clearedClouds.left.yRatio - clearedClouds.right.yRatio) > 0.025
+      ),
+    );
+    if (final.rsvpCloudCount !== 2 || !cloudsBeginCovered || !cloudsClearAsymmetrically) {
+      failures.push(`${label}: RSVP is not cleared by two asymmetric lower clouds`);
+    }
+    if (
+      final.titleOpacity < 0.9
+      || final.minimumIdentityOpacity < 0.9
+      || final.attendanceOpacity < 0.9
+      || final.ctaOpacity < 0.9
       || Math.abs(final.finalCenterX ?? Number.POSITIVE_INFINITY) > 2
       || Math.abs(final.finalCenterY ?? Number.POSITIVE_INFINITY) > 2
-      || final.finalPointerEvents !== "auto"
+      || !ctaIsAvailable(final.ctaState)
     ) {
-      failures.push(`${label}: final title is not centred, visible, and interactive`);
+      failures.push(`${label}: final copy/RSVP is not centred, visible, and interactive`);
     }
 
-    await phaseProgress(page, "#pavilion", 0.84);
+    await phaseProgress(page, "#pavilion", 0.95);
     const reversedHold = await readWorld(page);
-    if (reversedHold.finalOpacity > 0.08 || reversedHold.finalPointerEvents !== "none") {
-      failures.push(`${label}: final title did not reverse to its hidden non-interactive state`);
+    if (
+      reversedHold.titleOpacity < 0.9
+      || reversedHold.attendanceOpacity < 0.8
+      || reversedHold.ctaOpacity > 0.08
+      || !ctaIsUnavailable(reversedHold.ctaState)
+      || Math.abs(reversedHold.rsvpClouds.left?.x ?? Number.POSITIVE_INFINITY) > 1.5
+      || Math.abs(reversedHold.rsvpClouds.left?.y ?? Number.POSITIVE_INFINITY) > 1.5
+      || Math.abs(reversedHold.rsvpClouds.right?.x ?? Number.POSITIVE_INFINITY) > 1.5
+      || Math.abs(reversedHold.rsvpClouds.right?.y ?? Number.POSITIVE_INFINITY) > 1.5
+    ) {
+      failures.push(`${label}: RSVP clouds/CTA did not reverse to the covered non-interactive state`);
+    }
+    await phaseProgress(page, "#pavilion", 0.83);
+    const reversedCoupleHold = await readWorld(page);
+    if (
+      reversedCoupleHold.titleOpacity > 0.08
+      || reversedCoupleHold.attendanceOpacity > 0.08
+      || reversedCoupleHold.ctaOpacity > 0.08
+      || !ctaIsUnavailable(reversedCoupleHold.ctaState)
+    ) {
+      failures.push(`${label}: late pavilion copy retained stale state below its reveal thresholds`);
     }
 
     const reverse = {};
@@ -302,12 +481,16 @@ try {
         world.pavilionOpacity > 0.03
         || world.pavilionPreviewOpacity > 0.03
         || world.coupleOpacity > 0.03
-        || world.finalOpacity > 0.03
+        || world.titleOpacity > 0.03
+        || world.attendanceOpacity > 0.03
+        || world.ctaOpacity > 0.03
+        || !ctaIsUnavailable(world.ctaState)
       ) {
         failures.push(
           `${label}: pavilion state leaked back into the ${name} scene `
           + `(pavilion ${world.pavilionOpacity.toFixed(3)}, preview ${world.pavilionPreviewOpacity.toFixed(3)}, `
-          + `couple ${world.coupleOpacity.toFixed(3)}, final ${world.finalOpacity.toFixed(3)})`,
+          + `couple ${world.coupleOpacity.toFixed(3)}, title ${world.titleOpacity.toFixed(3)}, `
+          + `attendance ${world.attendanceOpacity.toFixed(3)}, CTA ${world.ctaOpacity.toFixed(3)})`,
         );
       }
     }
@@ -364,6 +547,40 @@ try {
       skyTravel: Number(skyTravel.toFixed(2)),
       farCloudTravel: Number(farCloudTravel.toFixed(2)),
       glintMaximum: Number(glintMaximum.toFixed(2)),
+      coupleSilhouetteOpacity: Number(coupleSilhouette.coupleOpacity.toFixed(3)),
+      coupleRevealOpacity: Number(coupleReveal.coupleOpacity.toFixed(3)),
+      pavilionStillnessDelta: Number(pavilionStillnessDelta.toFixed(3)),
+      coupleStillnessDelta: Number(coupleStillnessDelta.toFixed(3)),
+      finalStaging: {
+        hold: {
+          title: Number(coupleHold.titleOpacity.toFixed(3)),
+          attendance: Number(coupleHold.attendanceOpacity.toFixed(3)),
+          cta: Number(coupleHold.ctaOpacity.toFixed(3)),
+        },
+        title: {
+          title: Number(titleStage.titleOpacity.toFixed(3)),
+          attendance: Number(titleStage.attendanceOpacity.toFixed(3)),
+          cta: Number(titleStage.ctaOpacity.toFixed(3)),
+        },
+        attendance: {
+          title: Number(attendanceStage.titleOpacity.toFixed(3)),
+          attendance: Number(attendanceStage.attendanceOpacity.toFixed(3)),
+          cta: Number(attendanceStage.ctaOpacity.toFixed(3)),
+        },
+        final: {
+          title: Number(final.titleOpacity.toFixed(3)),
+          attendance: Number(final.attendanceOpacity.toFixed(3)),
+          cta: Number(final.ctaOpacity.toFixed(3)),
+          ctaState: final.ctaState,
+        },
+        reversedBelowReveal: {
+          title: Number(reversedHold.titleOpacity.toFixed(3)),
+          attendance: Number(reversedHold.attendanceOpacity.toFixed(3)),
+          cta: Number(reversedHold.ctaOpacity.toFixed(3)),
+          ctaState: reversedHold.ctaState,
+        },
+      },
+      finalClouds: final.rsvpClouds,
       finalCenterOffset: [Number((final.finalCenterX ?? 0).toFixed(2)), Number((final.finalCenterY ?? 0).toFixed(2))],
       reverseBeatStates: Object.fromEntries(
         Object.entries(reverse).map(([name, state]) => [name, {
@@ -384,6 +601,12 @@ try {
   await reducedPage.goto(`${baseUrl}/`, { waitUntil: "networkidle0" });
   await prepare(reducedPage);
   const reducedTop = await readWorld(reducedPage);
+  await phaseProgress(reducedPage, "#pavilion", 0.45, 300);
+  const reducedPavilion = await readWorld(reducedPage);
+  await phaseProgress(reducedPage, "#pavilion", 0.9, 300);
+  const reducedFinal = await readWorld(reducedPage);
+  await phaseProgress(reducedPage, "#pavilion", 0.6, 300);
+  const reducedReversed = await readWorld(reducedPage);
   const reducedMaximum = await reducedPage.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
   await animatedScroll(reducedPage, reducedMaximum, 300, 300);
   const reducedBottom = await readWorld(reducedPage);
@@ -395,6 +618,16 @@ try {
     || reducedTop.skyAnimation !== "none"
   ) {
     failures.push("reduced motion: sky idle drift or scroll parallax remains active");
+  }
+  if (
+    !ctaIsUnavailable(reducedTop.ctaState)
+    || !ctaIsUnavailable(reducedPavilion.ctaState)
+    || !ctaIsUnavailable(reducedReversed.ctaState)
+  ) {
+    failures.push("reduced motion: RSVP CTA is available outside the final state");
+  }
+  if (reducedFinal.finalOpacity < 0.9 || !ctaIsAvailable(reducedFinal.ctaState)) {
+    failures.push("reduced motion: final message/RSVP CTA not revealed and available together");
   }
   await reducedPage.close();
 

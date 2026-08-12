@@ -577,7 +577,7 @@ textarea {
 }
 
 .formal-invitation {
-  min-height: 78svh;
+  min-height: 72svh;
   width: min(84vw, 34rem);
 }
 
@@ -684,7 +684,7 @@ textarea {
 }
 
 .story-beat {
-  min-height: 78svh;
+  min-height: 72svh;
   width: min(86vw, 38rem);
 }
 
@@ -720,7 +720,7 @@ textarea {
 }
 
 .itinerary-scene {
-  min-height: 96svh;
+  min-height: 80svh;
   width: min(90vw, 39rem);
 }
 
@@ -914,13 +914,18 @@ textarea {
 }
 
 .pavilion-journey {
-  height: 320svh;
-  min-height: 126rem;
+  height: 260vh;
+  height: 260svh;
+  min-height: 0;
 }
 
 .pavilion-clouds {
   z-index: 0;
   opacity: 0.24;
+}
+
+.pavilion-clouds-mobile {
+  display: none;
 }
 
 .pavilion-clouds [data-layer="particles"] {
@@ -1226,7 +1231,20 @@ textarea {
   text-shadow: 0 1px 0.45rem rgba(255, 255, 255, 0.94);
 }
 
+.rsvp-reveal {
+  position: relative;
+  display: grid;
+  width: min(100%, 20rem);
+  height: 5rem;
+  margin: 0.4rem auto -0.65rem;
+  overflow: hidden;
+  place-items: end center;
+  pointer-events: none;
+}
+
 .rsvp-link {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   min-width: 10.75rem;
   min-height: 3.35rem;
@@ -1234,8 +1252,7 @@ textarea {
   justify-content: center;
   justify-self: center;
   gap: 0.8rem;
-  margin-inline: auto;
-  margin-top: 1rem;
+  margin: 0 0 0.35rem;
   padding: 0.78rem 1.8rem;
   color: #fffdf7;
   background: linear-gradient(135deg, #887554, #b29969);
@@ -1247,6 +1264,45 @@ textarea {
   letter-spacing: 0.18em;
   text-transform: uppercase;
   transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.rsvp-reveal-cloud {
+  position: absolute;
+  z-index: 2;
+  bottom: -0.2rem;
+  width: 62%;
+  height: 4.65rem;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.rsvp-reveal-cloud--left {
+  left: -1%;
+}
+
+.rsvp-reveal-cloud--right {
+  right: -1%;
+}
+
+.rsvp-reveal-cloud img {
+  position: absolute;
+  bottom: -0.15rem;
+  width: 190%;
+  max-width: none;
+  height: auto;
+  opacity: 0.98;
+}
+
+.rsvp-reveal-cloud--left img {
+  left: -10%;
+}
+
+.rsvp-reveal-cloud--right img {
+  right: -12%;
+}
+
+.rsvp-reveal.is-revealed {
+  pointer-events: auto;
 }
 
 .rsvp-link:hover,
@@ -1527,6 +1583,11 @@ html.is-rsvp-transitioning [data-final-copy-shift] {
   will-change: transform, opacity;
 }
 
+[data-journey-root].is-final-settled .sky-picture img,
+[data-journey-root].is-final-settled .sun-wash {
+  animation-play-state: paused;
+}
+
 @media (max-width: 47.9375rem) {
   .sky-picture img {
     animation: none;
@@ -1573,9 +1634,20 @@ html.is-rsvp-transitioning [data-final-copy-shift] {
     mask-image: none;
   }
 
-  .pavilion-clouds [data-layer="front"],
-  .pavilion-clouds [data-layer="mist"] {
+  .pavilion-clouds {
     display: none;
+  }
+
+  .pavilion-clouds-mobile {
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    display: block;
+    opacity: 0.34;
+    background:
+      radial-gradient(ellipse 72% 27% at 13% 28%, rgba(255, 254, 249, 0.64), transparent 72%),
+      radial-gradient(ellipse 68% 24% at 88% 64%, rgba(225, 235, 243, 0.52), transparent 74%);
+    pointer-events: none;
   }
 
   .stair-light,
@@ -1585,10 +1657,15 @@ html.is-rsvp-transitioning [data-final-copy-shift] {
     filter: none;
   }
 
-  .final-ascent-glow,
-  .pavilion-curtains,
-  .couple-light {
+  .final-ascent-glow {
     mix-blend-mode: normal;
+  }
+
+  .pavilion-curtains,
+  .couple-light,
+  .crest-haze,
+  .reveal-haze {
+    display: none;
   }
 
   .staircase-picture img,
@@ -1624,9 +1701,14 @@ html.is-rsvp-transitioning [data-final-copy-shift] {
 }
 
 @media (max-width: 47.9375rem) and (orientation: portrait) {
+  .pavilion-picture,
+  .pavilion-distant-preview img {
+    width: max(180vw, 91svh);
+  }
+
   .couple-anchor {
     bottom: 0;
-    width: min(70vw, 20rem);
+    width: min(70vw, 32.4svh, 20rem);
   }
 
   .final-copy {
@@ -1664,7 +1746,11 @@ html.is-rsvp-transitioning [data-final-copy-shift] {
 
   .rsvp-link {
     grid-row: 7;
-    margin-top: 0.9rem;
+  }
+
+  .rsvp-reveal {
+    grid-row: 7;
+    margin-top: 0.35rem;
   }
 }
 
@@ -1924,6 +2010,16 @@ html.is-rsvp-transitioning [data-final-copy-shift] {
     visibility: visible !important;
   }
 
+  [data-journey-root].is-reduced-final .rsvp-reveal-cloud {
+    opacity: 0 !important;
+  }
+
+  [data-journey-root].is-reduced-final .rsvp-link {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+  }
+
   .pavilion-scroll-space {
     height: 100%;
   }
@@ -1932,7 +2028,7 @@ html.is-rsvp-transitioning [data-final-copy-shift] {
 @media (max-width: 47.9375rem) and (orientation: portrait) and (prefers-reduced-motion: reduce) {
   [data-journey-root].is-reduced-final .pavilion-assembly {
     opacity: 1 !important;
-    transform: translateY(-11vh) scale(0.96) !important;
+    transform: translateY(var(--final-mobile-lift, -6.5vh)) scale(0.96) !important;
   }
 
   [data-journey-root].is-reduced-final .pavilion-picture {

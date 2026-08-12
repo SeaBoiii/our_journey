@@ -15,21 +15,23 @@
       arrival: "arrival",
       date: "date",
       invitation: "invitation",
-      celebration: "invitation",
+      celebration: "celebration",
       story: "story",
       itinerary: "itinerary",
       doa: "doa",
       location: "location",
-      contact: "location",
+      contact: "contact",
       pavilion: "pavilion",
     };
     const sceneTargets = [
       document.querySelector<HTMLElement>("[data-scene='arrival']"),
       ...document.querySelectorAll<HTMLElement>("[data-story-beat]"),
+      document.querySelector<HTMLElement>("[data-final-ascent]"),
       document.querySelector<HTMLElement>("[data-phase='pavilion']"),
     ].filter((target): target is HTMLElement => Boolean(target));
     const getSceneName = (target: HTMLElement) => {
       if (target.dataset.phase === "pavilion") return "pavilion";
+      if (target.hasAttribute("data-final-ascent")) return "final-ascent";
       if (target.dataset.scene === "arrival") return "arrival";
       return sceneNames[target.dataset.storyBeat ?? ""] ?? "arrival";
     };

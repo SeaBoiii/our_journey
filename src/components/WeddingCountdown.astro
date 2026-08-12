@@ -150,13 +150,32 @@ const {
       if (!isComplete && !document.hidden) intervalId = window.setInterval(update, SECOND);
     };
 
+    let rsvpActive = document.documentElement.classList.contains("is-rsvp-open");
+    const handleRsvpOpen = () => {
+      rsvpActive = true;
+      start();
+    };
+    const handleRsvpClose = () => {
+      rsvpActive = false;
+      stop();
+    };
+
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) stop();
-      else start();
+      else if (rsvpActive) start();
     });
-    window.addEventListener("pagehide", stop);
-    window.addEventListener("pageshow", start);
-    start();
+    document.addEventListener("ourjourney:rsvp-open", handleRsvpOpen);
+    document.addEventListener("ourjourney:rsvp-close", handleRsvpClose);
+    window.addEventListener("pagehide", () => {
+      rsvpActive = false;
+      stop();
+    });
+    window.addEventListener("pageshow", () => {
+      rsvpActive = document.documentElement.classList.contains("is-rsvp-open");
+      if (rsvpActive) start();
+    });
+
+    if (rsvpActive) start();
   });
 </script>
 

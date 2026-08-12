@@ -21,8 +21,11 @@ const finalPartnerDisplay = wedding.couple.finalBride.startsWith("[")
   ? "A"
   : wedding.couple.finalBride;
 const maxGuests = invite?.maxPax ?? 4;
-const contactSide = invite?.side ?? wedding.defaultContactSide;
-const contactVariant = wedding.contactVariants[contactSide];
+const contactSide = invite?.side;
+const contactVariant = contactSide ? wedding.contactVariants[contactSide] : undefined;
+const visibleContacts = contactVariant?.contacts.filter(
+  (contact) => contact.name.trim().length > 0 && contact.phone.trim().length > 0,
+) ?? [];
 const storageKey = invite
   ? `our-journey:rsvp:${invite.code.toLowerCase()}`
   : "our-journey:rsvp";
@@ -129,6 +132,7 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
     <section class="scene skyward-journey" data-scene="skyward">
       <div class="skyward-stage" data-shared-stage>
         <CloudField class="pavilion-clouds" id="pavilion-clouds" />
+        <div class="pavilion-clouds-mobile" aria-hidden="true"></div>
 
         <div class="stair-light" aria-hidden="true"></div>
         <div class="final-ascent-glow" data-final-ascent-glow aria-hidden="true"></div>
@@ -299,16 +303,49 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
             <span>{wedding.attendanceRequest[0]}</span>
             <span>{wedding.attendanceRequest[1]}</span>
           </p>
-          <a
-            class="rsvp-link"
-            href="#rsvp"
-            data-rsvp-open
-            aria-haspopup="dialog"
-            aria-controls="rsvp"
-          >
-            <span>RSVP</span>
-            <span aria-hidden="true">→</span>
-          </a>
+          <div class="rsvp-reveal" data-rsvp-reveal>
+            <a
+              class="rsvp-link"
+              href="#rsvp"
+              data-rsvp-open
+              aria-haspopup="dialog"
+              aria-controls="rsvp"
+              aria-hidden="true"
+              aria-disabled="true"
+              tabindex="-1"
+            >
+              <span>RSVP</span>
+              <span aria-hidden="true">→</span>
+            </a>
+            <span
+              class="rsvp-reveal-cloud rsvp-reveal-cloud--left"
+              data-rsvp-reveal-cloud="left"
+              aria-hidden="true"
+            >
+              <img
+                src={withBase("assets/clouds/cloud-mid-open.webp")}
+                alt=""
+                width="760"
+                height="248"
+                loading="lazy"
+                decoding="async"
+              />
+            </span>
+            <span
+              class="rsvp-reveal-cloud rsvp-reveal-cloud--right"
+              data-rsvp-reveal-cloud="right"
+              aria-hidden="true"
+            >
+              <img
+                src={withBase("assets/clouds/cloud-mid-open.webp")}
+                alt=""
+                width="760"
+                height="248"
+                loading="lazy"
+                decoding="async"
+              />
+            </span>
+          </div>
         </div>
         </div>
       </div>
@@ -540,35 +577,33 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
       />
     </div>
     <RSVPForm
-      client:load
+      client:idle
       defaultName={invite?.guestName ?? ""}
       maxGuests={maxGuests}
       storageKey={storageKey}
     />
 
-    <section
-      class="rsvp-assistance"
-      aria-labelledby="rsvp-assistance-title"
-      data-contact-side={contactSide}
-    >
-      <p class="eyebrow">Need assistance?</p>
-      <h3 id="rsvp-assistance-title">{contactVariant.heading}</h3>
-      <ul>
-        {
-          contactVariant.contacts.map((contact) => (
-            <li>
-              <span>{contact.label}</span>
-              <strong>{contact.name}</strong>
-              {contact.phone ? (
+    {
+      contactSide && contactVariant && visibleContacts.length > 0 ? (
+        <section
+          class="rsvp-assistance"
+          aria-labelledby="rsvp-assistance-title"
+          data-contact-side={contactSide}
+        >
+          <p class="eyebrow">Need assistance?</p>
+          <h3 id="rsvp-assistance-title">{contactVariant.heading}</h3>
+          <ul>
+            {visibleContacts.map((contact) => (
+              <li>
+                <span>{contact.label}</span>
+                <strong>{contact.name}</strong>
                 <a href={`tel:${String(contact.phone).replace(/[^+\d]/g, "")}`}>{contact.phone}</a>
-              ) : (
-                <small>Number to be confirmed</small>
-              )}
-            </li>
-          ))
-        }
-      </ul>
-    </section>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null
+    }
 
     <footer class="site-footer">
       <img
@@ -635,20 +670,49 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
     const ascentBeats = select<HTMLElement>("[data-ascent-beat]");
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    const warmupImages = [
-      root.querySelector<HTMLImageElement>("[data-staircase] img"),
-      root.querySelector<HTMLImageElement>(".pavilion-picture img"),
-      root.querySelector<HTMLImageElement>(".couple-picture img"),
-      root.querySelector<HTMLImageElement>("[data-ring-hand]"),
-      root.querySelector<HTMLImageElement>("[data-cloud-event='story'] img"),
-      root.querySelector<HTMLImageElement>("[data-cloud-event='doa'] img"),
-      root.querySelector<HTMLImageElement>("[data-cloud-event='final'] img"),
-      root.querySelector<HTMLImageElement>(".pavilion-cloud-bank"),
-    ].filter((image): image is HTMLImageElement => Boolean(image));
-    let warmupStartTimer: number | undefined;
+    type WarmupStage = {
+      name: string;
+      images: HTMLImageElement[];
+      unlocked: boolean;
+    };
+    const warmupImage = (selector: string) => root.querySelector<HTMLImageElement>(selector);
+    const compactWarmupStage = (
+      name: string,
+      images: Array<HTMLImageElement | null>,
+      unlocked = false,
+    ): WarmupStage => ({
+      name,
+      images: images.filter((image): image is HTMLImageElement => Boolean(image)),
+      unlocked,
+    });
+    const warmupStages = [
+      compactWarmupStage("opening", [warmupImage("[data-staircase] img")], true),
+      compactWarmupStage("early-ascent", [
+        warmupImage("[data-cloud-event='story'] img"),
+        warmupImage("[data-cloud-event='doa'] img"),
+      ]),
+      compactWarmupStage("mid-journey", [
+        warmupImage(".pavilion-picture img"),
+        warmupImage("[data-pavilion-preview] img"),
+        warmupImage("[data-cloud-event='final'] img"),
+      ]),
+      compactWarmupStage("finale", [
+        warmupImage(".couple-picture img"),
+        warmupImage("[data-ring-hand]"),
+        warmupImage(".pavilion-cloud-bank"),
+        warmupImage("[data-rsvp-reveal-cloud='left'] img"),
+      ]),
+    ];
+    const warmupInteractionGap = 420;
     let warmupIdleHandle: number | undefined;
+    let warmupRetryTimer: number | undefined;
     let warmupCancelled = false;
+    let warmupRunning = false;
+    let lastWarmupInteraction = Number.NEGATIVE_INFINITY;
+    const warmupObservers: IntersectionObserver[] = [];
+    const warmupFallbackTimers: number[] = [];
     root.dataset.assetWarmup = "pending";
+    root.dataset.assetWarmupStage = "opening";
     const requestIdle = Reflect.get(window, "requestIdleCallback") as
       | ((callback: () => void, options?: { timeout: number }) => number)
       | undefined;
@@ -658,43 +722,126 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
 
     const scheduleWarmupIdle = (callback: () => void) => {
       if (requestIdle) {
-        warmupIdleHandle = requestIdle.call(window, callback, { timeout: 1200 });
+        warmupIdleHandle = requestIdle.call(window, callback, { timeout: 1500 });
       } else {
         warmupIdleHandle = window.setTimeout(callback, 80);
       }
     };
+    const nextWarmupImage = () => {
+      for (const stage of warmupStages) {
+        if (!stage.unlocked || stage.images.length === 0) continue;
+        root.dataset.assetWarmupStage = stage.name;
+        return stage.images.shift();
+      }
+      return undefined;
+    };
+    const hasPendingWarmup = () => warmupStages.some((stage) => stage.images.length > 0);
+    const scheduleWarmup = () => {
+      if (warmupCancelled || warmupRunning || warmupIdleHandle !== undefined || warmupRetryTimer !== undefined) return;
+      scheduleWarmupIdle(warmNextImage);
+    };
     const warmNextImage = () => {
+      warmupIdleHandle = undefined;
       if (warmupCancelled) return;
-      const image = warmupImages.shift();
-      if (!image) {
-        root.dataset.assetWarmup = "complete";
+      const idleFor = performance.now() - lastWarmupInteraction;
+      if (idleFor < warmupInteractionGap) {
+        warmupRetryTimer = window.setTimeout(() => {
+          warmupRetryTimer = undefined;
+          scheduleWarmup();
+        }, Math.ceil(warmupInteractionGap - idleFor));
         return;
       }
 
-      scheduleWarmupIdle(() => {
-        if (warmupCancelled) return;
-        image.loading = "eager";
-        image.decoding = "async";
-        const loadComplete = image.complete
-          ? Promise.resolve()
-          : new Promise<void>((resolve) => {
-              image.addEventListener("load", () => resolve(), { once: true });
-              image.addEventListener("error", () => resolve(), { once: true });
-            });
-        void loadComplete
-          .then(() => image.decode().catch(() => {}))
-          .finally(warmNextImage);
-      });
+      const image = nextWarmupImage();
+      if (!image) {
+        root.dataset.assetWarmup = hasPendingWarmup() ? "waiting" : "complete";
+        return;
+      }
+
+      warmupRunning = true;
+      root.dataset.assetWarmup = "decoding";
+      image.loading = "eager";
+      image.decoding = "async";
+      const loadComplete = image.complete
+        ? Promise.resolve()
+        : new Promise<void>((resolve) => {
+            image.addEventListener("load", () => resolve(), { once: true });
+            image.addEventListener("error", () => resolve(), { once: true });
+          });
+      void loadComplete
+        .then(() => new Promise<void>((resolve) => {
+          const decodeWhenQuiet = () => {
+            if (warmupCancelled) {
+              resolve();
+              return;
+            }
+            const idleForDecode = performance.now() - lastWarmupInteraction;
+            if (idleForDecode < warmupInteractionGap) {
+              warmupRetryTimer = window.setTimeout(
+                decodeWhenQuiet,
+                Math.ceil(warmupInteractionGap - idleForDecode),
+              );
+              return;
+            }
+            warmupRetryTimer = undefined;
+            void image.decode().catch(() => {}).finally(resolve);
+          };
+          decodeWhenQuiet();
+        }))
+        .finally(() => {
+          warmupRunning = false;
+          scheduleWarmup();
+        });
+    };
+    const unlockWarmupStage = (index: number) => {
+      const stage = warmupStages[index];
+      if (!stage || stage.unlocked) return;
+      stage.unlocked = true;
+      root.dataset.assetWarmup = "pending";
+      scheduleWarmup();
+    };
+    const observeWarmupStage = (index: number, selector: string, rootMargin: string) => {
+      const trigger = root.querySelector<HTMLElement>(selector);
+      if (!trigger || !("IntersectionObserver" in window)) return false;
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (!entries.some((entry) => entry.isIntersecting)) return;
+          unlockWarmupStage(index);
+          observer.disconnect();
+        },
+        { rootMargin },
+      );
+      observer.observe(trigger);
+      warmupObservers.push(observer);
+      return true;
+    };
+    const markWarmupInteraction = () => {
+      lastWarmupInteraction = performance.now();
     };
     const cancelImageWarmup = () => {
       warmupCancelled = true;
-      if (warmupStartTimer !== undefined) window.clearTimeout(warmupStartTimer);
-      if (warmupIdleHandle === undefined) return;
-      if (cancelIdle) cancelIdle.call(window, warmupIdleHandle);
-      else window.clearTimeout(warmupIdleHandle);
+      if (warmupRetryTimer !== undefined) window.clearTimeout(warmupRetryTimer);
+      warmupFallbackTimers.forEach((timer) => window.clearTimeout(timer));
+      warmupObservers.forEach((observer) => observer.disconnect());
+      ["scroll", "touchmove", "wheel"].forEach((eventName) => {
+        window.removeEventListener(eventName, markWarmupInteraction);
+      });
+      if (warmupIdleHandle !== undefined) {
+        if (cancelIdle) cancelIdle.call(window, warmupIdleHandle);
+        else window.clearTimeout(warmupIdleHandle);
+      }
     };
 
-    warmupStartTimer = window.setTimeout(warmNextImage, 700);
+    ["scroll", "touchmove", "wheel"].forEach((eventName) => {
+      window.addEventListener(eventName, markWarmupInteraction, { passive: true });
+    });
+    observeWarmupStage(1, "[data-story-beat='date']", "120% 0px");
+    observeWarmupStage(2, "[data-story-beat='story']", "180% 0px");
+    observeWarmupStage(3, "[data-story-beat='location']", "260% 0px");
+    [2_400, 6_200, 10_000].forEach((delay, index) => {
+      warmupFallbackTimers.push(window.setTimeout(() => unlockWarmupStage(index + 1), delay));
+    });
+    scheduleWarmup();
     window.addEventListener("pagehide", cancelImageWarmup, { once: true });
 
     if ("IntersectionObserver" in window) {
@@ -866,9 +1013,21 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
       const glint = root.querySelector<HTMLElement>("[data-ring-glint]");
       const revealHaze = root.querySelector<HTMLElement>("[data-reveal-haze]");
       const finalCopy = root.querySelector<HTMLElement>("[data-final-copy]");
+      const finalMessage = root.querySelector<HTMLElement>(".final-message");
+      const finalIdentity = [
+        root.querySelector<HTMLElement>(".final-names"),
+        root.querySelector<HTMLElement>(".final-copy time"),
+        root.querySelector<HTMLElement>(".final-copy > img"),
+      ].filter((element): element is HTMLElement => Boolean(element));
+      const attendanceRequest = root.querySelector<HTMLElement>(".attendance-request");
+      const rsvpReveal = root.querySelector<HTMLElement>("[data-rsvp-reveal]");
+      const rsvpCloudLeft = root.querySelector<HTMLElement>("[data-rsvp-reveal-cloud='left']");
+      const rsvpCloudRight = root.querySelector<HTMLElement>("[data-rsvp-reveal-cloud='right']");
+      const rsvpOpener = root.querySelector<HTMLAnchorElement>("[data-rsvp-open]");
       const compactEffects = window.matchMedia("(max-width: 47.9375rem)").matches;
       let glintTimer: number | undefined;
       let ringMomentActive = false;
+      let rsvpRevealAccessible = false;
 
       const setMovingState = (
         layers: Array<HTMLElement | null | undefined>,
@@ -878,10 +1037,25 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
       };
 
       const setPavilionAmbientState = (progress: number, active = true) => {
-        const curtainsActive = active && progress >= 0.46 && progress < 0.9;
-        const coupleLightActive = active && progress >= 0.58 && progress < 0.91;
+        const curtainsActive = !compactEffects && active && progress >= 0.46 && progress < 0.76;
+        const coupleLightActive = !compactEffects && active && progress >= 0.58 && progress < 0.82;
         pavilionCurtains?.classList.toggle("is-active", curtainsActive);
         coupleLight?.classList.toggle("is-active", coupleLightActive);
+      };
+
+      const setFinalSettledState = (settled: boolean) => {
+        root.classList.toggle("is-final-settled", settled);
+      };
+
+      const setRsvpRevealAccessibility = (revealed: boolean) => {
+        if (!rsvpOpener) return;
+        if (revealed === rsvpRevealAccessible) return;
+        rsvpRevealAccessible = revealed;
+        rsvpOpener.tabIndex = revealed ? 0 : -1;
+        rsvpOpener.setAttribute("aria-hidden", revealed ? "false" : "true");
+        rsvpOpener.setAttribute("aria-disabled", revealed ? "false" : "true");
+        rsvpOpener.style.pointerEvents = revealed ? "auto" : "none";
+        rsvpReveal?.classList.toggle("is-revealed", revealed);
       };
 
       const clearGlintTimer = () => {
@@ -896,7 +1070,7 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
         if (!ringMomentActive || !glint) return;
         glintTimer = window.setTimeout(
           () => {
-            if (!ringMomentActive) return;
+            if (!ringMomentActive || document.documentElement.classList.contains("is-rsvp-open")) return;
             gsap
               .timeline({ onComplete: () => scheduleGlint(false) })
               .fromTo(
@@ -906,9 +1080,15 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
               )
               .to(glint, { autoAlpha: 0, scale: 0.7, duration: 0.48, ease: "sine.inOut" });
           },
-          first ? 900 : 6500 + Math.random() * 3000,
+          first ? 650 : 6500 + Math.random() * 3000,
         );
       };
+      const pauseGlintForRsvp = () => clearGlintTimer();
+      const resumeGlintAfterRsvp = () => {
+        if (ringMomentActive) scheduleGlint(false);
+      };
+      document.addEventListener("ourjourney:rsvp-open", pauseGlintForRsvp);
+      document.addEventListener("ourjourney:rsvp-close", resumeGlintAfterRsvp);
 
       if (ascensionPhase && finalAscentPhase && pavilionPhase && staircase && pavilionPreview && pavilionPreviewPicture && pavilionAssembly && pavilionPicture && couple && finalCopy) {
         const stairAscentScale = () => {
@@ -932,7 +1112,9 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
         const finalSceneLift = () => {
           if (window.innerWidth >= 1120) return "-30vh";
           if (window.innerWidth >= 768) return "-34vh";
-          return usesPortraitFinalComposition() ? "-11vh" : "-31vh";
+          return usesPortraitFinalComposition()
+            ? `${Math.round(window.innerHeight * -0.065)}px`
+            : "-31vh";
         };
 
         gsap.set(staircase, {
@@ -970,20 +1152,40 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
         gsap.set(revealHaze, { autoAlpha: 0, y: compactEffects ? 0 : "6vh" });
         gsap.set(finalAscentGlow, { autoAlpha: 0, scale: 0.9 });
         gsap.set(finalCopy, {
-          autoAlpha: 0,
+          autoAlpha: 1,
           xPercent: -50,
           yPercent: usesPortraitFinalComposition() ? 0 : -50,
-          y: 24,
+          y: 0,
           pointerEvents: "none",
         });
+        gsap.set(finalMessage, { autoAlpha: 0, y: 8 });
+        gsap.set(finalIdentity, { autoAlpha: 0, y: 5 });
+        gsap.set(attendanceRequest, { autoAlpha: 0, y: 6 });
+        gsap.set(rsvpOpener, { autoAlpha: 0, y: 6, pointerEvents: "none" });
+        gsap.set([rsvpCloudLeft, rsvpCloudRight], { autoAlpha: 1, x: 0, y: 0 });
+        setRsvpRevealAccessibility(false);
         gsap.set(glint, { autoAlpha: 0, scale: 0.4 });
 
         const ascentMotionLayers = compactEffects
           ? [staircase]
           : [staircase, pavilionClouds, upperStairFog, lowerStairFog, finalAscentGlow];
-        const pavilionMotionLayers = compactEffects
-          ? [staircase, pavilionPreview, pavilionAssembly]
-          : [staircase, pavilionPreview, pavilionAssembly, pavilionClouds, crestHaze, revealHaze, finalCopy];
+        const setPavilionMotionState = (progress: number, active: boolean) => {
+          const staircaseMoving = progress < 0.55 || (progress >= 0.7 && progress < 0.76);
+          const assemblyMoving = progress < 0.55 || (progress >= 0.76 && progress < 0.82);
+          staircase.classList.toggle("is-moving", active && staircaseMoving);
+          pavilionPreview.classList.toggle("is-moving", active && progress < 0.18);
+          pavilionAssembly.classList.toggle("is-moving", active && assemblyMoving);
+          couple.classList.toggle("is-moving", active && progress >= 0.66 && progress < 0.82);
+          setMovingState(
+            [rsvpCloudLeft, rsvpCloudRight, rsvpOpener],
+            active && progress >= 0.955 && progress < 1,
+          );
+          if (!compactEffects) {
+            pavilionClouds?.classList.toggle("is-moving", active && progress < 0.55);
+            crestHaze?.classList.toggle("is-moving", active && progress >= 0.02 && progress < 0.71);
+            revealHaze?.classList.toggle("is-moving", active && progress >= 0.57 && progress < 0.81);
+          }
+        };
 
         const ascensionTimeline = gsap.timeline({
           scrollTrigger: {
@@ -1071,12 +1273,15 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
             scrub: compactEffects ? 0.45 : 0.85,
             invalidateOnRefresh: true,
             onToggle: (self) => {
-              setMovingState(pavilionMotionLayers, self.isActive);
+              setPavilionMotionState(self.progress, self.isActive);
               if (!self.isActive) setPavilionAmbientState(self.progress, false);
             },
             onUpdate: (self) => {
               setPavilionAmbientState(self.progress, self.isActive);
-              const shouldGlint = self.isActive && self.progress >= 0.8 && self.progress < 0.9;
+              setPavilionMotionState(self.progress, self.isActive);
+              setFinalSettledState(self.progress >= 0.998);
+              setRsvpRevealAccessibility(self.progress >= 0.998);
+              const shouldGlint = self.progress >= 0.83;
               if (shouldGlint !== ringMomentActive) {
                 ringMomentActive = shouldGlint;
                 if (ringMomentActive) scheduleGlint(true);
@@ -1084,11 +1289,19 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
               }
             },
             onLeave: () => {
-              ringMomentActive = false;
-              clearGlintTimer();
+              setPavilionMotionState(1, false);
+              setFinalSettledState(true);
+              setRsvpRevealAccessibility(true);
+              if (!ringMomentActive) {
+                ringMomentActive = true;
+                scheduleGlint(false);
+              }
               setPavilionAmbientState(1, false);
             },
             onLeaveBack: () => {
+              setPavilionMotionState(0, false);
+              setFinalSettledState(false);
+              setRsvpRevealAccessibility(false);
               ringMomentActive = false;
               clearGlintTimer();
               setPavilionAmbientState(0, false);
@@ -1117,7 +1330,7 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
               autoAlpha: 0.56,
               scale: 0.2,
               y: () => pavilionDistantY(0.2),
-              duration: 0.13,
+              duration: 0.16,
               ease: "sine.out",
               immediateRender: false,
             },
@@ -1127,14 +1340,14 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
           .to(
             crestHaze,
             compactEffects
-              ? { autoAlpha: 0.9, duration: 0.18, ease: "sine.inOut" }
+              ? { autoAlpha: 0.42, duration: 0.18, ease: "sine.inOut" }
               : { autoAlpha: 0.9, scale: 1.12, yPercent: 12, duration: 0.18, ease: "sine.inOut" },
             0.02,
           )
           .to(
             pavilionClouds,
             compactEffects
-              ? { autoAlpha: 0.8, duration: 0.5, ease: "none" }
+              ? { autoAlpha: 0.42, duration: 0.55, ease: "none" }
               : { autoAlpha: 0.8, scale: 1.07, duration: 0.5, ease: "none" },
             0,
           )
@@ -1144,22 +1357,22 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
               autoAlpha: 0.9,
               scale: 0.62,
               y: () => pavilionApproachY(0.62, 0.5),
-              duration: 0.2,
+              duration: 0.22,
               ease: "none",
             },
-            0.15,
+            0.18,
           )
           .to(
             staircase,
             {
               scale: () => stairAscentScale() * 1.16,
               y: () => stairSummitTravel() * 0.5,
-              duration: 0.2,
+              duration: 0.22,
               ease: "none",
             },
-            0.15,
+            0.18,
           )
-          .to(pavilionAssembly, { autoAlpha: 1, scale: 1, y: 0, duration: 0.15, ease: "none" }, 0.35)
+          .to(pavilionAssembly, { autoAlpha: 1, scale: 1, y: 0, duration: 0.15, ease: "none" }, 0.4)
           .to(
             staircase,
             {
@@ -1168,23 +1381,23 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
               duration: 0.15,
               ease: "none",
             },
-            0.35,
+            0.4,
           )
-          .to(pavilionCurtains, { autoAlpha: 0.2, duration: 0.12, ease: "sine.out" }, 0.5)
-          .to(pavilionBanks, { autoAlpha: 0.9, duration: 0.14, ease: "sine.inOut" }, 0.48)
+          .to(pavilionCurtains, { autoAlpha: 0.2, duration: 0.12, ease: "sine.out" }, 0.55)
+          .to(pavilionBanks, { autoAlpha: 0.9, duration: 0.12, ease: "sine.inOut" }, 0.55)
           .to(
             crestHaze,
             compactEffects
-              ? { autoAlpha: 0.08, duration: 0.2, ease: "sine.inOut" }
+              ? { autoAlpha: 0.06, duration: 0.16, ease: "sine.inOut" }
               : { autoAlpha: 0.08, scale: 1.34, yPercent: 58, duration: 0.2, ease: "sine.inOut" },
-            0.44,
+            0.55,
           )
           .to(
             revealHaze,
             compactEffects
-              ? { autoAlpha: 0.84, duration: 0.1, ease: "sine.out" }
+              ? { autoAlpha: 0, duration: 0.1, ease: "none" }
               : { autoAlpha: 0.84, y: 0, duration: 0.1, ease: "sine.out" },
-            0.54,
+            0.57,
           );
 
         if (compactEffects) {
@@ -1200,9 +1413,9 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
                 ease: "sine.out",
                 immediateRender: false,
               },
-              0.62,
+              0.67,
             )
-            .to(couple, { autoAlpha: 1, y: 0, duration: 0.08, ease: "sine.inOut" }, 0.72);
+            .to(couple, { autoAlpha: 1, y: 0, duration: 0.09, ease: "sine.inOut" }, 0.73);
         } else {
           pavilionTimeline
             .fromTo(
@@ -1215,27 +1428,40 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
                 ease: "sine.out",
                 immediateRender: false,
               },
-              0.62,
+              0.67,
             )
-            .to(couple, { autoAlpha: 1, clipPath: "inset(0% 0 0 0)", duration: 0.08, ease: "sine.inOut" }, 0.72);
+            .to(couple, { autoAlpha: 1, clipPath: "inset(0% 0 0 0)", duration: 0.09, ease: "sine.inOut" }, 0.73);
+        }
+
+        if (compactEffects) {
+          pavilionTimeline.set(ringHand, { autoAlpha: 1 }, 0.67);
+        } else {
+          pavilionTimeline
+            .to(revealHaze, { autoAlpha: 0.06, y: "-9vh", duration: 0.14, ease: "sine.inOut" }, 0.67)
+            .fromTo(ringHand, { autoAlpha: 0.35 }, { autoAlpha: 1, duration: 0.05 }, 0.76);
         }
 
         pavilionTimeline
+          .to(staircase, { autoAlpha: 0, duration: 0.06, ease: "sine.in" }, 0.7)
+          .to(pavilionPicture, { autoAlpha: () => usesPortraitFinalComposition() ? 0.62 : 1, duration: 0.06, ease: "sine.inOut" }, 0.7)
           .to(
-            revealHaze,
-            compactEffects
-              ? { autoAlpha: 0.06, duration: 0.14, ease: "sine.inOut" }
-              : { autoAlpha: 0.06, y: "-9vh", duration: 0.14, ease: "sine.inOut" },
-            0.7,
+            pavilionAssembly,
+            {
+              scale: 0.96,
+              y: finalSceneLift,
+              autoAlpha: () => usesPortraitFinalComposition() ? 1 : 0.62,
+              duration: 0.06,
+              ease: "sine.inOut",
+            },
+            0.76,
           )
-          .fromTo(ringHand, { autoAlpha: 0.35 }, { autoAlpha: 1, duration: 0.04 }, 0.78)
-          .to(staircase, { autoAlpha: 0, duration: 0.08, ease: "sine.in" }, 0.72)
-          .to(pavilionAssembly, { scale: 1.025, duration: 0.08, ease: "sine.inOut" }, 0.78)
-          .to(pavilionAssembly, { scale: 0.96, y: finalSceneLift, autoAlpha: () => usesPortraitFinalComposition() ? 1 : 0.62, duration: 0.12, ease: "sine.inOut" }, 0.88)
-          .to(pavilionPicture, { autoAlpha: () => usesPortraitFinalComposition() ? 0.62 : 1, duration: 0.1, ease: "sine.inOut" }, 0.88)
-          .to(couple, { autoAlpha: () => usesPortraitFinalComposition() ? 0.96 : 0.74, duration: 0.1, ease: "sine.inOut" }, 0.88)
-          .set(finalCopy, { pointerEvents: "auto" }, 0.89)
-          .to(finalCopy, { autoAlpha: 1, y: 0, duration: 0.11, ease: "power2.out" }, 0.89);
+          .to(couple, { autoAlpha: () => usesPortraitFinalComposition() ? 0.96 : 0.74, duration: 0.06, ease: "sine.inOut" }, 0.76)
+          .to(finalMessage, { autoAlpha: 1, y: 0, duration: 0.04, ease: "power1.out" }, 0.86)
+          .to(finalIdentity, { autoAlpha: 1, y: 0, duration: 0.04, stagger: 0.006, ease: "power1.out" }, 0.88)
+          .to(attendanceRequest, { autoAlpha: 1, y: 0, duration: 0.04, ease: "power1.out" }, 0.92)
+          .to(rsvpCloudLeft, { x: "-78%", y: "42%", duration: 0.04, ease: "sine.inOut" }, 0.96)
+          .to(rsvpCloudRight, { x: "72%", y: "50%", duration: 0.037, ease: "power1.inOut" }, 0.963)
+          .to(rsvpOpener, { autoAlpha: 1, y: 0, duration: 0.035, ease: "sine.out" }, 0.965);
       }
 
       select("[data-soft-reveal]").forEach((element) => {
@@ -1252,18 +1478,38 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
         window.cancelAnimationFrame(initialAscentSync);
         ascentBeatTriggers.forEach((trigger) => trigger.kill());
         root.classList.remove("has-ascent-reveals");
+        setFinalSettledState(false);
         clearGlintTimer();
+        document.removeEventListener("ourjourney:rsvp-open", pauseGlintForRsvp);
+        document.removeEventListener("ourjourney:rsvp-close", resumeGlintAfterRsvp);
         setPavilionAmbientState(0, false);
       };
     });
 
     motion.add("(prefers-reduced-motion: reduce)", () => {
       const pavilionPhase = root.querySelector<HTMLElement>("[data-phase='pavilion']");
+      const reducedRsvpOpener = root.querySelector<HTMLAnchorElement>("[data-rsvp-open]");
+      const reducedRsvpReveal = root.querySelector<HTMLElement>("[data-rsvp-reveal]");
       if (!pavilionPhase) return;
 
       const showPavilion = () => root.classList.add("is-reduced-pavilion");
-      const showFinal = () => root.classList.add("is-reduced-final");
-      const hideFinal = () => root.classList.remove("is-reduced-final");
+      const setReducedRsvpVisible = (visible: boolean) => {
+        if (!reducedRsvpOpener) return;
+        reducedRsvpOpener.tabIndex = visible ? 0 : -1;
+        reducedRsvpOpener.setAttribute("aria-hidden", visible ? "false" : "true");
+        reducedRsvpOpener.setAttribute("aria-disabled", visible ? "false" : "true");
+        reducedRsvpOpener.style.pointerEvents = visible ? "auto" : "none";
+        reducedRsvpReveal?.classList.toggle("is-revealed", visible);
+      };
+      const showFinal = () => {
+        root.classList.add("is-reduced-final");
+        root.style.setProperty("--final-mobile-lift", `${Math.round(window.innerHeight * -0.065)}px`);
+        setReducedRsvpVisible(true);
+      };
+      const hideFinal = () => {
+        root.classList.remove("is-reduced-final");
+        setReducedRsvpVisible(false);
+      };
       const showAscent = () => {
         root.classList.remove("is-reduced-pavilion");
         hideFinal();
@@ -1272,6 +1518,7 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
       const finalThreshold = () =>
         pavilionTop() + Math.max(0, pavilionPhase.offsetHeight - window.innerHeight) * 0.72;
 
+      setReducedRsvpVisible(false);
       if (window.scrollY >= pavilionTop()) showPavilion();
       else showAscent();
       if (window.scrollY >= finalThreshold()) showFinal();
@@ -1509,6 +1756,7 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
         if (rsvpState === "closing") {
           rsvpState = "opening";
           documentElement.classList.add("is-rsvp-transitioning");
+          document.dispatchEvent(new CustomEvent("ourjourney:rsvp-open"));
           rsvpTimeline.play();
           return;
         }
@@ -1518,6 +1766,7 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
           ? activeElement
           : focusTarget;
         rsvpState = "opening";
+        document.dispatchEvent(new CustomEvent("ourjourney:rsvp-open"));
         lockInvitation();
         setBackgroundInactive(true);
         setSceneAccessibility(true);
@@ -1546,6 +1795,7 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
       const closeRsvp = () => {
         if (rsvpState === "closed" || rsvpState === "closing") return;
         rsvpState = "closing";
+        document.dispatchEvent(new CustomEvent("ourjourney:rsvp-close"));
         documentElement.classList.add("is-rsvp-transitioning");
         if (prefersReducedMotion) {
           rsvpTimeline.progress(0).pause();
@@ -1633,6 +1883,7 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
 
       rsvpOpener.addEventListener("click", (event) => {
         event.preventDefault();
+        if (rsvpOpener.getAttribute("aria-disabled") === "true") return;
         openRsvp(true, rsvpOpener);
       });
       closeControls.forEach((control) => control.addEventListener("click", requestClose));
@@ -1641,8 +1892,7 @@ const assetSrcset = (sources: ReadonlyArray<readonly [string, number]>) =>
       window.addEventListener("pagehide", handlePageHide, { once: true });
 
       if (location.hash === "#rsvp") {
-        history.replaceState({ ...historyStateObject(), rsvpOpen: true }, "", location.href);
-        window.requestAnimationFrame(() => openRsvp(false));
+        history.replaceState(historyStateObject(), "", `${location.pathname}${location.search}`);
       }
     }
   }

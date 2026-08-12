@@ -92,7 +92,6 @@ export interface WeddingContent {
   };
   audio: WeddingAudioConfig;
   countdown: WeddingCountdownConfig;
-  defaultContactSide: WeddingSide;
   contactVariants: Readonly<Record<WeddingSide, WeddingContactVariant>>;
   contacts: readonly WeddingContact[];
   finalMessage: readonly [string, string];
@@ -198,23 +197,21 @@ export const wedding = {
     todayMessage: "Today is the day.",
     completedMessage: "Our celebration has begun.",
   },
-  // The public landing page has no invite metadata, so it uses this variant.
-  defaultContactSide: "bride",
   contactVariants: {
     bride: {
       heading: "For the bride’s family",
-      // Replace these placeholder names and blank numbers before launch.
+      // Add public phone numbers before launch; incomplete entries stay hidden.
       contacts: [
-        { label: "Bride’s Father", name: "Name to be confirmed", phone: "" },
-        { label: "Bride’s Mother", name: "Name to be confirmed", phone: "" },
+        { label: "Bride’s Father", name: "Abdul Wahab", phone: "" },
+        { label: "Bride’s Mother", name: "Marsila", phone: "" },
       ],
     },
     groom: {
       heading: "For the groom’s family",
-      // Replace these placeholder names and blank numbers before launch.
+      // Add public phone numbers before launch; incomplete entries stay hidden.
       contacts: [
-        { label: "Groom’s Father", name: "Name to be confirmed", phone: "" },
-        { label: "Groom’s Mother", name: "Name to be confirmed", phone: "" },
+        { label: "Groom’s Father", name: "Abdul Jamal Salam", phone: "" },
+        { label: "Groom’s Mother", name: "Saadiah Hadi", phone: "" },
       ],
     },
   },

@@ -75,6 +75,33 @@ async function readSceneState(page) {
       return element ? Number.parseFloat(getComputedStyle(element).opacity) : -1;
     };
     const rect = (selector) => document.querySelector(selector)?.getBoundingClientRect() ?? null;
+    const transformState = (selector) => {
+      const element = document.querySelector(selector);
+      if (!element) return null;
+      const transform = getComputedStyle(element).transform;
+      const matrix = transform === "none" ? new DOMMatrix() : new DOMMatrix(transform);
+      return {
+        a: matrix.a,
+        b: matrix.b,
+        c: matrix.c,
+        d: matrix.d,
+        e: matrix.e,
+        f: matrix.f,
+      };
+    };
+    const cloudState = (side) => {
+      const element = document.querySelector(`[data-rsvp-reveal-cloud="${side}"]`);
+      if (!element) return null;
+      const bounds = element.getBoundingClientRect();
+      const transform = getComputedStyle(element).transform;
+      const matrix = transform === "none" ? new DOMMatrix() : new DOMMatrix(transform);
+      return {
+        x: matrix.e,
+        y: matrix.f,
+        xRatio: bounds.width > 0 ? matrix.e / bounds.width : null,
+        yRatio: bounds.height > 0 ? matrix.f / bounds.height : null,
+      };
+    };
     const staircase = rect("[data-staircase]");
     const pavilionPicture = rect(".pavilion-picture");
     const couple = rect("[data-couple]");
@@ -123,12 +150,41 @@ async function readSceneState(page) {
     );
     const maximumRowFaceOverlapRatio = Math.max(...Object.values(rowFaceOverlapRatios));
     const ctaBottomGap = finalRows.cta ? window.innerHeight - finalRows.cta.bottom : null;
+    const identityOpacities = [
+      opacity(".final-names"),
+      opacity(".final-copy time"),
+      opacity(".final-copy > img"),
+    ];
+    const rsvpOpener = document.querySelector("[data-rsvp-open]");
+    const rsvpStyle = rsvpOpener ? getComputedStyle(rsvpOpener) : null;
 
     return {
       pavilionOpacity: opacity("[data-pavilion-assembly]"),
       pavilionPreviewOpacity: opacity("[data-pavilion-preview] img"),
       coupleOpacity: opacity("[data-couple]"),
       finalOpacity: opacity("[data-final-copy]"),
+      titleOpacity: opacity(".final-message"),
+      identityOpacities,
+      minimumIdentityOpacity: Math.min(...identityOpacities),
+      attendanceOpacity: opacity(".attendance-request"),
+      ctaOpacity: opacity("[data-rsvp-open]"),
+      ctaState: rsvpOpener
+        ? {
+            tabIndex: rsvpOpener.tabIndex,
+            tabIndexAttribute: rsvpOpener.getAttribute("tabindex"),
+            ariaHidden: rsvpOpener.getAttribute("aria-hidden"),
+            ariaDisabled: rsvpOpener.getAttribute("aria-disabled"),
+            pointerEvents: rsvpStyle.pointerEvents,
+            visibility: rsvpStyle.visibility,
+          }
+        : null,
+      rsvpCloudCount: document.querySelectorAll("[data-rsvp-reveal-cloud]").length,
+      rsvpClouds: {
+        left: cloudState("left"),
+        right: cloudState("right"),
+      },
+      pavilionTransform: transformState("[data-pavilion-assembly]"),
+      coupleTransform: transformState("[data-couple]"),
       staircaseScale: Math.hypot(matrix.a, matrix.b),
       stairLandingY: staircase ? staircase.top + staircase.height * 0.0631 : null,
       pavilionBaseY: pavilionPicture ? pavilionPicture.top + pavilionPicture.height * 0.913 : null,
@@ -141,6 +197,36 @@ async function readSceneState(page) {
       ctaBottomGap,
     };
   });
+}
+
+function maximumTransformDelta(first, second) {
+  if (!first || !second) return Number.POSITIVE_INFINITY;
+  return Math.max(
+    ...["a", "b", "c", "d", "e", "f"].map((property) => Math.abs(first[property] - second[property])),
+  );
+}
+
+function ctaIsAvailable(state) {
+  return Boolean(
+    state
+    && state.tabIndex === 0
+    && state.tabIndexAttribute === "0"
+    && state.ariaHidden === "false"
+    && state.ariaDisabled === "false"
+    && state.pointerEvents === "auto"
+    && state.visibility === "visible",
+  );
+}
+
+function ctaIsUnavailable(state) {
+  return Boolean(
+    state
+    && state.tabIndex === -1
+    && state.tabIndexAttribute === "-1"
+    && state.ariaHidden === "true"
+    && state.ariaDisabled === "true"
+    && state.pointerEvents === "none",
+  );
 }
 
 try {
@@ -220,14 +306,14 @@ try {
       arrival: [150, 165],
       initialBreath: [30, 40],
       saveDate: [55, 65],
-      formalInvitation: [70, 80],
+      formalInvitation: [70, 72],
       celebration: [55, 65],
-      story: [70, 80],
-      itinerary: [85, 100],
+      story: [68, 72],
+      itinerary: [75, 82],
       doa: [60, 72],
       location: [55, 65],
       finalBreath: [30, 40],
-      pavilion: [280, 340],
+      pavilion: [250, 265],
     };
     for (const [scene, [minimum, maximum]] of Object.entries(sceneRanges)) {
       const value = staticState.sceneSvh[scene];
@@ -251,9 +337,13 @@ try {
     const pavilionDistant = await readSceneState(page);
     await scrollPhase(page, "#pavilion", 0.44);
     const pavilionApproach = await readSceneState(page);
-    await scrollPhase(page, "#pavilion", 0.84);
+    await scrollPhase(page, "#pavilion", 0.83);
     const coupleHold = await readSceneState(page);
-    await scrollPhase(page, "#pavilion", 0.96);
+    await scrollPhase(page, "#pavilion", 0.91);
+    const titleStage = await readSceneState(page);
+    await scrollPhase(page, "#pavilion", 0.95);
+    const attendanceStage = await readSceneState(page);
+    await scrollPhase(page, "#pavilion", 1);
     const finalState = await readSceneState(page);
 
     if (ascentMiddle.pavilionOpacity > 0.02 || ascentMiddle.pavilionPreviewOpacity > 0.02) {
@@ -282,13 +372,79 @@ try {
     if (pavilionDistant.pavilionOpacity < 0.12 || pavilionDistant.pavilionOpacity > 0.8) {
       failures.push(`${viewport.width}x${viewport.height}: distant pavilion opacity is not atmospheric`);
     }
-    if (coupleHold.coupleOpacity < 0.68 || coupleHold.finalOpacity > 0.08) {
+    if (
+      coupleHold.coupleOpacity < 0.68
+      || coupleHold.titleOpacity > 0.08
+      || coupleHold.attendanceOpacity > 0.08
+      || coupleHold.ctaOpacity > 0.08
+    ) {
       failures.push(`${viewport.width}x${viewport.height}: couple hold/final-message ordering regressed`);
+    }
+    if (
+      titleStage.titleOpacity < 0.8
+      || titleStage.attendanceOpacity > 0.08
+      || titleStage.ctaOpacity > 0.08
+    ) {
+      failures.push(`${viewport.width}x${viewport.height}: title is not staged ahead of attendance and RSVP`);
+    }
+    if (
+      attendanceStage.titleOpacity < 0.9
+      || attendanceStage.minimumIdentityOpacity < 0.9
+      || attendanceStage.attendanceOpacity < 0.8
+      || attendanceStage.ctaOpacity > 0.08
+      || !ctaIsUnavailable(attendanceStage.ctaState)
+    ) {
+      failures.push(`${viewport.width}x${viewport.height}: attendance is not staged ahead of the RSVP reveal`);
+    }
+    const pavilionStillnessDelta = Math.max(
+      maximumTransformDelta(coupleHold.pavilionTransform, titleStage.pavilionTransform),
+      maximumTransformDelta(coupleHold.pavilionTransform, attendanceStage.pavilionTransform),
+      maximumTransformDelta(coupleHold.pavilionTransform, finalState.pavilionTransform),
+    );
+    const coupleStillnessDelta = Math.max(
+      maximumTransformDelta(coupleHold.coupleTransform, titleStage.coupleTransform),
+      maximumTransformDelta(coupleHold.coupleTransform, attendanceStage.coupleTransform),
+      maximumTransformDelta(coupleHold.coupleTransform, finalState.coupleTransform),
+    );
+    if (pavilionStillnessDelta > 0.75 || coupleStillnessDelta > 0.75) {
+      failures.push(
+        `${viewport.width}x${viewport.height}: pavilion/couple transform continued after the 82% settling point `
+        + `(pavilion ${pavilionStillnessDelta.toFixed(2)}, couple ${coupleStillnessDelta.toFixed(2)})`,
+      );
+    }
+    const coveredClouds = attendanceStage.rsvpClouds;
+    const clearedClouds = finalState.rsvpClouds;
+    const cloudsBeginCovered = Boolean(
+      coveredClouds.left
+      && coveredClouds.right
+      && Math.abs(coveredClouds.left.x) < 1.5
+      && Math.abs(coveredClouds.left.y) < 1.5
+      && Math.abs(coveredClouds.right.x) < 1.5
+      && Math.abs(coveredClouds.right.y) < 1.5,
+    );
+    const cloudsClearAsymmetrically = Boolean(
+      clearedClouds.left
+      && clearedClouds.right
+      && clearedClouds.left.xRatio < -0.35
+      && clearedClouds.right.xRatio > 0.35
+      && clearedClouds.left.yRatio > 0.15
+      && clearedClouds.right.yRatio > 0.15
+      && (
+        Math.abs(Math.abs(clearedClouds.left.xRatio) - Math.abs(clearedClouds.right.xRatio)) > 0.025
+        || Math.abs(clearedClouds.left.yRatio - clearedClouds.right.yRatio) > 0.025
+      ),
+    );
+    if (finalState.rsvpCloudCount !== 2 || !cloudsBeginCovered || !cloudsClearAsymmetrically) {
+      failures.push(`${viewport.width}x${viewport.height}: RSVP is not cleared by two asymmetric lower clouds`);
     }
     const rowFaceOverlap = Object.entries(finalState.rowFaceOverlapRatios)
       .filter(([, ratio]) => ratio > 0.02);
     if (
-      finalState.finalOpacity < 0.82
+      finalState.titleOpacity < 0.9
+      || finalState.minimumIdentityOpacity < 0.9
+      || finalState.attendanceOpacity < 0.9
+      || finalState.ctaOpacity < 0.9
+      || !ctaIsAvailable(finalState.ctaState)
       || Math.abs(finalState.finalCenterOffsetX ?? Number.POSITIVE_INFINITY) > 2
       || Math.abs(finalState.finalCenterOffsetY ?? Number.POSITIVE_INFINITY) > 2
       || rowFaceOverlap.length > 0
@@ -359,6 +515,32 @@ try {
       pavilionBaseY: pavilionApproach.pavilionBaseY === null ? null : Number(pavilionApproach.pavilionBaseY.toFixed(1)),
       distantPavilionOpacity: pavilionDistant.pavilionOpacity,
       coupleHoldOpacity: coupleHold.coupleOpacity,
+      pavilionStillnessDelta: Number(pavilionStillnessDelta.toFixed(3)),
+      coupleStillnessDelta: Number(coupleStillnessDelta.toFixed(3)),
+      finalStaging: {
+        hold: {
+          title: Number(coupleHold.titleOpacity.toFixed(3)),
+          attendance: Number(coupleHold.attendanceOpacity.toFixed(3)),
+          cta: Number(coupleHold.ctaOpacity.toFixed(3)),
+        },
+        title: {
+          title: Number(titleStage.titleOpacity.toFixed(3)),
+          attendance: Number(titleStage.attendanceOpacity.toFixed(3)),
+          cta: Number(titleStage.ctaOpacity.toFixed(3)),
+        },
+        attendance: {
+          title: Number(attendanceStage.titleOpacity.toFixed(3)),
+          attendance: Number(attendanceStage.attendanceOpacity.toFixed(3)),
+          cta: Number(attendanceStage.ctaOpacity.toFixed(3)),
+        },
+        final: {
+          title: Number(finalState.titleOpacity.toFixed(3)),
+          attendance: Number(finalState.attendanceOpacity.toFixed(3)),
+          cta: Number(finalState.ctaOpacity.toFixed(3)),
+          ctaState: finalState.ctaState,
+        },
+      },
+      finalClouds: finalState.rsvpClouds,
       finalCenterOffsetX: finalState.finalCenterOffsetX === null ? null : Number(finalState.finalCenterOffsetX.toFixed(2)),
       finalCenterOffsetY: finalState.finalCenterOffsetY === null ? null : Number(finalState.finalCenterOffsetY.toFixed(2)),
       finalRowFaceOverlapRatios: Object.fromEntries(
@@ -395,13 +577,28 @@ try {
   const reducedPavilion = await readSceneState(reducedPage);
   await scrollPhase(reducedPage, "#pavilion", 0.9, 250);
   const reducedFinal = await readSceneState(reducedPage);
+  await scrollPhase(reducedPage, "#pavilion", 0.6, 250);
+  const reducedReversed = await readSceneState(reducedPage);
   if (reducedAscent.pavilionOpacity > 0.02 || reducedAscent.coupleOpacity > 0.02) {
     failures.push("reduced motion: pavilion/couple visible during ascent");
   }
-  if (reducedPavilion.pavilionOpacity < 0.9 || reducedPavilion.coupleOpacity < 0.9 || reducedPavilion.finalOpacity > 0.02) {
+  if (
+    reducedPavilion.pavilionOpacity < 0.9
+    || reducedPavilion.coupleOpacity < 0.9
+    || reducedPavilion.finalOpacity > 0.02
+  ) {
     failures.push("reduced motion: pavilion state order regressed");
   }
-  if (reducedFinal.finalOpacity < 0.9) failures.push("reduced motion: final message not revealed");
+  if (
+    !ctaIsUnavailable(reducedAscent.ctaState)
+    || !ctaIsUnavailable(reducedPavilion.ctaState)
+    || !ctaIsUnavailable(reducedReversed.ctaState)
+  ) {
+    failures.push("reduced motion: RSVP CTA is available outside the final state");
+  }
+  if (reducedFinal.finalOpacity < 0.9 || !ctaIsAvailable(reducedFinal.ctaState)) {
+    failures.push("reduced motion: final message/RSVP CTA not revealed and available together");
+  }
   await reducedPage.close();
 
   console.log(JSON.stringify({ ok: failures.length === 0, results, failures }, null, 2));
