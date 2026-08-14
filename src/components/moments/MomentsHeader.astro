@@ -1,0 +1,40 @@
+---
+import { journeyUrl, momentsPath, withBase } from "../../lib/paths";
+
+interface Props {
+  active?: "home" | "capture" | "gallery" | "admin" | "live";
+  compact?: boolean;
+}
+
+const { active = "home", compact = false } = Astro.props;
+---
+
+<header class:list={["moments-header", compact && "moments-header--compact"]}>
+  <a class="moments-header__journey" href={journeyUrl()}>
+    <svg viewBox="0 0 20 20" aria-hidden="true">
+      <path d="M16 10H4m5-5-5 5 5 5" />
+    </svg>
+    <span>Our Journey</span>
+  </a>
+
+  <a class="moments-header__mark" href={momentsPath()} aria-label="Moments home">
+    <img
+      src={withBase("assets/ornaments/monogram.svg")}
+      alt=""
+      width="54"
+      height="40"
+    />
+    <span>Moments</span>
+  </a>
+
+  <nav class="moments-header__nav" aria-label="Moments">
+    <a
+      href={momentsPath("capture/")}
+      aria-current={active === "capture" ? "page" : undefined}
+    >Capture</a>
+    <a
+      href={momentsPath("gallery/")}
+      aria-current={active === "gallery" ? "page" : undefined}
+    >Gallery</a>
+  </nav>
+</header>

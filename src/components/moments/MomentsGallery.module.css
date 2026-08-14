@@ -1,0 +1,715 @@
+.galleryRoot {
+  --moments-ink: #435762;
+  --moments-ink-soft: #6c7c84;
+  --moments-gold: #aa8b57;
+  --moments-surface: rgba(255, 253, 248, 0.78);
+  position: relative;
+  width: min(100%, 92rem);
+  margin-inline: auto;
+  color: var(--moments-ink);
+}
+
+.galleryHeader {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: clamp(1.2rem, 4vw, 2.25rem);
+}
+
+.galleryCount {
+  margin: 0;
+  color: var(--moments-ink-soft);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.refreshButton,
+.stateAction {
+  display: inline-flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 0.72rem 1.2rem;
+  color: #fffdf8;
+  background: #536a78;
+  border: 1px solid rgba(45, 67, 81, 0.3);
+  border-radius: 999px;
+  box-shadow: 0 0.7rem 1.8rem rgba(76, 87, 93, 0.12);
+  cursor: pointer;
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.11em;
+  line-height: 1;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition:
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.refreshButton {
+  min-width: 3rem;
+  padding-inline: 1rem;
+  color: #687a84;
+  background: rgba(255, 253, 248, 0.56);
+  border-color: rgba(145, 158, 164, 0.3);
+  box-shadow: none;
+}
+
+.refreshIcon {
+  width: 1rem;
+  height: 1rem;
+  transition: transform 400ms ease;
+}
+
+.refreshButton:hover .refreshIcon,
+.refreshButton:focus-visible .refreshIcon {
+  transform: rotate(90deg);
+}
+
+.refreshButton:hover,
+.refreshButton:focus-visible,
+.stateAction:hover,
+.stateAction:focus-visible {
+  box-shadow: 0 0.9rem 2rem rgba(76, 87, 93, 0.17);
+  transform: translateY(-2px);
+}
+
+.refreshButton:disabled {
+  cursor: wait;
+  opacity: 0.58;
+  transform: none;
+}
+
+.masonry,
+.skeletonMasonry {
+  column-count: 2;
+  column-gap: clamp(0.65rem, 2vw, 1.25rem);
+}
+
+.card,
+.skeletonCard {
+  width: 100%;
+  margin: 0 0 clamp(0.65rem, 2vw, 1.25rem);
+  break-inside: avoid;
+}
+
+.card {
+  display: block;
+  opacity: 0;
+  animation: cardReveal 620ms cubic-bezier(0.2, 0.72, 0.26, 1) forwards;
+  animation-delay: min(calc(var(--moment-index, 0) * 55ms), 440ms);
+}
+
+@keyframes cardReveal {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 0.8rem, 0) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.cardButton {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  color: inherit;
+  background: var(--moments-surface);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: clamp(0.75rem, 2.5vw, 1.15rem);
+  box-shadow:
+    0 0.55rem 1.7rem rgba(77, 91, 100, 0.1),
+    inset 0 0 0 1px rgba(161, 139, 98, 0.07);
+  cursor: zoom-in;
+  text-align: left;
+  transform: translateZ(0);
+  transition:
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    transform 220ms ease;
+}
+
+.cardButton:hover,
+.cardButton:focus-visible {
+  border-color: rgba(170, 139, 87, 0.48);
+  box-shadow:
+    0 0.9rem 2.3rem rgba(71, 87, 98, 0.16),
+    inset 0 0 0 1px rgba(161, 139, 98, 0.08);
+  transform: translateY(-0.2rem);
+}
+
+.mediaFrame {
+  position: relative;
+  display: grid;
+  width: 100%;
+  min-height: 8rem;
+  overflow: hidden;
+  place-items: center;
+  background:
+    radial-gradient(circle at 25% 18%, rgba(255, 252, 239, 0.92), transparent 38%),
+    linear-gradient(145deg, #dbe7ef, #f4eadc);
+}
+
+.cardMedia {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition:
+    opacity 360ms ease,
+    transform 500ms cubic-bezier(0.2, 0.72, 0.26, 1);
+}
+
+.mediaLoaded {
+  opacity: 1;
+}
+
+.cardButton:hover .cardMedia,
+.cardButton:focus-visible .cardMedia {
+  transform: scale(1.018);
+}
+
+.mediaPlaceholder,
+.skeletonCard {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 22% 18%, rgba(255, 255, 255, 0.76), transparent 34%),
+    linear-gradient(135deg, rgba(214, 228, 238, 0.92), rgba(245, 237, 223, 0.9));
+}
+
+.mediaPlaceholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: rgba(78, 99, 110, 0.55);
+}
+
+.mediaPlaceholder::after,
+.skeletonCard::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.5) 48%,
+    transparent 66%
+  );
+  content: "";
+  transform: translateX(-100%);
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.fallbackMark {
+  position: relative;
+  z-index: 1;
+  width: 2.6rem;
+  height: 2.6rem;
+  opacity: 0.68;
+}
+
+.videoBadge {
+  position: absolute;
+  z-index: 2;
+  top: 0.65rem;
+  right: 0.65rem;
+  display: inline-flex;
+  min-height: 2rem;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.62rem;
+  color: #fff;
+  background: rgba(40, 53, 60, 0.66);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 999px;
+  box-shadow: 0 0.3rem 1rem rgba(25, 34, 40, 0.15);
+  font-size: 0.57rem;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.videoBadge svg {
+  width: 0.7rem;
+  height: 0.7rem;
+}
+
+.cardDetails {
+  display: grid;
+  gap: 0.18rem;
+  padding: 0.75rem 0.78rem 0.82rem;
+}
+
+.cardName {
+  overflow: hidden;
+  color: #4c606a;
+  font-family: var(--font-display, "Cormorant Garamond", Georgia, serif);
+  font-size: clamp(1.02rem, 3.8vw, 1.2rem);
+  font-weight: 500;
+  line-height: 1.12;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardCaption {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #738189;
+  font-size: 0.66rem;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.skeletonCard {
+  display: block;
+  min-height: 11rem;
+  border: 1px solid rgba(255, 255, 255, 0.52);
+  border-radius: clamp(0.75rem, 2.5vw, 1.15rem);
+}
+
+.stateShell {
+  display: grid;
+  min-height: min(58vh, 32rem);
+  place-items: center;
+  padding: clamp(3rem, 10vw, 6rem) 1rem;
+  text-align: center;
+}
+
+.stateContent {
+  display: grid;
+  width: min(100%, 27rem);
+  justify-items: center;
+}
+
+.stateCloud {
+  position: relative;
+  width: 8.5rem;
+  height: 4.5rem;
+  margin-bottom: 1.35rem;
+  opacity: 0.8;
+}
+
+.stateCloud::before,
+.stateCloud::after {
+  position: absolute;
+  content: "";
+}
+
+.stateCloud::before {
+  right: 0.25rem;
+  bottom: 0.35rem;
+  left: 0.25rem;
+  height: 2.25rem;
+  background: rgba(255, 255, 252, 0.76);
+  border-radius: 999px;
+  box-shadow: 0 0.7rem 1.6rem rgba(101, 121, 133, 0.1);
+}
+
+.stateCloud::after {
+  bottom: 1.15rem;
+  left: 2.15rem;
+  width: 3.8rem;
+  height: 3.15rem;
+  background: rgba(255, 255, 252, 0.82);
+  border-radius: 50%;
+  box-shadow:
+    -1.75rem 0.85rem 0 -0.6rem rgba(255, 255, 252, 0.8),
+    2.15rem 1rem 0 -0.75rem rgba(255, 255, 252, 0.78);
+}
+
+.stateEyebrow {
+  margin: 0 0 0.55rem;
+  color: #9b8052;
+  font-size: 0.63rem;
+  font-weight: 650;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.stateTitle {
+  margin: 0;
+  color: #455964;
+  font-family: var(--font-display, "Cormorant Garamond", Georgia, serif);
+  font-size: clamp(2.05rem, 10vw, 3.2rem);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1;
+}
+
+.stateCopy {
+  max-width: 23rem;
+  margin: 1rem 0 1.5rem;
+  color: #6e7e86;
+  font-size: 0.83rem;
+  line-height: 1.7;
+}
+
+.errorDetail {
+  max-width: 23rem;
+  margin: -0.75rem 0 1.5rem;
+  color: #967267;
+  font-size: 0.7rem;
+  line-height: 1.55;
+}
+
+.lightboxBackdrop {
+  position: fixed;
+  z-index: 2000;
+  inset: 0;
+  display: grid;
+  overflow: hidden;
+  color: #fffdf8;
+  background:
+    radial-gradient(circle at 50% 24%, rgba(92, 111, 123, 0.2), transparent 35%),
+    #141d22;
+  opacity: 0;
+  animation: lightboxFade 220ms ease-out forwards;
+  overscroll-behavior: contain;
+}
+
+@keyframes lightboxFade {
+  to {
+    opacity: 1;
+  }
+}
+
+.lightboxDialog {
+  position: relative;
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  outline: none;
+}
+
+.lightboxTopbar {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  min-height: calc(4rem + env(safe-area-inset-top));
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding:
+    max(0.7rem, env(safe-area-inset-top))
+    max(0.75rem, env(safe-area-inset-right))
+    0.55rem
+    max(0.75rem, env(safe-area-inset-left));
+}
+
+.lightboxPosition {
+  margin: 0;
+  padding-left: 0.45rem;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.iconButton,
+.navButton {
+  display: grid;
+  width: 3.25rem;
+  height: 3.25rem;
+  flex: 0 0 auto;
+  place-items: center;
+  padding: 0;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  cursor: pointer;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    transform 180ms ease;
+}
+
+.iconButton:hover,
+.iconButton:focus-visible,
+.navButton:hover,
+.navButton:focus-visible {
+  background: rgba(255, 255, 255, 0.17);
+  border-color: rgba(255, 255, 255, 0.48);
+  transform: scale(1.04);
+}
+
+.iconButton:disabled,
+.navButton:disabled {
+  cursor: default;
+  opacity: 0.3;
+  transform: none;
+}
+
+.closeIcon {
+  position: relative;
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.closeIcon::before,
+.closeIcon::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1.25rem;
+  height: 1px;
+  background: currentColor;
+  content: "";
+}
+
+.closeIcon::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.closeIcon::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.lightboxViewport {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  place-items: center;
+  padding: 0 max(0.75rem, env(safe-area-inset-right)) 0 max(0.75rem, env(safe-area-inset-left));
+  touch-action: pan-y;
+}
+
+.lightboxMediaWrap {
+  position: relative;
+  display: grid;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  place-items: center;
+  user-select: none;
+  animation: mediaReveal 340ms cubic-bezier(0.2, 0.72, 0.26, 1) both;
+}
+
+@keyframes mediaReveal {
+  from {
+    opacity: 0;
+    transform: scale(0.975);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.lightboxMedia {
+  display: block;
+  max-width: min(100%, 84rem);
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 0.35rem;
+  box-shadow: 0 1.2rem 4rem rgba(0, 0, 0, 0.28);
+  -webkit-user-drag: none;
+}
+
+.lightboxVideo {
+  width: auto;
+}
+
+.lightboxFallback {
+  display: grid;
+  width: min(100%, 32rem);
+  min-height: 14rem;
+  place-items: center;
+  padding: 2rem;
+  color: rgba(255, 255, 255, 0.76);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 1rem;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.navButton {
+  position: absolute;
+  z-index: 3;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.navButton:hover,
+.navButton:focus-visible {
+  transform: translateY(-50%) scale(1.04);
+}
+
+.navPrevious {
+  left: max(0.75rem, env(safe-area-inset-left));
+}
+
+.navNext {
+  right: max(0.75rem, env(safe-area-inset-right));
+}
+
+.chevron {
+  width: 0.9rem;
+  height: 0.9rem;
+  border-top: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+}
+
+.chevronPrevious {
+  margin-left: 0.25rem;
+  transform: rotate(-135deg);
+}
+
+.chevronNext {
+  margin-right: 0.25rem;
+  transform: rotate(45deg);
+}
+
+.lightboxMeta {
+  position: relative;
+  z-index: 4;
+  display: grid;
+  min-height: calc(6rem + env(safe-area-inset-bottom));
+  align-content: center;
+  justify-items: center;
+  padding:
+    0.85rem
+    max(4.5rem, env(safe-area-inset-right))
+    max(1rem, env(safe-area-inset-bottom))
+    max(4.5rem, env(safe-area-inset-left));
+  background: linear-gradient(180deg, transparent, rgba(11, 18, 22, 0.56));
+  text-align: center;
+}
+
+.lightboxName {
+  margin: 0;
+  color: #fffdf8;
+  font-family: var(--font-display, "Cormorant Garamond", Georgia, serif);
+  font-size: clamp(1.45rem, 6vw, 2rem);
+  font-weight: 400;
+  line-height: 1.12;
+}
+
+.lightboxCaption {
+  max-width: 42rem;
+  margin: 0.35rem 0 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-family: var(--font-display, "Cormorant Garamond", Georgia, serif);
+  font-size: clamp(0.98rem, 4vw, 1.18rem);
+  line-height: 1.4;
+}
+
+.lightboxTime {
+  margin-top: 0.45rem;
+  color: rgba(255, 255, 255, 0.52);
+  font-size: 0.58rem;
+  font-style: normal;
+  font-weight: 500;
+  letter-spacing: 0.11em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 22rem) {
+  .masonry,
+  .skeletonMasonry {
+    column-count: 1;
+  }
+}
+
+@media (min-width: 48rem) {
+  .masonry,
+  .skeletonMasonry {
+    column-count: 3;
+  }
+
+  .cardDetails {
+    padding: 0.85rem 0.95rem 0.95rem;
+  }
+
+  .lightboxTopbar {
+    padding-inline: max(1.25rem, env(safe-area-inset-right));
+  }
+
+  .lightboxViewport {
+    padding-inline: 5.5rem;
+  }
+
+  .navPrevious {
+    left: max(1.25rem, env(safe-area-inset-left));
+  }
+
+  .navNext {
+    right: max(1.25rem, env(safe-area-inset-right));
+  }
+}
+
+@media (min-width: 72rem) {
+  .masonry,
+  .skeletonMasonry {
+    column-count: 4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .lightboxBackdrop,
+  .lightboxMediaWrap,
+  .mediaPlaceholder::after,
+  .skeletonCard::after {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .cardMedia,
+  .cardButton,
+  .iconButton,
+  .navButton,
+  .refreshButton,
+  .stateAction,
+  .refreshIcon {
+    transition: none;
+  }
+
+  .cardButton:hover,
+  .cardButton:focus-visible,
+  .cardButton:hover .cardMedia,
+  .cardButton:focus-visible .cardMedia {
+    transform: none;
+  }
+}

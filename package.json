@@ -17,6 +17,7 @@
     "audit:features": "node scripts/feature-audit.mjs",
     "audit:network-decode": "node scripts/network-decode-audit.mjs",
     "audit:viewport": "node scripts/viewport-audit.mjs",
+    "audit:moments": "node scripts/moments-audit.mjs",
     "smoke": "node scripts/smoke.mjs",
     "preview": "astro preview",
     "astro": "astro"

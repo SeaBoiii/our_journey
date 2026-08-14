@@ -1,0 +1,54 @@
+---
+import MomentsBackground from "./MomentsBackground.astro";
+import MomentsHeader from "./MomentsHeader.astro";
+import { momentsPath, withBase } from "../../lib/paths";
+---
+
+<div class="moments-shell moments-landing">
+  <MomentsBackground variant="full" />
+  <MomentsHeader active="home" />
+
+  <main id="main-content" class="moments-hero">
+    <div class="moments-hero__photo moments-hero__photo--left" aria-hidden="true">
+      <img
+        src={withBase("assets/moments/mock/henna-bouquet-thumb.webp")}
+        alt=""
+        width="427"
+        height="640"
+      />
+    </div>
+    <div class="moments-hero__photo moments-hero__photo--right" aria-hidden="true">
+      <img
+        src={withBase("assets/moments/mock/friends-laughing-thumb.webp")}
+        alt=""
+        width="640"
+        height="427"
+      />
+    </div>
+
+    <div class="moments-hero__copy">
+      <p class="moments-kicker">Aleem &amp; Ain · 14 June 2027</p>
+      <h1>Capture<br /><em>Our Day</em></h1>
+      <div class="moments-hero__intro">
+        <p>Everyone sees a wedding differently.</p>
+        <p>Show us what you see.</p>
+      </div>
+      <div class="moments-hero__actions">
+        <a class="moments-button moments-button--primary" href={momentsPath("capture/")}>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 7.5h3l1.3-2h7.4l1.3 2h3a2 2 0 0 1 2 2v8.5a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9.5a2 2 0 0 1 2-2Z" />
+            <circle cx="12" cy="13" r="3.5" />
+          </svg>
+          <span>Capture a Moment</span>
+        </a>
+        <a class="moments-button moments-button--secondary" href={momentsPath("gallery/")}>
+          <span>Explore the Gallery</span>
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M4 10h12m-5-5 5 5-5 5" />
+          </svg>
+        </a>
+      </div>
+      <p class="moments-hero__note">A little corner of the day, seen through the people we love.</p>
+    </div>
+  </main>
+</div>

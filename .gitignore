@@ -16,9 +16,9 @@ pnpm-debug.log*
 artifacts/
 
 
-# environment variables
-.env
-.env.production
+# environment variables (keep the documented empty template)
+.env*
+!.env.example
 
 # macOS-specific files
 .DS_Store

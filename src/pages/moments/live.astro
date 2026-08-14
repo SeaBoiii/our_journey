@@ -1,0 +1,38 @@
+---
+import MomentsBackground from "../../components/moments/MomentsBackground.astro";
+import MomentsLayout from "../../layouts/MomentsLayout.astro";
+import { momentsPath, withBase } from "../../lib/paths";
+---
+
+<MomentsLayout
+  title="Moments Live — Aleem & Ain"
+  description="A future live wedding display for approved guest moments."
+>
+  <div class="moments-shell moments-live">
+    <MomentsBackground variant="night" />
+    <a class="moments-live__back" href={momentsPath()}>
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16 10H4m5-5-5 5 5 5" /></svg>
+      Moments
+    </a>
+    <main id="main-content" class="moments-live__main">
+      <div class="moments-live__frames" aria-hidden="true">
+        <figure class="moments-live__frame moments-live__frame--one">
+          <img src={withBase("assets/moments/mock/walking-together-thumb.webp")} alt="" width="427" height="640" />
+        </figure>
+        <figure class="moments-live__frame moments-live__frame--two">
+          <img src={withBase("assets/moments/mock/first-dance-thumb.webp")} alt="" width="640" height="427" />
+        </figure>
+        <figure class="moments-live__frame moments-live__frame--three">
+          <img src={withBase("assets/moments/mock/table-details-thumb.webp")} alt="" width="427" height="640" />
+        </figure>
+      </div>
+      <div class="moments-live__copy">
+        <img src={withBase("assets/ornaments/monogram.svg")} alt="" width="72" height="54" />
+        <p class="moments-kicker">Coming closer to the day</p>
+        <h1>Moments, <em>Live</em></h1>
+        <p>Approved photographs will gently appear here throughout the celebration.</p>
+        <span>Projector mode is prepared for a future phase.</span>
+      </div>
+    </main>
+  </div>
+</MomentsLayout>

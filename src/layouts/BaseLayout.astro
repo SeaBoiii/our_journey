@@ -10,11 +10,15 @@ import "../styles/global.css";
 interface Props {
   title?: string;
   description?: string;
+  skipLabel?: string;
+  bodyClass?: string;
 }
 
 const {
   title = "Aleem & A — Our Journey",
   description = "A wedding invitation told as a cinematic journey through the clouds.",
+  skipLabel = "Skip to the invitation",
+  bodyClass,
 } = Astro.props;
 const baseUrl = import.meta.env.BASE_URL.endsWith("/")
   ? import.meta.env.BASE_URL
@@ -46,8 +50,8 @@ const withBase = (path: string) => `${baseUrl}${path.replace(/^\/+/, "")}`;
     />
     <title>{title}</title>
   </head>
-  <body>
-    <a class="skip-link" href="#main-content">Skip to the invitation</a>
+  <body class={bodyClass}>
+    <a class="skip-link" href="#main-content">{skipLabel}</a>
     <slot />
   </body>
 </html>

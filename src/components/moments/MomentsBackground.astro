@@ -1,0 +1,47 @@
+---
+import CloudField from "../CloudField.astro";
+import { withBase } from "../../lib/paths";
+
+interface Props {
+  variant?: "full" | "quiet" | "night";
+}
+
+const { variant = "quiet" } = Astro.props;
+---
+
+<div class:list={["moments-background", `moments-background--${variant}`]} aria-hidden="true">
+  <picture class="moments-background__sky">
+    <source
+      media="(max-width: 640px)"
+      srcset={`${withBase("assets/sky/sky-gradient-480.webp")} 480w, ${withBase("assets/sky/sky-gradient-640.webp")} 640w`}
+      sizes="100vw"
+    />
+    <img
+      src={withBase("assets/sky/sky-gradient.webp")}
+      alt=""
+      width="864"
+      height="1821"
+      decoding="async"
+      fetchpriority={variant === "full" ? "high" : "low"}
+    />
+  </picture>
+  <span class="moments-background__light"></span>
+  <span class="moments-background__grain"></span>
+  {variant === "full" ? <CloudField class="moments-background__cloud-field" /> : null}
+  <img
+    class="moments-background__wisp"
+    src={withBase("assets/clouds/cloud-distant-wisp.webp")}
+    alt=""
+    width="520"
+    height="114"
+    decoding="async"
+  />
+  <img
+    class="moments-background__bank"
+    src={withBase("assets/clouds/cloud-foreground-bank.webp")}
+    alt=""
+    width="960"
+    height="391"
+    decoding="async"
+  />
+</div>

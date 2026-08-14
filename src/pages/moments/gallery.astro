@@ -1,0 +1,25 @@
+---
+import MomentsBackground from "../../components/moments/MomentsBackground.astro";
+import MomentsGallery from "../../components/moments/MomentsGallery";
+import MomentsHeader from "../../components/moments/MomentsHeader.astro";
+import MomentsLayout from "../../layouts/MomentsLayout.astro";
+import { momentsPath } from "../../lib/paths";
+---
+
+<MomentsLayout
+  title="Wedding Moments — Aleem & Ain"
+  description="Explore approved photos and videos shared by Aleem and Ain's wedding guests."
+>
+  <div class="moments-shell moments-page moments-page--gallery">
+    <MomentsBackground variant="quiet" />
+    <MomentsHeader active="gallery" compact />
+    <main id="main-content" class="moments-page__main moments-page__main--wide">
+      <header class="moments-page__intro moments-page__intro--gallery">
+        <p class="moments-kicker">Seen by the people we love</p>
+        <h1>Our <em>Moments</em></h1>
+        <p>Every photograph holds a different corner of the same beautiful day.</p>
+      </header>
+      <MomentsGallery client:load captureHref={momentsPath("capture/")} />
+    </main>
+  </div>
+</MomentsLayout>

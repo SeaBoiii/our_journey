@@ -1,0 +1,19 @@
+---
+import CaptureMoment from "../../components/moments/CaptureMoment";
+import MomentsBackground from "../../components/moments/MomentsBackground.astro";
+import MomentsHeader from "../../components/moments/MomentsHeader.astro";
+import MomentsLayout from "../../layouts/MomentsLayout.astro";
+---
+
+<MomentsLayout
+  title="Capture a Moment — Aleem & Ain"
+  description="Take a photo or choose one from your phone and add it to Aleem and Ain's wedding story."
+>
+  <div class="moments-shell moments-page moments-page--capture">
+    <MomentsBackground variant="quiet" />
+    <MomentsHeader active="capture" compact />
+    <main id="main-content" class="moments-page__main">
+      <CaptureMoment client:load />
+    </main>
+  </div>
+</MomentsLayout>

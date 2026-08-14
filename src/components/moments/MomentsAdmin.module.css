@@ -1,0 +1,360 @@
+.shell {
+  width: min(100%, 72rem);
+  margin: 0 auto;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.15rem;
+}
+
+.filters {
+  display: flex;
+  max-width: 100%;
+  gap: 0.35rem;
+  overflow-x: auto;
+  padding: 0.25rem;
+  scrollbar-width: none;
+}
+
+.filters::-webkit-scrollbar {
+  display: none;
+}
+
+.filters button,
+.refresh {
+  display: inline-flex;
+  min-height: 2.85rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 0.48rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid rgba(81, 100, 112, 0.18);
+  border-radius: 999px;
+  color: #586a74;
+  background: rgba(255, 253, 248, 0.58);
+  font-size: 0.67rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+.filters button[aria-pressed="true"] {
+  color: #fffdf8;
+  background: #536a78;
+  border-color: #536a78;
+  box-shadow: 0 0.55rem 1.4rem rgba(63, 84, 97, 0.16);
+}
+
+.filters strong {
+  display: grid;
+  min-width: 1.4rem;
+  height: 1.4rem;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  font-size: 0.65rem;
+}
+
+.refresh svg,
+.actions svg {
+  width: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.45;
+}
+
+.refresh {
+  cursor: pointer;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1rem, 2.5vw, 1.6rem);
+}
+
+.card {
+  overflow: hidden;
+  border: 1px solid rgba(89, 107, 118, 0.13);
+  border-radius: 1.35rem;
+  background: rgba(255, 253, 248, 0.83);
+  box-shadow: 0 1.2rem 3rem rgba(59, 78, 91, 0.1);
+}
+
+.media {
+  position: relative;
+  min-height: 14rem;
+  max-height: 28rem;
+  overflow: hidden;
+  background: #dbe5eb;
+}
+
+.media img,
+.media video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.status,
+.videoBadge {
+  position: absolute;
+  top: 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  color: #42525b;
+  background: rgba(255, 253, 248, 0.86);
+  box-shadow: 0 0.4rem 1.1rem rgba(44, 59, 68, 0.12);
+  backdrop-filter: blur(10px);
+}
+
+.status {
+  left: 0.8rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.card[data-status="approved"] .status {
+  color: #3f6457;
+}
+
+.card[data-status="rejected"] .status {
+  color: #85564e;
+}
+
+.card[data-status="hidden"] .status {
+  color: #62636d;
+}
+
+.videoBadge {
+  right: 0.8rem;
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  border-radius: 50%;
+}
+
+.videoBadge svg {
+  width: 1rem;
+  fill: currentColor;
+}
+
+.copy {
+  padding: 1rem 1.1rem 0.9rem;
+}
+
+.identity {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.identity strong {
+  color: #42535d;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 500;
+}
+
+.identity time {
+  flex: 0 0 auto;
+  color: #77858c;
+  font-size: 0.61rem;
+}
+
+.copy p {
+  margin: 0.65rem 0 0;
+  color: #5f6e76;
+  font-size: 0.76rem;
+  line-height: 1.6;
+}
+
+.copy .noCaption {
+  color: #879298;
+  font-style: italic;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  padding: 0 1rem 1rem;
+}
+
+.actions button {
+  display: inline-flex;
+  min-height: 2.85rem;
+  flex: 1 1 7rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.42rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgba(85, 102, 112, 0.18);
+  border-radius: 0.8rem;
+  color: #5c6a71;
+  background: rgba(245, 247, 246, 0.72);
+  font-size: 0.65rem;
+  font-weight: 650;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.actions button.approve {
+  color: #fffdf8;
+  background: #536f65;
+  border-color: #536f65;
+}
+
+.actions button:disabled {
+  cursor: wait;
+  opacity: 0.56;
+}
+
+.announcement {
+  min-height: 1.2rem;
+  margin: 0 0 0.45rem;
+  color: #526b60;
+  font-size: 0.72rem;
+  text-align: center;
+}
+
+.error,
+.empty {
+  display: grid;
+  min-height: 18rem;
+  place-items: center;
+  align-content: center;
+  padding: 2rem;
+  border: 1px solid rgba(84, 101, 112, 0.15);
+  border-radius: 1.35rem;
+  text-align: center;
+  background: rgba(255, 253, 248, 0.7);
+  box-shadow: 0 1rem 3rem rgba(63, 81, 94, 0.08);
+}
+
+.error p,
+.empty p {
+  max-width: 28rem;
+  margin: 0.65rem 0 0;
+  color: #687780;
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.error button {
+  min-height: 2.9rem;
+  margin-top: 1rem;
+  padding: 0.65rem 1rem;
+  border: 0;
+  border-radius: 999px;
+  color: #fff;
+  background: #536a78;
+  cursor: pointer;
+}
+
+.empty span {
+  display: grid;
+  width: 4rem;
+  height: 4rem;
+  place-items: center;
+  border-radius: 50%;
+  color: #8b7a5c;
+  background: rgba(232, 220, 197, 0.48);
+}
+
+.empty svg {
+  width: 1.75rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.25;
+}
+
+.empty h2 {
+  margin: 1rem 0 0;
+  color: #44555e;
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 500;
+}
+
+.skeletonFilters,
+.skeletonCard {
+  overflow: hidden;
+  background: linear-gradient(105deg, rgba(255,255,255,0.45) 30%, rgba(255,255,255,0.82) 45%, rgba(255,255,255,0.45) 60%);
+  background-size: 240% 100%;
+  animation: skeleton 1.4s ease-in-out infinite;
+}
+
+.skeletonFilters {
+  width: 22rem;
+  max-width: 90%;
+  height: 2.85rem;
+  margin-bottom: 1.2rem;
+  border-radius: 999px;
+}
+
+.skeletonCard {
+  height: 30rem;
+  border-radius: 1.35rem;
+}
+
+@keyframes skeleton {
+  to { background-position-x: -240%; }
+}
+
+@media (max-width: 42rem) {
+  .toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 2.85rem;
+    align-items: flex-start;
+  }
+
+  .filters {
+    width: 100%;
+  }
+
+  .refresh {
+    position: relative;
+    z-index: 2;
+    width: 2.85rem;
+    overflow: hidden;
+    flex: 0 0 2.85rem;
+    padding: 0;
+    color: transparent;
+  }
+
+  .refresh svg {
+    position: absolute;
+    color: #586a74;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .media {
+    max-height: 34rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeletonFilters,
+  .skeletonCard {
+    animation: none;
+  }
+}

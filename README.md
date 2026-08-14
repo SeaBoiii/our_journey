@@ -2,6 +2,8 @@
 
 A mobile-first cinematic wedding invitation built with Astro, TypeScript, Tailwind CSS, React, GSAP, and ScrollTrigger. The experience moves from an opening cloud field through an ascending staircase to a layered pavilion, couple reveal, ring glint, final invitation, and RSVP.
 
+The repository also contains **Moments**, a separate guest photo experience at `/moments/`. Its Phase 1 capture, gallery, lightbox, and moderation flows run entirely in a browser-local mock mode, with no cloud credentials required. See [`MOMENTS.md`](MOMENTS.md) for architecture, security, and deployment guidance.
+
 ## Run locally
 
 ```sh
@@ -19,6 +21,7 @@ npm run audit:journey -- http://127.0.0.1:4321
 npm run audit:reverse -- http://127.0.0.1:4321
 npm run audit:motion -- http://127.0.0.1:4321
 npm run audit:viewport -- http://127.0.0.1:4321
+npm run audit:moments -- http://127.0.0.1:4321
 ```
 
 `npm run smoke -- http://127.0.0.1:4321` runs the personalized RSVP flow in local Chrome/Edge. `npm run capture -- <url> <output> <width> <height> <scroll>` captures a visual checkpoint; `scroll` can be a page fraction such as `0.5` or a section target such as `#pavilion@0.74`.

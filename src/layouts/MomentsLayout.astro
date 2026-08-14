@@ -1,0 +1,23 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+import "../styles/moments.css";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = "Moments — Aleem & Ain",
+  description = "Capture and explore the little moments that make our wedding day ours.",
+} = Astro.props;
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  skipLabel="Skip to Moments"
+  bodyClass="moments-body"
+>
+  <slot />
+</BaseLayout>
