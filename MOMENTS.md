@@ -32,6 +32,7 @@ Key files:
 - `src/lib/moments/providers/mock.ts` is the only Phase 1 adapter.
 - `src/lib/moments/gallery.ts` owns approved/newest-first filtering, alt text, and object-URL cleanup.
 - `src/lib/paths.ts` resolves both assets and routes from Astro’s `BASE_URL`, so local/root and GitHub project builds use the same UI code.
+- `src/data/wedding.ts` remains the single source of truth for public couple/date/event metadata used by both the invitation and Moments.
 
 The default limits are 20 MB per photo, 150 MB per video, and 10 files per submission. JPEG, PNG, WebP, HEIC/HEIF, MP4, and MOV are accepted. A browser may upload HEIC/HEIF even when it cannot render a local preview.
 
@@ -48,7 +49,6 @@ The guest gallery requests approved records by default. The mock admin explicitl
 Everything bundled by Astro or exposed through a `PUBLIC_` environment variable is public. Never put any of the following in client source or browser-visible environment variables:
 
 - Google OAuth client secrets or refresh tokens
-- Google service-account private keys
 - Supabase service-role keys
 - admin credentials or hard-coded passwords
 
@@ -56,26 +56,31 @@ There is deliberately no frontend password check on `/moments/admin/`. Future mo
 
 ## Future Google Drive and Supabase integration
 
-The intended production flow is:
+The intended production backend is hybrid rather than choosing Google Drive or Supabase as mutually exclusive storage providers:
 
 ```text
 Guest browser
     → authenticated/rate-limited upload request
 Cloudflare Worker or Pages Function
     → validate type, size, count, and guest session
-Google Drive
+    → initiate/relay bounded chunks for resumable upload
+Google Drive (OAuth as the owning human account)
     → store full original in Originals or Videos
 Media processing
     → create bounded WebP/AVIF gallery derivatives
 Supabase
-    → store metadata, moderation status, session, and derivative URLs
+    → store metadata, moderation status, session, admin auth, and derivative URLs
 Gallery
     → read approved metadata/derivatives only
 ```
 
-Google Drive owner credentials must exist only in the serverless environment. The browser should call one secure upload API. That endpoint can save the original, enqueue or generate a thumbnail, then create a Supabase metadata row. Large originals should never be returned for masonry cards.
+For a personal `My Drive`, production uploads should authenticate with OAuth 2.0 on behalf of the Google account that owns the wedding folders. The OAuth client secret and refresh token belong only in the serverless environment. Do not put them in browser code.
 
-A future provider can implement the existing `MomentsProvider` contract and be selected by the facade without rewriting React components. In production, approved-only filtering and moderation authorization must be enforced by the API/database policies—not trusted to a client parameter.
+The upload API must not assume a single request can proxy every configured video. Cloudflare Free currently limits request bodies to 100 MB while the Phase 1 video limit is 150 MB, so Phase 2 should use Google Drive resumable uploads with bounded chunks rather than sending an entire large video through one Worker request.
+
+Large originals should never be returned for masonry cards. Gallery pages should use optimized derivatives while the full originals remain in Drive.
+
+A production remote provider can implement the existing `MomentsProvider` contract and be selected by the facade without rewriting React components. In production, approved-only filtering and moderation authorization must be enforced by the API/database policies—not trusted to a client parameter.
 
 ## Environment variables
 
@@ -90,7 +95,7 @@ Browser-safe values:
 | `PUBLIC_SUPABASE_URL` | Proposed future Supabase project URL if the browser client needs it. |
 | `PUBLIC_SUPABASE_ANON_KEY` | Proposed future anonymous key; safe to expose only with correct RLS policies. |
 
-Serverless-only values should be configured in Cloudflare’s encrypted environment and must never use the `PUBLIC_` prefix. Examples are `SUPABASE_SERVICE_ROLE_KEY`, `GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_PRIVATE_KEY`, and the Drive folder IDs shown in `.env.example`.
+Serverless-only values should be configured in Cloudflare’s encrypted environment and must never use the `PUBLIC_` prefix. Examples are `SUPABASE_SERVICE_ROLE_KEY`, `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `GOOGLE_OAUTH_REFRESH_TOKEN`, and the Drive folder IDs shown in `.env.example`.
 
 ## Deployment
 
@@ -119,7 +124,7 @@ Create a separate Cloudflare Pages project pointed at this repository with:
 
 The initial preview will be available at `https://<project>.pages.dev/moments/`. The build also contains the invitation because this is still one repository; a later deployment-only root rewrite or a small Moments-specific Astro entry can make the dedicated domain open Moments at `/` without changing its service/business logic. Set `PUBLIC_JOURNEY_URL` to the invitation origin when the experiences move to separate domains.
 
-Real uploads require a Cloudflare Worker/Pages Function or another secure external API. This static Astro build must never be given service credentials.
+Real uploads require a Cloudflare Worker/Pages Function or another secure external API. This static Astro build must never be given private OAuth or service credentials.
 
 ## Verification
 
