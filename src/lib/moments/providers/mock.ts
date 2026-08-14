@@ -1,7 +1,12 @@
 import { MOMENTS_CONFIG } from "../../../config/moments";
 import { withBase } from "../../paths";
-import { sortMomentsNewestFirst } from "../gallery";
+import {
+  releaseMomentObjectUrls,
+  sortMomentsNewestFirst,
+} from "../gallery";
 import type {
+  AdminMomentsOptions,
+  AdminMomentsPage,
   GetMomentsOptions,
   Moment,
   MomentMediaType,
@@ -10,6 +15,7 @@ import type {
   MomentUploadInput,
   MomentUploadProgress,
   MomentUploadResult,
+  MomentsPage,
   UploadMomentOptions,
 } from "../types";
 
@@ -345,13 +351,39 @@ function hydrateMoment(
     mediaType: record.mediaType,
     previewUrl,
     thumbnailUrl,
-    originalFileId: record.blobId,
     status: record.status,
     width: record.width,
     height: record.height,
     mimeType: record.mimeType,
     fileName: record.fileName,
     size: record.size,
+    processingStatus: "ready",
+  };
+}
+
+function paginateMoments(
+  moments: readonly Moment[],
+  options: GetMomentsOptions,
+): MomentsPage {
+  const requestedLimit = Math.trunc(options.limit ?? 20);
+  const limit = Math.min(
+    20,
+    Math.max(1, Number.isSafeInteger(requestedLimit) ? requestedLimit : 20),
+  );
+  const requestedOffset = Math.trunc(options.offset ?? 0);
+  const offset =
+    Number.isSafeInteger(requestedOffset) && requestedOffset >= 0
+      ? requestedOffset
+      : 0;
+  const endOffset = Math.min(moments.length, offset + limit);
+  const pageMoments = moments.slice(offset, endOffset);
+  releaseMomentObjectUrls([
+    ...moments.slice(0, offset),
+    ...moments.slice(endOffset),
+  ]);
+  return {
+    moments: pageMoments,
+    nextOffset: endOffset < moments.length ? endOffset : null,
   };
 }
 
@@ -549,11 +581,6 @@ class MockMomentsProvider implements MomentsProvider {
     throwIfAborted(options.signal);
     await writeUploadedRecords(records, mediaRecords);
 
-    const media = new Map(mediaRecords.map((record) => [record.id, record.blob]));
-    const moments = records
-      .map((record) => hydrateMoment(record, media))
-      .filter((moment): moment is Moment => moment !== null);
-
     reportProgress(options.onProgress, {
       phase: "complete",
       completedFiles: input.files.length,
@@ -563,10 +590,32 @@ class MockMomentsProvider implements MomentsProvider {
       percentage: 100,
     });
 
-    return { moments };
+    return {
+      submissions: records.map((record) => ({
+        id: record.id,
+        status: record.status === "approved" ? "approved" : "pending",
+        createdAt: record.createdAt,
+        mediaType: record.mediaType,
+      })),
+    };
   }
 
-  async getMoments(options: GetMomentsOptions = {}): Promise<Moment[]> {
+  async getMoments(options: GetMomentsOptions = {}): Promise<MomentsPage> {
+    return paginateMoments(
+      await this.readMoments({ status: "approved" }),
+      options,
+    );
+  }
+
+  async getAdminMoments(
+    options: AdminMomentsOptions = {},
+  ): Promise<AdminMomentsPage> {
+    return paginateMoments(await this.readMoments(options), options);
+  }
+
+  private async readMoments(
+    options: AdminMomentsOptions,
+  ): Promise<Moment[]> {
     const requestedStatus = options.status ?? "approved";
     const { records, media } = await readStoredState();
     const visibleRecords =

@@ -5,7 +5,10 @@ import {
   MOMENTS_CONFIG,
 } from "../../config/moments";
 import { mockMomentsProvider } from "./providers/mock";
+import { remoteMomentsProvider } from "./providers/remote";
 import type {
+  AdminMomentsOptions,
+  AdminMomentsPage,
   GetMomentsOptions,
   Moment,
   MomentErrorCode,
@@ -15,6 +18,7 @@ import type {
   MomentStatus,
   MomentUploadInput,
   MomentUploadResult,
+  MomentsPage,
   MomentValidationIssue,
   UploadMomentOptions,
 } from "./types";
@@ -45,6 +49,8 @@ export const MOMENT_ERROR_MESSAGES: Readonly<Record<MomentErrorCode, string>> = 
   NO_FILES: "Choose at least one photo or video to share.",
   TOO_MANY_FILES: `Choose up to ${MOMENTS_CONFIG.maxFilesPerUpload} files at a time.`,
   GUEST_NAME_REQUIRED: "Please tell us your name before sharing your moment.",
+  GUEST_NAME_TOO_LONG: "Please shorten your name before sharing your moment.",
+  CAPTION_TOO_LONG: "Please shorten your note before sharing your moment.",
   UNSUPPORTED_FILE_TYPE:
     "That file type is not supported. Try a JPEG, PNG, WebP, HEIC, MP4, or MOV file.",
   VIDEOS_DISABLED: "Video uploads are not available just yet.",
@@ -62,6 +68,14 @@ export const MOMENT_ERROR_MESSAGES: Readonly<Record<MomentErrorCode, string>> = 
   NOT_PENDING: "Only a moment that is still pending can be removed.",
   INVALID_STATUS: "That moderation choice is not available.",
   ABORTED: "The upload was cancelled before it finished.",
+  API_NOT_CONFIGURED:
+    "Online Moments has not been configured yet. Please try again later.",
+  NETWORK_ERROR:
+    "We could not reach Moments just now. Check your connection and try again.",
+  SESSION_EXPIRED: "That upload paused for too long. Please try sharing it again.",
+  RATE_LIMITED: "Moments is a little busy. Please wait a moment and try again.",
+  AUTH_REQUIRED: "Sign in before opening the moderation queue.",
+  ACCESS_DENIED: "This account does not have access to Moments moderation.",
 };
 
 export class MomentServiceError extends Error {
@@ -200,6 +214,20 @@ export function validateMomentUpload(
     });
   }
 
+  if (input.guestName.trim().length > MOMENTS_CONFIG.guestNameMaxLength) {
+    issues.push({
+      code: "GUEST_NAME_TOO_LONG",
+      message: MOMENT_ERROR_MESSAGES.GUEST_NAME_TOO_LONG,
+    });
+  }
+
+  if ((input.caption?.trim().length ?? 0) > MOMENTS_CONFIG.captionMaxLength) {
+    issues.push({
+      code: "CAPTION_TOO_LONG",
+      message: MOMENT_ERROR_MESSAGES.CAPTION_TOO_LONG,
+    });
+  }
+
   return issues;
 }
 
@@ -242,6 +270,26 @@ function serviceErrorFor(
     return error;
   }
 
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "name" in error &&
+    error.name === "MomentsApiError" &&
+    "code" in error &&
+    typeof error.code === "string" &&
+    error.code in MOMENT_ERROR_MESSAGES
+  ) {
+    const code = error.code as MomentErrorCode;
+    return new MomentServiceError(code, MOMENT_ERROR_MESSAGES[code], {
+      cause: error,
+      details:
+        "retryAfterSeconds" in error &&
+        typeof error.retryAfterSeconds === "number"
+          ? { retryAfterSeconds: error.retryAfterSeconds }
+          : undefined,
+    });
+  }
+
   if (isNamedError(error, "AbortError")) {
     return new MomentServiceError("ABORTED", undefined, { cause: error });
   }
@@ -269,7 +317,15 @@ export function getMomentErrorMessage(error: unknown): string {
     : MOMENT_ERROR_MESSAGES.UPLOAD_FAILED;
 }
 
-let activeProvider: MomentsProvider = mockMomentsProvider;
+export function getMomentErrorCode(error: unknown): MomentErrorCode | undefined {
+  return error instanceof MomentServiceError ? error.code : undefined;
+}
+
+const configuredMomentsProvider =
+  MOMENTS_CONFIG.backendProvider === "remote"
+    ? remoteMomentsProvider
+    : mockMomentsProvider;
+let activeProvider: MomentsProvider = configuredMomentsProvider;
 
 /** Allows a future Supabase/API adapter to be injected without changing UI. */
 export function setMomentsProvider(provider: MomentsProvider): void {
@@ -277,7 +333,7 @@ export function setMomentsProvider(provider: MomentsProvider): void {
 }
 
 export function resetMomentsProvider(): void {
-  activeProvider = mockMomentsProvider;
+  activeProvider = configuredMomentsProvider;
 }
 
 export function getMomentsProvider(): MomentsProvider {
@@ -323,9 +379,19 @@ export async function uploadMoment(
 
 export async function getMoments(
   options: GetMomentsOptions = {},
-): Promise<Moment[]> {
+): Promise<MomentsPage> {
   try {
     return await activeProvider.getMoments(options);
+  } catch (error) {
+    throw serviceErrorFor(error, "LOAD_FAILED");
+  }
+}
+
+export async function getAdminMoments(
+  options: AdminMomentsOptions = {},
+): Promise<AdminMomentsPage> {
+  try {
+    return await activeProvider.getAdminMoments(options);
   } catch (error) {
     throw serviceErrorFor(error, "LOAD_FAILED");
   }
@@ -355,6 +421,8 @@ export async function updateMomentStatus(
 }
 
 export type {
+  AdminMomentsOptions,
+  AdminMomentsPage,
   GetMomentsOptions,
   Moment,
   MomentErrorCode,
@@ -364,7 +432,9 @@ export type {
   MomentUploadInput,
   MomentUploadProgress,
   MomentUploadProgressCallback,
+  MomentUploadReceipt,
   MomentUploadResult,
+  MomentsPage,
   MomentValidationIssue,
   UploadMomentOptions,
 } from "./types";

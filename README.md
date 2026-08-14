@@ -2,7 +2,7 @@
 
 A mobile-first cinematic wedding invitation built with Astro, TypeScript, Tailwind CSS, React, GSAP, and ScrollTrigger. The experience moves from an opening cloud field through an ascending staircase to a layered pavilion, couple reveal, ring glint, final invitation, and RSVP.
 
-The repository also contains **Moments**, a separate guest photo experience at `/moments/`. Its Phase 1 capture, gallery, lightbox, and moderation flows run entirely in a browser-local mock mode, with no cloud credentials required. See [`MOMENTS.md`](MOMENTS.md) for architecture, security, and deployment guidance.
+The repository also contains **Moments**, a separate guest photo experience at `/moments/`. Browser-local mock mode still needs no cloud credentials; optional remote mode uses an independently deployed Cloudflare Worker, private Google Drive originals, and Supabase metadata/auth/derivatives. See [`MOMENTS.md`](MOMENTS.md) for architecture, security, and deployment guidance.
 
 ## Run locally
 
@@ -15,6 +15,7 @@ Production checks:
 
 ```sh
 npm run check
+npm run test:phase2
 npm run build
 npm run preview
 npm run audit:journey -- http://127.0.0.1:4321

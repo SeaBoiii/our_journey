@@ -1,5 +1,6 @@
 export type MomentStatus = "pending" | "approved" | "rejected" | "hidden";
 export type MomentMediaType = "photo" | "video";
+export type MomentProcessingStatus = "pending" | "ready" | "failed";
 
 export interface Moment {
   readonly id: string;
@@ -7,15 +8,17 @@ export interface Moment {
   readonly caption: string;
   readonly createdAt: string;
   readonly mediaType: MomentMediaType;
+  /** Gallery-sized display asset. Never a Google Drive original URL. */
   readonly previewUrl: string;
   readonly thumbnailUrl?: string;
-  readonly originalFileId?: string;
   readonly status: MomentStatus;
   readonly width?: number;
   readonly height?: number;
   readonly mimeType?: string;
   readonly fileName?: string;
   readonly size?: number;
+  /** Present on privileged admin reads; public gallery records are always ready. */
+  readonly processingStatus?: MomentProcessingStatus;
 }
 
 export interface MomentUploadInput {
@@ -24,7 +27,12 @@ export interface MomentUploadInput {
   readonly caption?: string;
 }
 
-export type MomentUploadPhase = "validating" | "uploading" | "complete";
+export type MomentUploadPhase =
+  | "validating"
+  | "preparing"
+  | "uploading"
+  | "finalizing"
+  | "complete";
 
 export interface MomentUploadProgress {
   readonly phase: MomentUploadPhase;
@@ -45,19 +53,39 @@ export interface UploadMomentOptions {
   readonly signal?: AbortSignal;
 }
 
+export interface MomentUploadReceipt {
+  readonly id: string;
+  readonly status: "pending" | "approved";
+  readonly createdAt: string;
+  readonly mediaType: MomentMediaType;
+}
+
 export interface MomentUploadResult {
-  readonly moments: Moment[];
+  readonly submissions: readonly MomentUploadReceipt[];
 }
 
 export interface GetMomentsOptions {
-  /** Defaults to approved so guest-facing callers cannot expose moderation. */
+  readonly limit?: number;
+  readonly offset?: number;
+}
+
+export interface MomentsPage {
+  readonly moments: readonly Moment[];
+  readonly nextOffset: number | null;
+}
+
+export interface AdminMomentsOptions extends GetMomentsOptions {
   readonly status?: MomentStatus | "all";
 }
+
+export type AdminMomentsPage = MomentsPage;
 
 export type MomentErrorCode =
   | "NO_FILES"
   | "TOO_MANY_FILES"
   | "GUEST_NAME_REQUIRED"
+  | "GUEST_NAME_TOO_LONG"
+  | "CAPTION_TOO_LONG"
   | "UNSUPPORTED_FILE_TYPE"
   | "VIDEOS_DISABLED"
   | "FILE_TOO_LARGE"
@@ -70,7 +98,13 @@ export type MomentErrorCode =
   | "NOT_FOUND"
   | "NOT_PENDING"
   | "INVALID_STATUS"
-  | "ABORTED";
+  | "ABORTED"
+  | "API_NOT_CONFIGURED"
+  | "NETWORK_ERROR"
+  | "SESSION_EXPIRED"
+  | "RATE_LIMITED"
+  | "AUTH_REQUIRED"
+  | "ACCESS_DENIED";
 
 export interface MomentErrorDetails {
   readonly fileName?: string;
@@ -78,6 +112,7 @@ export interface MomentErrorDetails {
   readonly maximumBytes?: number;
   readonly actualBytes?: number;
   readonly maximumFiles?: number;
+  readonly retryAfterSeconds?: number;
 }
 
 export interface MomentValidationIssue {
@@ -92,7 +127,10 @@ export interface MomentsProvider {
     input: MomentUploadInput,
     options?: UploadMomentOptions,
   ): Promise<MomentUploadResult>;
-  getMoments(options?: GetMomentsOptions): Promise<Moment[]>;
+  /** Guest-safe, approved-only gallery read. */
+  getMoments(options?: GetMomentsOptions): Promise<MomentsPage>;
+  /** Privileged moderation read; remote implementations require admin auth. */
+  getAdminMoments(options?: AdminMomentsOptions): Promise<AdminMomentsPage>;
   deletePendingUpload(id: string): Promise<void>;
   updateMomentStatus(id: string, status: MomentStatus): Promise<Moment>;
 }

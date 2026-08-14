@@ -6,20 +6,22 @@ import styles from "./CaptureMoment.module.css";
 
 export interface UploadProgressProps {
   progress: MomentUploadProgress;
+  onCancel?: () => void;
+  isCancelling?: boolean;
 }
 
 function phaseCopy(progress: MomentUploadProgress): {
   title: string;
   copy: string;
 } {
-  if (progress.phase === "validating") {
+  if (progress.phase === "validating" || progress.phase === "preparing") {
     return {
       title: "Preparing your moment",
       copy: "Making sure everything is ready for its journey to us.",
     };
   }
 
-  if (progress.phase === "complete") {
+  if (progress.phase === "finalizing" || progress.phase === "complete") {
     return {
       title: "Almost there",
       copy: "Adding the final touch to your moment.",
@@ -27,14 +29,18 @@ function phaseCopy(progress: MomentUploadProgress): {
   }
 
   return {
-    title: "Sending through the clouds",
+    title: "Uploading your moment",
     copy: progress.currentFileName
       ? `Sharing ${progress.currentFileName}`
       : "Your moment is on its way.",
   };
 }
 
-export default function UploadProgress({ progress }: UploadProgressProps) {
+export default function UploadProgress({
+  progress,
+  onCancel,
+  isCancelling = false,
+}: UploadProgressProps) {
   const titleId = useId();
   const titleRef = useRef<HTMLHeadingElement>(null);
   const percentage = Math.max(0, Math.min(100, Math.round(progress.percentage)));
@@ -84,6 +90,16 @@ export default function UploadProgress({ progress }: UploadProgressProps) {
       </div>
 
       <p className={styles.progressHint}>Keep this page open until your upload is complete.</p>
+      {onCancel ? (
+        <button
+          className={styles.progressCancel}
+          type="button"
+          onClick={onCancel}
+          disabled={isCancelling}
+        >
+          {isCancelling ? "Cancelling…" : "Cancel upload"}
+        </button>
+      ) : null}
     </section>
   );
 }

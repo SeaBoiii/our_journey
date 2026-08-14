@@ -47,7 +47,9 @@ export default function UploadSuccess({
         Your {momentWord} {uploadedCount === 1 ? "has" : "have"} joined our story.
       </h1>
       <p className={styles.successCopy}>
-        We’re so glad you shared what the day looked like through your eyes.
+        {!isMock && requiresModeration
+          ? "It may take a little while to appear while we give everything a quick look."
+          : "We’re so glad you shared what the day looked like through your eyes."}
       </p>
 
       <div className={styles.successActions}>
@@ -62,10 +64,6 @@ export default function UploadSuccess({
       {isMock ? (
         <p className={styles.successNote}>
           Preview mode saves this moment only in this browser; nothing has been sent online.
-        </p>
-      ) : requiresModeration ? (
-        <p className={styles.successNote}>
-          Moments may take a little while to appear in the gallery while they’re lovingly reviewed.
         </p>
       ) : null}
     </section>

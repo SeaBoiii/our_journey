@@ -19,7 +19,6 @@ import {
   uploadMoment,
   validateMomentFiles,
 } from "../../lib/moments/upload";
-import { releaseMomentObjectUrls } from "../../lib/moments/gallery";
 import styles from "./CaptureMoment.module.css";
 import UploadPreview, {
   type SelectedMedia,
@@ -28,8 +27,8 @@ import UploadPreview, {
 import UploadProgress from "./UploadProgress";
 import UploadSuccess from "./UploadSuccess";
 
-const GUEST_NAME_MAX_LENGTH = 80;
-const CAPTION_MAX_LENGTH = 500;
+const GUEST_NAME_MAX_LENGTH = MOMENTS_CONFIG.guestNameMaxLength;
+const CAPTION_MAX_LENGTH = MOMENTS_CONFIG.captionMaxLength;
 const PHOTO_ACCEPT_ATTRIBUTE = [
   ...ACCEPTED_PHOTO_MIME_TYPES,
   ".jpg",
@@ -115,10 +114,12 @@ export default function CaptureMoment({ className }: CaptureMomentProps) {
   const [submissionError, setSubmissionError] = useState("");
   const [progress, setProgress] = useState<MomentUploadProgress>(() => createProgress());
   const [uploadedCount, setUploadedCount] = useState(0);
+  const [cancelRequested, setCancelRequested] = useState(false);
 
   const objectUrlsRef = useRef(new Set<string>());
   const nextMediaIdRef = useRef(0);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const cancelRequestedRef = useRef(false);
   const selectionHeadingRef = useRef<HTMLHeadingElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const formErrorRef = useRef<HTMLDivElement>(null);
@@ -255,6 +256,8 @@ export default function CaptureMoment({ className }: CaptureMomentProps) {
     const abortController = new AbortController();
 
     abortControllerRef.current = abortController;
+    cancelRequestedRef.current = false;
+    setCancelRequested(false);
     setProgress(nextProgress);
     setSubmissionError("");
     setPhase("uploading");
@@ -273,18 +276,23 @@ export default function CaptureMoment({ className }: CaptureMomentProps) {
       );
 
       if (abortController.signal.aborted) {
-        releaseMomentObjectUrls(result.moments);
         return;
       }
 
-      setUploadedCount(result.moments.length || files.length);
-      releaseMomentObjectUrls(result.moments);
+      setUploadedCount(result.submissions.length || files.length);
       releaseMedia(selectedMedia);
       setSelectedMedia([]);
       setCaption("");
       setPhase("success");
     } catch (error: unknown) {
       if (abortController.signal.aborted) {
+        if (cancelRequestedRef.current) {
+          setSubmissionError(
+            "Upload cancelled. Your photos and note are still here when you’re ready to try again.",
+          );
+          setPhase("editing");
+          window.requestAnimationFrame(() => formErrorRef.current?.focus());
+        }
         return;
       }
 
@@ -295,7 +303,18 @@ export default function CaptureMoment({ className }: CaptureMomentProps) {
       if (abortControllerRef.current === abortController) {
         abortControllerRef.current = null;
       }
+      cancelRequestedRef.current = false;
+      setCancelRequested(false);
     }
+  }
+
+  function cancelUpload() {
+    if (!abortControllerRef.current || cancelRequestedRef.current) {
+      return;
+    }
+    cancelRequestedRef.current = true;
+    setCancelRequested(true);
+    abortControllerRef.current.abort();
   }
 
   function captureAnother() {
@@ -310,7 +329,11 @@ export default function CaptureMoment({ className }: CaptureMomentProps) {
   if (phase === "uploading") {
     return (
       <div className={shellClassName}>
-        <UploadProgress progress={progress} />
+        <UploadProgress
+          progress={progress}
+          onCancel={cancelUpload}
+          isCancelling={cancelRequested}
+        />
       </div>
     );
   }
@@ -514,7 +537,7 @@ export default function CaptureMoment({ className }: CaptureMomentProps) {
           ) : null}
 
           <button className={styles.submitButton} type="submit">
-            <span>Share this moment</span>
+            <span>{submissionError ? "Try sharing again" : "Share this moment"}</span>
             <svg className={styles.submitIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
               <path d="M5 12h13m-5-5 5 5-5 5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>

@@ -1,0 +1,19 @@
+{
+  "name": "@our-journey/moments-api",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "check": "tsc --noEmit && wrangler deploy --dry-run",
+    "test": "node --import tsx --test test/*.test.ts",
+    "types": "wrangler types src/worker-configuration.d.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^6.0.0",
+    "wrangler": "^4.36.0"
+  }
+}

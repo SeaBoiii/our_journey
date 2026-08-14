@@ -3,31 +3,36 @@ import MomentsAdmin from "../../components/moments/MomentsAdmin";
 import MomentsBackground from "../../components/moments/MomentsBackground.astro";
 import MomentsHeader from "../../components/moments/MomentsHeader.astro";
 import MomentsLayout from "../../layouts/MomentsLayout.astro";
+import { MOMENTS_CONFIG } from "../../config/moments";
+
+const isMock = MOMENTS_CONFIG.backendProvider === "mock";
 ---
 
 <MomentsLayout
-  title="Moments Moderation Preview — Aleem & Ain"
-  description="A local-only preview of the future Moments moderation experience."
+  title={isMock ? "Moments Moderation Preview — Aleem & Ain" : "Moments Moderation — Aleem & Ain"}
+  description={isMock ? "A local-only preview of the future Moments moderation experience." : "Private moderation for Aleem and Ain's wedding Moments."}
 >
   <div class="moments-shell moments-page moments-page--admin">
     <MomentsBackground variant="quiet" />
     <MomentsHeader active="admin" compact />
     <main id="main-content" class="moments-page__main moments-page__main--wide">
       <header class="moments-page__intro moments-page__intro--admin">
-        <p class="moments-kicker">Local preview</p>
+        <p class="moments-kicker">{isMock ? "Local preview" : "Private access"}</p>
         <h1>Moment <em>Moderation</em></h1>
         <p>Review what guests have shared before it joins the public gallery.</p>
       </header>
-      <div class="moments-demo-notice" role="note">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 3 3.5 7.5v5c0 4.8 3.6 7.6 8.5 9 4.9-1.4 8.5-4.2 8.5-9v-5L12 3Z" />
-          <path d="M9.5 12.5 11 14l3.8-4" />
-        </svg>
-        <div>
-          <strong>Mock moderation only</strong>
-          <span>Actions are stored in this browser. Real admin access will use Supabase Auth—never a frontend password.</span>
+      {isMock && (
+        <div class="moments-demo-notice" role="note">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3 3.5 7.5v5c0 4.8 3.6 7.6 8.5 9 4.9-1.4 8.5-4.2 8.5-9v-5L12 3Z" />
+            <path d="M9.5 12.5 11 14l3.8-4" />
+          </svg>
+          <div>
+            <strong>Mock moderation only</strong>
+            <span>Actions are stored in this browser. Real admin access uses Supabase Auth—never a frontend password.</span>
+          </div>
         </div>
-      </div>
+      )}
       <MomentsAdmin client:load />
     </main>
   </div>

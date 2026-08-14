@@ -1,0 +1,21 @@
+# Copy to .dev.vars for `npm run dev`. Never commit .dev.vars.
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+
+GOOGLE_OAUTH_CLIENT_ID=
+GOOGLE_OAUTH_CLIENT_SECRET=
+GOOGLE_OAUTH_REFRESH_TOKEN=
+GOOGLE_DRIVE_ORIGINALS_FOLDER_ID=
+GOOGLE_DRIVE_VIDEOS_FOLDER_ID=
+
+# Generate at least 32 random bytes, for example:
+# openssl rand -base64 48
+MOMENTS_SESSION_SECRET=
+
+# Comma-separated exact origins. Origins never contain a path.
+MOMENTS_ALLOWED_ORIGINS=http://localhost:4321,http://127.0.0.1:4321,https://seaboiii.github.io
+MOMENTS_ALLOW_VIDEOS=false
+MOMENTS_REQUIRE_MODERATION=true
+MOMENTS_DERIVATIVES_BUCKET=moments-gallery
+MOMENTS_SIGNED_URL_TTL_SECONDS=900

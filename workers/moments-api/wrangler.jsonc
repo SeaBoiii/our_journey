@@ -1,0 +1,51 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "aleem-ain-moments-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-14",
+  "workers_dev": true,
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "MOMENTS_ALLOWED_ORIGINS": "http://localhost:4321,http://127.0.0.1:4321,https://seaboiii.github.io",
+    "MOMENTS_ALLOW_VIDEOS": "false",
+    "MOMENTS_REQUIRE_MODERATION": "true",
+    "MOMENTS_DERIVATIVES_BUCKET": "moments-gallery",
+    "MOMENTS_SIGNED_URL_TTL_SECONDS": "900"
+  },
+  "ratelimits": [
+    {
+      "name": "ENTRY_IP_RATE_LIMITER",
+      "namespace_id": "21001",
+      "simple": {
+        "limit": 600,
+        "period": 60
+      }
+    },
+    {
+      "name": "UPLOAD_SESSION_RATE_LIMITER",
+      "namespace_id": "21002",
+      "simple": {
+        "limit": 120,
+        "period": 60
+      }
+    },
+    {
+      "name": "UPLOAD_IP_RATE_LIMITER",
+      "namespace_id": "21003",
+      "simple": {
+        "limit": 2400,
+        "period": 60
+      }
+    },
+    {
+      "name": "GALLERY_IP_RATE_LIMITER",
+      "namespace_id": "21004",
+      "simple": {
+        "limit": 1200,
+        "period": 60
+      }
+    }
+  ]
+}

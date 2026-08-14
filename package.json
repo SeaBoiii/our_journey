@@ -18,6 +18,11 @@
     "audit:network-decode": "node scripts/network-decode-audit.mjs",
     "audit:viewport": "node scripts/viewport-audit.mjs",
     "audit:moments": "node scripts/moments-audit.mjs",
+    "check:moments-api": "tsc -p workers/moments-api/tsconfig.json --noEmit",
+    "test:moments-api": "node --experimental-strip-types --import ./tests/register-ts-loader.mjs --test workers/moments-api/test/*.test.ts",
+    "test:moments-remote": "tsc -p tests/tsconfig.json --noEmit && node --experimental-strip-types --import ./tests/register-ts-loader.mjs --test tests/moments-remote-provider.test.ts",
+    "test:phase2": "npm run check:moments-api && npm run test:moments-api && npm run test:moments-remote",
+    "oauth:google": "node scripts/google-drive-oauth.mjs",
     "smoke": "node scripts/smoke.mjs",
     "preview": "astro preview",
     "astro": "astro"
@@ -27,6 +32,7 @@
     "@fontsource/cormorant-garamond": "^5.3.0",
     "@fontsource/manrope": "^5.3.0",
     "@fontsource/noto-naskh-arabic": "^5.3.0",
+    "@supabase/supabase-js": "^2.112.3",
     "@tailwindcss/vite": "^4.3.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
@@ -38,7 +44,11 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@types/node": "^26.2.0",
     "puppeteer-core": "^25.5.0",
     "typescript": "^6.0.3"
+  },
+  "overrides": {
+    "nanoid": "^3.3.18"
   }
 }

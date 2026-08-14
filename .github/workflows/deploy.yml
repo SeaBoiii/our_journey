@@ -32,10 +32,17 @@ jobs:
         uses: withastro/action@v6
         with:
           node-version: 24
-          build-cmd: npm run check && npm run build
+          build-cmd: npm run check && npm run test:phase2 && npm run build
         env:
           PAGES_SITE: ${{ steps.pages.outputs.origin }}
           PAGES_BASE: ${{ steps.pages.outputs.base_path }}
+          # Browser-safe build variables only. The defaults keep GitHub Pages
+          # in Phase 1 mock mode until the remote Worker is configured.
+          PUBLIC_MOMENTS_BACKEND_PROVIDER: ${{ vars.PUBLIC_MOMENTS_BACKEND_PROVIDER || 'mock' }}
+          PUBLIC_MOMENTS_API_URL: ${{ vars.PUBLIC_MOMENTS_API_URL }}
+          PUBLIC_MOMENTS_ALLOW_VIDEOS: ${{ vars.PUBLIC_MOMENTS_ALLOW_VIDEOS || 'false' }}
+          PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
 
   deploy:
     name: Deploy site

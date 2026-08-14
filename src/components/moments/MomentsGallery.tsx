@@ -8,6 +8,7 @@ import { createPortal } from "react-dom";
 
 import {
   getApprovedMomentsNewestFirst,
+  mergeMomentsById,
   releaseMomentObjectUrls,
 } from "../../lib/moments/gallery";
 import type { Moment } from "../../lib/moments/types";
@@ -23,6 +24,7 @@ export interface MomentsGalleryProps {
 }
 
 type GalleryPhase = "loading" | "ready" | "error";
+const GALLERY_PAGE_SIZE = 20;
 
 const SKELETON_RATIOS = [
   "4 / 5",
@@ -104,18 +106,25 @@ export default function MomentsGallery({
 }: MomentsGalleryProps) {
   const [phase, setPhase] = useState<GalleryPhase>("loading");
   const [moments, setMoments] = useState<Moment[]>([]);
+  const [nextOffset, setNextOffset] = useState<number | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [loadMoreError, setLoadMoreError] = useState(false);
   const [activeMomentId, setActiveMomentId] = useState<string | null>(null);
   const [reloadVersion, setReloadVersion] = useState(0);
   const retainedMomentsRef = useRef<Moment[]>([]);
+  const galleryGenerationRef = useRef(0);
 
   const reloadGallery = useCallback(() => {
     setPhase("loading");
     setActiveMomentId(null);
+    setLoadMoreError(false);
     setReloadVersion((version) => version + 1);
   }, []);
 
   useEffect(() => {
     let isCancelled = false;
+    const generation = galleryGenerationRef.current + 1;
+    galleryGenerationRef.current = generation;
 
     const previousMoments = retainedMomentsRef.current;
     retainedMomentsRef.current = [];
@@ -123,26 +132,39 @@ export default function MomentsGallery({
 
     setPhase("loading");
     setMoments([]);
+    setNextOffset(null);
+    setLoadingMore(false);
+    setLoadMoreError(false);
     setActiveMomentId(null);
 
-    void getMoments({ status: "approved" })
-      .then((providedMoments) => {
+    void getMoments({ limit: GALLERY_PAGE_SIZE, offset: 0 })
+      .then((page) => {
         if (isCancelled) {
-          releaseMomentObjectUrls(providedMoments);
+          releaseMomentObjectUrls(page.moments);
           return;
         }
 
-        const approvedMoments = getApprovedMomentsNewestFirst(providedMoments);
-        const approvedMomentIds = new Set(
-          approvedMoments.map((moment) => moment.id),
+        const approvedMoments = mergeMomentsById(
+          [],
+          getApprovedMomentsNewestFirst(page.moments),
         );
-        const unusedMoments = providedMoments.filter(
-          (moment) => !approvedMomentIds.has(moment.id),
-        );
+        const approvedMomentIds = new Set<string>();
+        const unusedMoments: Moment[] = [];
+        for (const moment of page.moments) {
+          if (
+            moment.status !== "approved" ||
+            approvedMomentIds.has(moment.id)
+          ) {
+            unusedMoments.push(moment);
+          } else {
+            approvedMomentIds.add(moment.id);
+          }
+        }
 
         releaseMomentObjectUrls(unusedMoments);
         retainedMomentsRef.current = approvedMoments;
         setMoments(approvedMoments);
+        setNextOffset(page.nextOffset);
         setPhase("ready");
       })
       .catch(() => {
@@ -153,11 +175,67 @@ export default function MomentsGallery({
 
     return () => {
       isCancelled = true;
+      if (galleryGenerationRef.current === generation) {
+        galleryGenerationRef.current += 1;
+      }
       const retainedMoments = retainedMomentsRef.current;
       retainedMomentsRef.current = [];
       releaseMomentObjectUrls(retainedMoments);
     };
   }, [reloadVersion]);
+
+  const loadMoreMoments = useCallback(async () => {
+    if (nextOffset === null || loadingMore) return;
+    const generation = galleryGenerationRef.current;
+    setLoadingMore(true);
+    setLoadMoreError(false);
+
+    try {
+      const page = await getMoments({
+        limit: GALLERY_PAGE_SIZE,
+        offset: nextOffset,
+      });
+      if (galleryGenerationRef.current !== generation) {
+        releaseMomentObjectUrls(page.moments);
+        return;
+      }
+
+      const currentMoments = retainedMomentsRef.current;
+      const knownIds = new Set(currentMoments.map((moment) => moment.id));
+      const acceptedIds = new Set<string>();
+      const acceptedMoments: Moment[] = [];
+      const unusedMoments: Moment[] = [];
+      for (const moment of page.moments) {
+        if (
+          moment.status !== "approved" ||
+          knownIds.has(moment.id) ||
+          acceptedIds.has(moment.id)
+        ) {
+          unusedMoments.push(moment);
+          continue;
+        }
+        acceptedIds.add(moment.id);
+        acceptedMoments.push(moment);
+      }
+      releaseMomentObjectUrls(unusedMoments);
+
+      const mergedMoments = mergeMomentsById(
+        currentMoments,
+        acceptedMoments,
+      );
+      retainedMomentsRef.current = mergedMoments;
+      setMoments(mergedMoments);
+      setNextOffset(page.nextOffset);
+    } catch {
+      if (galleryGenerationRef.current === generation) {
+        setLoadMoreError(true);
+      }
+    } finally {
+      if (galleryGenerationRef.current === generation) {
+        setLoadingMore(false);
+      }
+    }
+  }, [loadingMore, nextOffset]);
 
   const openMoment = useCallback((moment: Moment) => {
     setActiveMomentId(moment.id);
@@ -208,18 +286,21 @@ export default function MomentsGallery({
     <section
       className={shellClassName}
       aria-label="Wedding moments gallery"
-      aria-busy={phase === "loading"}
+      aria-busy={phase === "loading" || loadingMore}
     >
       {phase === "ready" && moments.length > 0 ? (
         <>
           <header className={styles.galleryHeader}>
             <p className={styles.galleryCount}>
-              {moments.length} {moments.length === 1 ? "moment" : "moments"} shared
+              {moments.length}
+              {nextOffset !== null ? "+" : ""}{" "}
+              {moments.length === 1 ? "moment" : "moments"} shared
             </p>
             <button
               className={styles.refreshButton}
               type="button"
               onClick={reloadGallery}
+              disabled={loadingMore}
               aria-label="Refresh wedding moments"
               title="Refresh moments"
             >
@@ -257,6 +338,26 @@ export default function MomentsGallery({
               />
             ))}
           </div>
+
+          {loadMoreError ? (
+            <div className={styles.loadMoreError} role="alert">
+              <p>We couldn’t gather the next moments just now.</p>
+              <button type="button" onClick={() => void loadMoreMoments()}>
+                Try loading more again
+              </button>
+            </div>
+          ) : nextOffset !== null ? (
+            <div className={styles.loadMore}>
+              <button
+                type="button"
+                onClick={() => void loadMoreMoments()}
+                disabled={loadingMore}
+                aria-busy={loadingMore}
+              >
+                {loadingMore ? "Loading more moments..." : "Load more moments"}
+              </button>
+            </div>
+          ) : null}
         </>
       ) : phase === "loading" ? (
         <LoadingGallery />

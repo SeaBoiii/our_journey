@@ -14,6 +14,27 @@ export function sortMomentsNewestFirst(
   });
 }
 
+export function mergeMomentsById(
+  currentMoments: readonly Moment[],
+  incomingMoments: readonly Moment[],
+): Moment[] {
+  const momentsById = new Map(
+    currentMoments.map((moment) => [moment.id, moment] as const),
+  );
+  for (const moment of incomingMoments) {
+    if (!momentsById.has(moment.id)) momentsById.set(moment.id, moment);
+  }
+  return sortMomentsNewestFirst([...momentsById.values()]);
+}
+
+export function isMomentReadyForApproval(moment: Moment): boolean {
+  return (
+    moment.processingStatus === "ready" &&
+    Boolean(moment.previewUrl) &&
+    (moment.mediaType === "video" || Boolean(moment.thumbnailUrl))
+  );
+}
+
 export function filterApprovedMoments(
   moments: readonly Moment[],
 ): Moment[] {
@@ -63,4 +84,3 @@ export function releaseMomentObjectUrls(
     releaseObjectUrl(url);
   }
 }
-

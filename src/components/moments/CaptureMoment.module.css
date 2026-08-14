@@ -745,6 +745,34 @@
   font-size: 0.65rem;
 }
 
+.progressCancel {
+  min-height: 2.75rem;
+  margin-top: 0.85rem;
+  padding: 0.55rem 1rem;
+  color: #687980;
+  font: 650 0.68rem/1 var(--font-sans, "Manrope", sans-serif);
+  letter-spacing: 0.04em;
+  background: transparent;
+  border: 1px solid rgba(111, 132, 141, 0.32);
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    color 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+.progressCancel:hover:not(:disabled) {
+  color: #4f6169;
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(154, 127, 77, 0.48);
+}
+
+.progressCancel:disabled {
+  cursor: wait;
+  opacity: 0.62;
+}
+
 /* Success */
 .successPanel {
   min-height: min(38rem, calc(100svh - 3rem));

@@ -1,132 +1,238 @@
 # Moments
 
-Moments is the guest photo chapter of Aleem and Ain’s wedding experience. Phase 1 is available at:
+Moments is the guest-photo chapter of Aleem and Ain's wedding experience. It
+shares the invitation's typography, palette, sky, cloud, and ornament assets,
+while keeping its routes, React islands, storage, styles, and state separate.
+
+Routes:
 
 - `/moments/` — landing experience
-- `/moments/capture/` — camera/gallery selection and mock upload
+- `/moments/capture/` — camera/gallery selection and upload
 - `/moments/gallery/` — approved moments and full-screen viewer
-- `/moments/admin/` — local mock moderation
-- `/moments/live/` — future projector-mode shell
+- `/moments/admin/` — local mock moderation or authenticated remote moderation
+- `/moments/live/` — Phase 3 projector-mode shell
 
-It shares the invitation’s typography, palette, sky, cloud, and ornament assets while keeping its routes, React islands, storage, styles, and state independent.
+## Runtime modes
 
-## Phase 1 architecture
+The same frontend supports two providers:
 
-The UI imports the service facade in `src/lib/moments/upload.ts`; it does not import or know about Google Drive, Supabase, or IndexedDB directly.
+| Mode | Build value | Behavior |
+| --- | --- | --- |
+| Mock | `PUBLIC_MOMENTS_BACKEND_PROVIDER=mock` | IndexedDB originals and metadata in the current browser; no accounts or cloud credentials. |
+| Remote | `PUBLIC_MOMENTS_BACKEND_PROVIDER=remote` | Cloudflare Worker API coordinating private Google Drive originals and Supabase metadata/auth/derivatives. |
+
+Mock is the default and remains the safe GitHub Pages/local-development mode.
+Remote mode also requires `PUBLIC_MOMENTS_API_URL`, `PUBLIC_SUPABASE_URL`, and
+`PUBLIC_SUPABASE_ANON_KEY`. The Supabase values are browser-safe and are used
+only for the admin magic-link session; all data operations still pass through
+the Worker.
+
+The frontend keeps one boundary in both modes:
 
 ```text
 Capture / Gallery / Admin UI
             ↓
    Moments service facade
             ↓
-      provider interface
-            ↓
-   IndexedDB mock provider
+      mock OR remote provider
 ```
 
-Key files:
+Google Drive and Supabase are not alternative frontend providers. They are two
+private responsibilities behind the one remote API.
 
-- `src/config/moments.ts` owns feature flags, wedding mode, accepted media, and file limits.
-- `src/lib/moments/types.ts` defines serializable Moments records and provider contracts.
-- `src/lib/moments/upload.ts` validates requests, maps provider failures to warm guest-facing messages, and exposes `uploadMoment()`, `getMoments()`, `deletePendingUpload()`, and `updateMomentStatus()`.
-- `src/lib/moments/providers/mock.ts` is the only Phase 1 adapter.
-- `src/lib/moments/gallery.ts` owns approved/newest-first filtering, alt text, and object-URL cleanup.
-- `src/lib/paths.ts` resolves both assets and routes from Astro’s `BASE_URL`, so local/root and GitHub project builds use the same UI code.
-
-The default limits are 20 MB per photo, 150 MB per video, and 10 files per submission. JPEG, PNG, WebP, HEIC/HEIF, MP4, and MOV are accepted. A browser may upload HEIC/HEIF even when it cannot render a local preview.
-
-### Mock persistence
-
-Uploaded `Blob` objects and metadata are stored in a versioned, Moments-only IndexedDB database. They are not written to localStorage, the Git repository, GitHub, Google Drive, or Supabase. This makes the capture → admin → gallery flow genuinely testable across normal page navigation.
-
-Mock data is origin-local. A submission created on `localhost`, GitHub Pages, or a future `pages.dev` domain will not appear on the other origins. Clearing site data removes it. Generated demo images under `public/assets/moments/mock/` are fictional layout fixtures, not real guests or the real couple.
-
-The guest gallery requests approved records by default. The mock admin explicitly asks for all statuses and can approve, reject, or hide records in the current browser. This is a UI preview, not a security boundary.
-
-## Security boundary
-
-Everything bundled by Astro or exposed through a `PUBLIC_` environment variable is public. Never put any of the following in client source or browser-visible environment variables:
-
-- Google OAuth client secrets or refresh tokens
-- Google service-account private keys
-- Supabase service-role keys
-- admin credentials or hard-coded passwords
-
-There is deliberately no frontend password check on `/moments/admin/`. Future moderation will use Supabase Auth and server-enforced authorization.
-
-## Future Google Drive and Supabase integration
-
-The intended production flow is:
+## Phase 2 remote architecture
 
 ```text
 Guest browser
-    → authenticated/rate-limited upload request
-Cloudflare Worker or Pages Function
-    → validate type, size, count, and guest session
-Google Drive
-    → store full original in Originals or Videos
-Media processing
-    → create bounded WebP/AVIF gallery derivatives
-Supabase
-    → store metadata, moderation status, session, and derivative URLs
-Gallery
-    → read approved metadata/derivatives only
+  ├─ signed anonymous guest session
+  ├─ bounded original chunks
+  └─ metadata-free WebP derivatives where the browser can decode the photo
+              ↓
+Cloudflare Worker (security boundary)
+  ├─ exact-origin CORS and rate limiting
+  ├─ metadata, extension, size, MIME and first-byte validation
+  ├─ opaque encrypted upload tickets
+  ├─ Google OAuth refresh and Drive resumable upload proxy
+  ├─ private Supabase Storage derivative writes/signing
+  └─ RLS-backed gallery/auth/moderation requests
+       ├─ Google My Drive: private full-quality originals
+       └─ Supabase: metadata, Auth, moderation and private derivatives
 ```
 
-Google Drive owner credentials must exist only in the serverless environment. The browser should call one secure upload API. That endpoint can save the original, enqueue or generate a thumbnail, then create a Supabase metadata row. Large originals should never be returned for masonry cards.
+Private values exist only in the Worker environment. The static Astro bundle
+never receives Google credentials, the Supabase service-role key, Drive file
+IDs, Drive upload URLs, or admin allow-list data.
 
-A future provider can implement the existing `MomentsProvider` contract and be selected by the facade without rewriting React components. In production, approved-only filtering and moderation authorization must be enforced by the API/database policies—not trusted to a client parameter.
+### Resumable original uploads
 
-## Environment variables
+1. The browser requests a short-lived signed anonymous guest session.
+2. It initializes all file descriptors together, allowing the Worker to enforce
+   the per-submission count and text limits.
+3. The Worker refreshes the owner's Google OAuth access token, pre-generates
+   private Drive file IDs, and opens resumable uploads in the configured folder.
+4. The private Drive session URI and immutable metadata are encrypted into an
+   opaque, expiring upload ticket. The browser never receives the URI in plain
+   text and never puts the ticket in a URL.
+5. The browser uploads 8 MiB chunks through the Worker. Before each chunk, the
+   Worker asks Drive for the authoritative accepted offset. Lost responses and
+   retries therefore resume rather than duplicate data.
+6. Only the first bounded chunk is buffered for magic-byte validation; later
+   chunks are streamed to Drive. The Worker never buffers a 150 MB original.
+7. Completion is idempotent by server-generated moment ID and pre-generated
+   Drive file ID. A successful response contains upload receipts, never a Drive
+   URL.
 
-Phase 1 requires none. Copy `.env.example` only when testing the optional cross-domain journey link.
+Client cancellation aborts the active network request and abandons the short-
+lived sealed ticket. This stateless design avoids KV/Durable Object setup on the
+free plan. It does not provide a hard server-side ticket revocation list; an
+incomplete Drive session contains no finished file and expires. If hard
+revocation or strict per-session serialization becomes necessary, a Durable
+Object is the documented upgrade path.
 
-Browser-safe values:
+A cancellation or finalization failure that occurs after Drive has already
+finished can leave a private original without a Supabase row. The Worker README
+contains the owner reconciliation runbook: compare the server UUID filename (or
+Drive `appProperties.momentsId`) with `public.moments.id`, preserve the file
+while investigating, and only archive/delete it manually after confirming the
+row is absent. Guest metadata is not guessed after a sealed ticket is lost.
 
-| Variable | Purpose |
-| --- | --- |
-| `PUBLIC_JOURNEY_URL` | Invitation origin after Moments is deployed separately. Falls back to the current Astro base. |
-| `PUBLIC_MOMENTS_API_URL` | Proposed future public upload/read API origin. Not consumed in mock mode. |
-| `PUBLIC_SUPABASE_URL` | Proposed future Supabase project URL if the browser client needs it. |
-| `PUBLIC_SUPABASE_ANON_KEY` | Proposed future anonymous key; safe to expose only with correct RLS policies. |
+Remote videos default to disabled. The resumable protocol and Videos folder are
+present, but production video enablement should follow the manual integration
+test and operational review. Mock mode may continue to preview videos locally.
 
-Serverless-only values should be configured in Cloudflare’s encrypted environment and must never use the `PUBLIC_` prefix. Examples are `SUPABASE_SERVICE_ROLE_KEY`, `GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_PRIVATE_KEY`, and the Drive folder IDs shown in `.env.example`.
+### Derivatives and location privacy
 
-## Deployment
+The gallery never loads Google Drive originals.
 
-### Existing GitHub Pages invitation
+For JPEG, PNG, and WebP photos a browser-side canvas creates a canonical gallery
+WebP bounded to approximately 1600 px. Canvas re-encoding excludes the source
+EXIF payload, including GPS metadata. The Worker independently verifies strict
+still-WebP structure, dimensions, and the absence of metadata/animation chunks
+before writing it to the private `moments-gallery` Supabase bucket.
 
-The current workflow remains unchanged. It obtains the repository base path from `actions/configure-pages` and builds with `PAGES_BASE=/our_journey/`. Moments is therefore testable at `https://seaboiii.github.io/our_journey/moments/` without breaking the invitation root.
+In remote Phase 2, both the gallery and thumbnail paths deliberately reference
+that same verified object. An independently guest-supplied thumbnail could show
+a moderator different pixels from the eventual lightbox image, so it is not a
+trusted optimization. A future trusted media processor may generate a separate
+approximately 640 px thumbnail and atomically update the metadata row. Mock mode
+keeps its existing local thumbnail fixtures.
 
-To reproduce that build locally:
+The browser-produced WebP is still untrusted input. The Worker proves that the
+moderator preview and public gallery bytes are identical and safe in structure,
+but it cannot prove that those pixels were derived from the private Drive
+original. Approval therefore attests the canonical public image, not the
+integrity of the archived original. Spot-check originals after the event, or
+add a trusted server-side processor before treating Drive as a verified archive.
 
-```powershell
-$env:PAGES_SITE='https://seaboiii.github.io'
-$env:PAGES_BASE='/our_journey/'
-npm run build
+HEIC/HEIF originals can still reach the private Drive archive when the browser
+cannot decode them, but their metadata remains `processing_status=pending`
+until a trusted processor creates derivatives. Approving a moment never makes
+it public unless processing is also ready and both derivative paths exist.
+
+Gallery/admin responses receive short-lived signed derivative URLs. A signed
+URL remains usable until its expiry even if the row is hidden in the meantime;
+the default is 15 minutes. A future Worker media proxy can provide immediate
+revocation if that tradeoff becomes important.
+
+## Guest and admin security
+
+- Guests do not need email, phone, password, Google, or Supabase accounts.
+- `guestName` is display metadata, not identity.
+- Guest API access uses a server-signed opaque session ID.
+- The guest gallery endpoint accepts no moderation-status selector. Supabase RLS
+  and column grants expose only approved, derivative-ready rows and never Drive
+  IDs, guest-session IDs, or moderation actors.
+- Admin sign-in uses Supabase Auth magic links with implicit signup disabled.
+- An immutable `auth.users.id` must also appear in `moment_admins`; a valid but
+  non-allow-listed user receives Access denied.
+- The Worker's admin queries forward the admin JWT to Supabase, so RLS remains a
+  second authorization boundary.
+- GitHub Pages cannot configure `Content-Security-Policy` response headers, so
+  the remote admin gate also refuses to render authentication or moderation
+  controls inside a frame. On a future configurable host, additionally send
+  `Content-Security-Policy: frame-ancestors 'none'` as the primary browser-level
+  clickjacking control.
+- Rejecting, hiding, or restoring a moment changes metadata only. There is no
+  permanent-delete action and the private Drive original remains untouched.
+- The service-role key is used only for trusted upload completion, derivative
+  storage/signing, and never appears in browser code.
+
+## Limits
+
+The defaults are centralized in the frontend and independently enforced by the
+Worker and database:
+
+- 10 files per submission
+- 20 MB per photo
+- 150 MB per video when remote video is explicitly enabled
+- 80 characters for the guest name
+- 500 characters for the caption
+- JPEG, PNG, WebP and HEIC/HEIF photos
+- MP4 and MOV video architecture, feature-flagged remotely
+
+Browser validation is friendly feedback only. The Worker validates metadata,
+extension, declared MIME, bounded request size, and media signature before an
+original is accepted.
+
+## Setup order
+
+No real credential is committed. Complete these guides in order:
+
+1. [Supabase setup and RLS](docs/SUPABASE_MOMENTS.md)
+2. [One-time Google OAuth and Drive folders](docs/GOOGLE_DRIVE_MOMENTS.md)
+3. [Cloudflare Worker setup and deployment](workers/moments-api/README.md)
+4. Add the public remote values to the frontend deployment.
+
+Phase 2 owner configuration consists of:
+
+- a Supabase project, migration, private bucket and allow-listed Auth user;
+- one Google owner OAuth refresh token and app-created Drive folder IDs;
+- a Cloudflare account, Worker secrets, exact allowed origins and deployment;
+- GitHub repository variables for the public provider/API/Auth configuration.
+
+See `.env.example` and `workers/moments-api/.dev.vars.example` for names only.
+
+## GitHub Pages
+
+The invitation workflow remains in place. `actions/configure-pages` supplies
+`PAGES_BASE=/our_journey/`, and all Moments routes/assets continue to use the
+shared base helper.
+
+The workflow defaults to mock mode. To point the GitHub Pages Moments routes at
+the Worker, add these browser-safe GitHub repository variables:
+
+```text
+PUBLIC_MOMENTS_BACKEND_PROVIDER=remote
+PUBLIC_MOMENTS_API_URL=https://<worker-name>.<account>.workers.dev
+PUBLIC_MOMENTS_ALLOW_VIDEOS=false
+PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
+PUBLIC_SUPABASE_ANON_KEY=<publishable-or-anon-key>
 ```
 
-No Moments component hard-codes `/our_journey/`.
+Do not add Worker secrets to GitHub Pages variables. The current invitation
+continues at `/our_journey/`; Moments continues at `/our_journey/moments/`.
 
-### Future Cloudflare Pages preview
-
-Create a separate Cloudflare Pages project pointed at this repository with:
-
-- Build command: `npm run check && npm run build`
-- Output directory: `dist`
-- Node.js: 24 (or another version satisfying `>=22.12.0`)
-- `PAGES_BASE`: unset
-
-The initial preview will be available at `https://<project>.pages.dev/moments/`. The build also contains the invitation because this is still one repository; a later deployment-only root rewrite or a small Moments-specific Astro entry can make the dedicated domain open Moments at `/` without changing its service/business logic. Set `PUBLIC_JOURNEY_URL` to the invitation origin when the experiences move to separate domains.
-
-Real uploads require a Cloudflare Worker/Pages Function or another secure external API. This static Astro build must never be given service credentials.
+For the eventual dedicated frontend, leave `PAGES_BASE` unset and set
+`PUBLIC_JOURNEY_URL` to the invitation origin. No custom domain is required for
+the Worker or frontend during Phase 2.
 
 ## Verification
 
-With a local server running, the browser audit exercises capture, IndexedDB persistence, moderation, gallery visibility, lightbox keyboard behavior, base-aware links, and horizontal overflow:
+Frontend and API checks:
+
+```sh
+npm run check
+npm run test:phase2
+npm run build
+```
+
+The existing browser audit deliberately exercises mock mode and must remain
+available without any cloud account:
 
 ```sh
 npm run audit:moments -- http://127.0.0.1:4321
 ```
 
-For a GitHub-base preview, pass the full base URL (for example `http://127.0.0.1:4321/our_journey`). Existing invitation audits remain independent.
+Worker tests mock Google and Supabase; normal CI never performs a real Drive
+upload. The optional owner integration command in the Worker README creates one
+small real test upload only when its environment variables are explicitly set.

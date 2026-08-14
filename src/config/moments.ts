@@ -1,26 +1,56 @@
 export const BYTES_PER_MEGABYTE = 1024 * 1024;
 
 export type WeddingMode = "pre-wedding" | "live" | "post-wedding";
-export type MomentsBackendProvider = "mock" | "supabase" | "google-drive";
+export type MomentsBackendProvider = "mock" | "remote";
 
 export interface MomentsConfig {
   readonly enabled: boolean;
   readonly backendProvider: MomentsBackendProvider;
+  readonly apiUrl: string;
+  readonly supabaseUrl: string;
+  readonly supabaseAnonKey: string;
   readonly allowVideos: boolean;
   readonly maxPhotoSize: number;
   readonly maxVideoSize: number;
   readonly maxFilesPerUpload: number;
+  readonly guestNameMaxLength: number;
+  readonly captionMaxLength: number;
   readonly requireModeration: boolean;
   readonly weddingMode: WeddingMode;
 }
 
+function normaliseApiUrl(value: string | undefined): string {
+  return value?.trim().replace(/\/+$/, "") ?? "";
+}
+
+function isEnabled(value: string | undefined): boolean {
+  return value?.trim().toLocaleLowerCase() === "true";
+}
+
+// Native Node test imports do not define Vite's `import.meta.env` object.
+const publicEnv: Partial<ImportMetaEnv> = import.meta.env ?? {};
+const configuredApiUrl = normaliseApiUrl(publicEnv.PUBLIC_MOMENTS_API_URL);
+const configuredProvider =
+  publicEnv.PUBLIC_MOMENTS_BACKEND_PROVIDER?.trim().toLocaleLowerCase();
+const backendProvider: MomentsBackendProvider =
+  configuredProvider === "remote" ? "remote" : "mock";
+
 export const MOMENTS_CONFIG = {
   enabled: true,
-  backendProvider: "mock",
-  allowVideos: true,
+  backendProvider,
+  apiUrl: configuredApiUrl,
+  supabaseUrl: normaliseApiUrl(publicEnv.PUBLIC_SUPABASE_URL),
+  supabaseAnonKey: publicEnv.PUBLIC_SUPABASE_ANON_KEY?.trim() ?? "",
+  // Mock mode retains the Phase 1 video preview. The production API starts
+  // photo-first until its large-file resumable path is explicitly enabled.
+  allowVideos:
+    backendProvider === "mock" ||
+    isEnabled(publicEnv.PUBLIC_MOMENTS_ALLOW_VIDEOS),
   maxPhotoSize: 20 * BYTES_PER_MEGABYTE,
   maxVideoSize: 150 * BYTES_PER_MEGABYTE,
   maxFilesPerUpload: 10,
+  guestNameMaxLength: 80,
+  captionMaxLength: 500,
   requireModeration: true,
   weddingMode: "pre-wedding",
 } as const satisfies MomentsConfig;
@@ -59,10 +89,6 @@ export const MOMENTS_ACCEPT_ATTRIBUTE = [
   ".heic",
   ".heif",
   ...(MOMENTS_CONFIG.allowVideos
-    ? [
-        ...ACCEPTED_VIDEO_MIME_TYPES,
-        ".mp4",
-        ".mov",
-      ]
+    ? [...ACCEPTED_VIDEO_MIME_TYPES, ".mp4", ".mov"]
     : []),
 ].join(",");
