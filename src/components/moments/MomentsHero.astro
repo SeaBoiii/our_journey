@@ -1,7 +1,12 @@
 ---
 import MomentsBackground from "./MomentsBackground.astro";
 import MomentsHeader from "./MomentsHeader.astro";
+import { wedding } from "../../data/wedding";
 import { momentsPath, withBase } from "../../lib/paths";
+
+const displayName = (value: string) =>
+  value ? `${value[0]}${value.slice(1).toLowerCase()}` : value;
+const coupleLabel = `${displayName(wedding.couple.groom)} & ${displayName(wedding.couple.finalBride)} · ${wedding.event.date}`;
 ---
 
 <div class="moments-shell moments-landing">
@@ -27,7 +32,7 @@ import { momentsPath, withBase } from "../../lib/paths";
     </div>
 
     <div class="moments-hero__copy">
-      <p class="moments-kicker">Aleem &amp; Ain · 14 June 2027</p>
+      <p class="moments-kicker">{coupleLabel}</p>
       <h1>Capture<br /><em>Our Day</em></h1>
       <div class="moments-hero__intro">
         <p>Everyone sees a wedding differently.</p>
